@@ -1,0 +1,34 @@
+Debug/
+Release/
+Distribution/
+_win32/_ReSharper.kumi/*
+data/
+ipch/
+*.ilk
+*.lib
+*.pdb
+*.pyd
+*.pyc
+*.ncb
+*.suo
+*.vcproj.*
+*.exp
+*.bmp
+*.*~
+*.zip
+*.obj
+*.opensdf
+*.psess
+*.sdf
+*.vsp
+*.log
+*.user
+*.swp
+*.dat
+*.filters
+*.aps
+_win32/My Inspector XE Results - kumi/*
+_win32/My Amplifier XE Results - kumi/*
+kumi_browser/.idea/
+effects/obj/*
+effects/obj_debug/*
