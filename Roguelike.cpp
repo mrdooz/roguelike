@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "utils.hpp"
 
+#include <vector>
+#include <assert.h>
+
 using namespace std;
 
 enum Tiles {
@@ -20,6 +23,67 @@ enum Tiles {
   floorRug,
   cNumTiles,
 };
+
+
+struct Level {
+
+  sf::Sprite &get(int row, int col) { return _sprites[row*_width+col]; }
+  vector<sf::Sprite> _sprites;
+  int _width;
+  int _height;
+};
+
+class LevelFactory {
+
+public:
+  static bool create();
+  static void close();
+  static LevelFactory &instance();
+
+  Level *makeLevel(int width, int height, const sf::Texture &texture);
+private:
+  static LevelFactory *_instance;
+};
+
+Level *LevelFactory::makeLevel(int width, int height, const sf::Texture &texture) {
+  Level *level = new Level;
+
+  level->_width = width;
+  level->_height = height;
+
+  level->_sprites.resize(width*height);
+
+  for (int i = 0; i < height; ++i) {
+    for (int j = 0; j < width; ++j) {
+      auto &sprite = level->get(i, j);
+      sprite.setPosition((float)j*24, (float)i*24);
+      sprite.setScale(3.0f, 3.0f);
+      sprite.setTextureRect(sf::IntRect(Tiles::floorA*8, 0, 8, 8));
+      sprite.setTexture(texture);
+    }
+  }
+
+  return level;
+}
+
+LevelFactory *LevelFactory::_instance;
+
+bool LevelFactory::create() {
+  assert(!_instance);
+  _instance = new LevelFactory;
+  return true;
+}
+
+void LevelFactory::close() {
+  assert(_instance);
+  delete exch_null(_instance);
+}
+
+LevelFactory &LevelFactory::instance() {
+  assert(_instance);
+  return *_instance;
+}
+
 
 class Game {
 
@@ -41,14 +105,11 @@ private:
 
 class App {
 
-  sf::Texture _wallTexture;
-  sf::Sprite _wallSprites[Tiles::cNumTiles];
-  sf::RenderWindow *_window;
-
 public:
 
   bool close() {
-    delete _window;
+    delete exch_null(_level);
+    delete exch_null(_window);
     return true;
   }
 
@@ -57,12 +118,15 @@ public:
 
     _window = new sf::RenderWindow(sf::VideoMode(800, 600), "SFML window");
 
-    if (!_wallTexture.loadFromFile("oryx_lofi\\lofi_environment.png"))
+    if (!_environmentTexture.loadFromFile("oryx_lofi\\lofi_environment.png"))
       return EXIT_FAILURE;
+
+    LevelFactory::create();
+    _level = LevelFactory::instance().makeLevel(20, 20, _environmentTexture);
 
     // create wall tiles
     for (int i = 0; i < Tiles::cNumTiles; ++i) {
-      _wallSprites[i].setTexture(_wallTexture);
+      _wallSprites[i].setTexture(_environmentTexture);
       _wallSprites[i].setTextureRect(sf::IntRect(i*8,0,8,8));
     }
 
@@ -92,26 +156,8 @@ public:
 
       _window->clear();
 
-      for (int i = 0; i < 20; ++i) {
-        _wallSprites[Tiles::wallH].setPosition(100+i*8, 100);
-        _window->draw(_wallSprites[Tiles::wallH]);
-
-        _wallSprites[Tiles::wallH].setPosition(100+i*8, 100+21*8);
-        _window->draw(_wallSprites[Tiles::wallH]);
-
-        for (int j = 0; j < 20; ++j) {
-          _wallSprites[Tiles::floorA].setPosition(100+i*8, 100+(j+1)*8);
-          _window->draw(_wallSprites[Tiles::floorA]);
-        }
-      }
-
-      for (int i = 0; i < 20; ++i) {
-        _wallSprites[Tiles::wallV].setPosition(100, 100+(i+1)*8);
-        _window->draw(_wallSprites[Tiles::wallV]);
-
-        _wallSprites[Tiles::wallV].setPosition(100+21*8, 100+(i+1)*8);
-        _window->draw(_wallSprites[Tiles::wallV]);
-      }
+      for (size_t i = 0; i < _level->_sprites.size(); ++i)
+        _window->draw(_level->_sprites[i]);
 
       //_window->draw(text);
 
@@ -120,6 +166,7 @@ public:
 
     return EXIT_SUCCESS;
   }
+
 private:
 
   void findAppRoot()
@@ -150,6 +197,11 @@ private:
     _appRoot = startingDir;
   }
 
+  Level *_level;
+
+  sf::Texture _environmentTexture;
+  sf::Sprite _wallSprites[Tiles::cNumTiles];
+  sf::RenderWindow *_window;
 
   string _appRoot;
 
