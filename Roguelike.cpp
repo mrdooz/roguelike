@@ -3,24 +3,74 @@
 
 using namespace std;
 
-class App {
+enum Tiles {
+  wallH,
+  wallH_torch_anim_1,
+  wAllH_torch_anim_2,
+  wallH_crumbled,
+  wallV,
+  floorA,
+  floorB,
+  stairsUp,
+  stairsDown,
+  hole,
+  trapdoorClosed,
+  trapdoorOpen,
+  floorC,
+  floorRug,
+  cNumTiles,
+};
+
+class Game {
+
 public:
+  enum GameState {
+    WaitingForPlayer,
+    WaitingForWorld,
+  };
+
+  void init() {
+  }
+
+private:
+
+  GameState _state;
+
+};
+
+
+class App {
+
+  sf::Texture _wallTexture;
+  sf::Sprite _wallSprites[Tiles::cNumTiles];
+  sf::RenderWindow *_window;
+
+public:
+
+  bool close() {
+    delete _window;
+    return true;
+  }
 
   bool init() {
     findAppRoot();
+
+    _window = new sf::RenderWindow(sf::VideoMode(800, 600), "SFML window");
+
+    if (!_wallTexture.loadFromFile("oryx_lofi\\lofi_environment.png"))
+      return EXIT_FAILURE;
+
+    // create wall tiles
+    for (int i = 0; i < Tiles::cNumTiles; ++i) {
+      _wallSprites[i].setTexture(_wallTexture);
+      _wallSprites[i].setTextureRect(sf::IntRect(i*8,0,8,8));
+    }
+
     return true;
   }
 
   int run()
   {
-    // Create the main window
-    sf::RenderWindow window(sf::VideoMode(800, 600), "SFML window");
-
-    // Load a sprite to display
-    sf::Texture texture;
-    if (!texture.loadFromFile("oryx_lofi\\preview_sample.png"))
-      return EXIT_FAILURE;
-    sf::Sprite sprite(texture);
 
     // Create a graphical text to display
     sf::Font font;
@@ -29,28 +79,43 @@ public:
     sf::Text text("Hello SFML", font, 20);
 
     // Start the game loop
-    while (window.isOpen())
+    while (_window->isOpen())
     {
       // Process events
       sf::Event event;
-      while (window.pollEvent(event))
-      {
-        // Close window : exit
+      while (_window->pollEvent(event)) {
+
+        //sf::Keyboard::isKeyPressed()
         if (event.type == sf::Event::Closed)
-          window.close();
+          _window->close();
       }
 
-      // Clear screen
-      window.clear();
+      _window->clear();
 
-      // Draw the sprite
-      window.draw(sprite);
+      for (int i = 0; i < 20; ++i) {
+        _wallSprites[Tiles::wallH].setPosition(100+i*8, 100);
+        _window->draw(_wallSprites[Tiles::wallH]);
 
-      // Draw the string
-      window.draw(text);
+        _wallSprites[Tiles::wallH].setPosition(100+i*8, 100+21*8);
+        _window->draw(_wallSprites[Tiles::wallH]);
 
-      // Update the window
-      window.display();
+        for (int j = 0; j < 20; ++j) {
+          _wallSprites[Tiles::floorA].setPosition(100+i*8, 100+(j+1)*8);
+          _window->draw(_wallSprites[Tiles::floorA]);
+        }
+      }
+
+      for (int i = 0; i < 20; ++i) {
+        _wallSprites[Tiles::wallV].setPosition(100, 100+(i+1)*8);
+        _window->draw(_wallSprites[Tiles::wallV]);
+
+        _wallSprites[Tiles::wallV].setPosition(100+21*8, 100+(i+1)*8);
+        _window->draw(_wallSprites[Tiles::wallV]);
+      }
+
+      //_window->draw(text);
+
+      _window->display();
     }
 
     return EXIT_SUCCESS;
@@ -97,6 +162,8 @@ int main() {
     return 1;
 
   int res = app.run();
+
+  app.close();
 
   if (res) {
     while (!isBitSet(GetAsyncKeyState(VK_ESCAPE), 15))
