@@ -32,3 +32,6 @@ _win32/My Amplifier XE Results - kumi/*
 kumi_browser/.idea/
 effects/obj/*
 effects/obj_debug/*
+*.o
+*.gch
+roguelike

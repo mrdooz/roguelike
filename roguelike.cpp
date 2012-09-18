@@ -172,9 +172,14 @@ struct StateBase {
   virtual void update() = 0;
 };
 
+#ifdef _WIN32
+#define OVERRIDE override
+#else
+#define OVERRIDE
+#endif
 struct PlayerState : public StateBase {
 
-  virtual void update() override {
+  virtual void update() OVERRIDE {
 
     Player *player = _party->_players[_party->_curPlayer];
     bool newPos = false;
@@ -213,7 +218,7 @@ struct PlayerState : public StateBase {
 
 struct AiState : public StateBase {
 
-  virtual void update() override {
+  virtual void update() OVERRIDE {
 
   }
 };
@@ -234,10 +239,10 @@ public:
 
     _window = new sf::RenderWindow(sf::VideoMode(800, 600), "while (true) { kill(stuff); get(epix); }");
 
-    if (!_environmentTexture.loadFromFile("oryx_lofi\\lofi_environment.png"))
+    if (!_environmentTexture.loadFromFile("oryx_lofi/lofi_environment.png"))
       return EXIT_FAILURE;
 
-    if (!_characterTexture.loadFromFile("oryx_lofi\\lofi_char.png"))
+    if (!_characterTexture.loadFromFile("oryx_lofi/lofi_char.png"))
       return EXIT_FAILURE;
 
     LevelFactory::create();
@@ -267,7 +272,7 @@ public:
 
     // Create a graphical text to display
     sf::Font font;
-    if (!font.loadFromFile("gfx\\wscsnrg.ttf"))
+    if (!font.loadFromFile("gfx/wscsnrg.ttf"))
       return EXIT_FAILURE;
     sf::Text text("Hello SFML", font, 20);
 
@@ -308,6 +313,7 @@ private:
 
   void findAppRoot()
   {
+#ifdef _WIN32
     char startingDir[MAX_PATH];
     _getcwd(startingDir, MAX_PATH);
 
@@ -332,6 +338,7 @@ private:
         break;
     }
     _appRoot = startingDir;
+#endif
   }
 
   Party _party;
@@ -363,8 +370,10 @@ int main() {
   app.close();
 
   if (res) {
+#ifdef _WIN32
     while (!isBitSet(GetAsyncKeyState(VK_ESCAPE), 15))
       ;
+#endif
   }
 
   return res;

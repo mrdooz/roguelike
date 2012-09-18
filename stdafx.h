@@ -3,17 +3,19 @@
 // are changed infrequently
 //
 
-#pragma once
+#ifndef _STDAFX_H_
+#define _STDAFX_H_
 
 #include <stdio.h>
-#include <tchar.h>
-
 
 #include <SFML/Graphics.hpp>
 
-#include <windows.h>
-#include <direct.h>
-#include <io.h>
+#ifdef _WIN32
+  #include <windows.h>
+  #include <direct.h>
+  #include <io.h>
+#endif
+
 #include <sys/stat.h>
 #include <string>
 #include <stdint.h>
@@ -36,4 +38,6 @@ typedef uint64_t uint64;
 #pragma comment(lib, "sfml-graphics-s.lib")
 #pragma comment(lib, "sfml-window-s.lib")
 #pragma comment(lib, "sfml-system-s.lib")
+#endif
+
 #endif
