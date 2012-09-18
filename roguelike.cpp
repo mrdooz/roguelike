@@ -24,6 +24,13 @@ enum class Tiles {
   cNumTiles,
 };
 
+enum class TileType {
+  kFloor,
+  kWall,
+  kStairUp,
+  kStairDown,
+};
+
 enum class PlayerClass : uint8 {
   kWizard,
   kRogue,
@@ -75,6 +82,7 @@ struct Player {
   bool _activePlayer;
   bool _hasMoved;
 
+  sf::Sprite _sprite;
   PlayerMode _mode;
   PlayerClass _class;
 };
@@ -87,6 +95,7 @@ struct Party {
 
 struct Tile {
   Tile() : _visited(0) {}
+  TileType _type;
   sf::Sprite _sprite;
   int _visited;
 };
@@ -95,8 +104,17 @@ struct Level {
 
   Tile &get(int row, int col) { return _tiles[row*_width+col]; }
 
+  bool movable(int row, int col) {
+    return false;
+  }
+
   bool validPosition(int row, int col) {
-    return row >= 0 && row < _height && col >= 0 && col < _width;
+    bool inside = row >= 0 && row < _height && col >= 0 && col < _width;
+    if (!inside)
+      return false;
+
+    auto &tile = get(row, col);
+    return tile._type == TileType::kFloor;
   }
 
   void visitTile(int row, int col) {
@@ -144,16 +162,45 @@ Level *LevelFactory::makeLevel(int width, int height, const sf::Texture &texture
 
   level->_tiles.resize(width*height);
 
-  for (int i = 0; i < height; ++i) {
-    for (int j = 0; j < width; ++j) {
-      auto &sprite = level->get(i, j)._sprite;
+  for (int i = 1; i < height-1; ++i) {
+    for (int j = 1; j < width-1; ++j) {
+      auto &tile = level->get(i, j);
+      tile._type = TileType::kFloor;
+      auto &sprite = tile._sprite;
       sprite.setPosition((float)j*24, (float)i*24);
       sprite.setScale(3.0f, 3.0f);
       sprite.setColor(sf::Color(0,0,0,0));
-      sprite.setTextureRect(sf::IntRect((int)Tiles::floorA*8, 0, 8, 8));
+      sprite.setTextureRect(sf::IntRect((int)Tiles::floorC*8, 0, 8, 8));
       sprite.setTexture(texture);
     }
   }
+
+  for (int j = 0; j < 2; ++j) {
+    for (int i = 0; i < width; ++i) {
+      auto &tile = level->get(j*(height-1), i);
+      tile._type = TileType::kWall;
+      auto &sprite = tile._sprite;
+      sprite.setPosition((float)i*3*8, (float)j*3*8*(height-1));
+      sprite.setScale(3.0f, 3.0f);
+      sprite.setColor(sf::Color(255,255,255));
+      sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
+      sprite.setTexture(texture);
+    }
+  }
+
+  for (int j = 0; j < 2; ++j) {
+    for (int i = 0; i < height; ++i) {
+      auto &tile = level->get(i, j*(width-1));
+      tile._type = TileType::kWall;
+      auto &sprite = tile._sprite;
+      sprite.setPosition((float)j*3*8*(width-1), (float)i*3*8);
+      sprite.setScale(3.0f, 3.0f);
+      sprite.setColor(sf::Color(255,255,255));
+      sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
+      sprite.setTexture(texture);
+    }
+  }
+
 
   return level;
 }
@@ -207,40 +254,75 @@ struct PlayerState : public StateBase {
 
   virtual void update(const sf::Event &event) OVERRIDE {
 
-    Player *player = _party->_players[_party->_curPlayer];
+    auto &players = _party->_players;
+    Player *player = players[_party->_curPlayer];
     bool newPos = false;
+    bool skipPlayer = false;
 
     if (event.type == sf::Event::KeyReleased) {
-      if (event.key.code == sf::Keyboard::Left) {
+      auto code = event.key.code;
+      if (code == sf::Keyboard::Left) {
         if (_level->validPosition(player->_posY, player->_posX-1)) {
           newPos = true;
           player->_posX--;
         }
 
-      } else if (event.key.code == sf::Keyboard::Right) {
+      } else if (code == sf::Keyboard::Right) {
         if (_level->validPosition(player->_posY, player->_posX+1)) {
           newPos = true;
           player->_posX++;
         }
 
-      } else if (event.key.code == sf::Keyboard::Up) {
+      } else if (code == sf::Keyboard::Up) {
         if (_level->validPosition(player->_posY-1, player->_posX)) {
           newPos = true;
           player->_posY--;
         }
 
-      } else if (event.key.code == sf::Keyboard::Down) {
+      } else if (code == sf::Keyboard::Down) {
         if (_level->validPosition(player->_posY+1, player->_posX)) {
           newPos = true;
           player->_posY++;
         }
+
+      } else if (code == sf::Keyboard::Space) {
+        skipPlayer = true;
       }
     }
     
-    if (newPos)
+    if (newPos) {
+      player->_hasMoved = true;
       _level->visitTile(player->_posY, player->_posX);
+      player->_activePlayer = false;
+    }
 
-    // Check if all the players have moved
+    // Set next player
+    bool done = true;
+    if (skipPlayer) {
+      player->_activePlayer = false;
+      _party->_curPlayer++;
+    }
+
+    for (size_t i = 0; i < players.size(); ++i) {
+      int idx = (_party->_curPlayer + i) % players.size();
+      Player *p = players[idx];
+      if (!p->_hasMoved) {
+        _party->_curPlayer = idx;
+        p->_activePlayer = true;
+        done = false;
+        break;
+      }
+    }
+
+    if (done) {
+      for (size_t i = 0; i < players.size(); ++i) {
+        players[i]->_activePlayer = false;
+        players[i]->_hasMoved = false;
+      }
+      _party->_curPlayer = 0;
+      players[0]->_activePlayer = true;
+    }
+
   }
 
   Level *_level;
@@ -282,16 +364,16 @@ public:
     LevelFactory::create();
     _level = LevelFactory::instance().makeLevel(20, 20, _environmentTexture);
 
-    _characterSprite.setTexture(_characterTexture);
-    _characterSprite.setScale(3, 3);
-    _characterSprite.setTextureRect(sf::IntRect(0, 0, 8, 8));
-
     _curState = &_playerState;
 
     for (int i = 0; i < 4; ++i) {
       auto *p = new Player();
-      p->_posX = i / 2;
-      p->_posY = i % 2;
+      p->_sprite.setTexture(_characterTexture);
+      p->_sprite.setScale(3, 3);
+      p->_sprite.setTextureRect(sf::IntRect(0, 0, 8, 8));
+
+      p->_posX = 1 + i / 2;
+      p->_posY = 1 + i % 2;
       _party._players.push_back(p);
     }
     _party._players[_party._curPlayer]->_activePlayer = true;
@@ -377,9 +459,9 @@ public:
         Player *cur = _party._players[i];
         cur->_name = toString("Player %d", i);
         cur->_class = (PlayerClass)i;
-        _characterSprite.setPosition((float)cur->_posX*3*8, (float)cur->_posY*3*8);
-        _characterSprite.setColor(cur->_activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
-        _window->draw(_characterSprite);
+        cur->_sprite.setPosition((float)cur->_posX*3*8, (float)cur->_posY*3*8);
+        cur->_sprite.setColor(cur->_activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
+        _window->draw(cur->_sprite);
       }
 
       drawPartyStats();
@@ -435,7 +517,6 @@ private:
   sf::Texture _environmentTexture;
   sf::Texture _characterTexture;
   sf::RenderWindow *_window;
-  sf::Sprite _characterSprite;
 
   string _appRoot;
 
