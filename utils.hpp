@@ -21,3 +21,5 @@ inline bool isBitSet(uint32 value, int bit_num) {
 inline uint32 clearBit(uint32 value, int bit_num) {
   return value & ~(1 << bit_num);
 }
+
+std::string toString(char const * const format, ... );

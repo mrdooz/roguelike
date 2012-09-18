@@ -24,22 +24,45 @@ enum class Tiles {
   cNumTiles,
 };
 
-enum class PlayerClass {
+enum class PlayerClass : uint8 {
   kWizard,
   kRogue,
   kWarrior,
   kCleric,
 };
 
-enum class PlayerMode {
+enum class PlayerMode : uint8 {
   kExplore,
-  kStay,
+  kGuard,
   kFollow,
   kInteractive,
 };
 
+string playerClassToString(PlayerClass pc) {
+  switch (pc) {
+    case PlayerClass::kWizard: return "Wizard";
+    case PlayerClass::kRogue: return "Rogue";
+    case PlayerClass::kWarrior: return "Warrior";
+    case PlayerClass::kCleric: return "Cleric";
+    default: assert(false); return "";
+  }
+}
+
+string playerModeToString(PlayerMode pm) {
+  switch (pm) {
+    case PlayerMode::kExplore: return "Explore";
+    case PlayerMode::kGuard: return "Guard";
+    case PlayerMode::kFollow: return "Follow";
+    case PlayerMode::kInteractive: return "Interactive";
+    default: assert(false); return "";
+  }
+}
+
 struct Player {
-  Player() : _posX(0), _posY(0), _mode(PlayerMode::kInteractive) {}
+  Player() : _posX(0), _posY(0), _mode(PlayerMode::kInteractive), _hasMoved(false), _activePlayer(false) {}
+
+  string _name;
+
   int _intelligence;
   int _strength;
   int _dexterity;
@@ -48,6 +71,9 @@ struct Player {
   int _health;
   int _mana;
   int _posX, _posY;
+
+  bool _activePlayer;
+  bool _hasMoved;
 
   PlayerMode _mode;
   PlayerClass _class;
@@ -169,7 +195,7 @@ private:
 
 struct StateBase {
 
-  virtual void update() = 0;
+  virtual void update(const sf::Event &event) = 0;
 };
 
 #ifdef _WIN32
@@ -179,37 +205,42 @@ struct StateBase {
 #endif
 struct PlayerState : public StateBase {
 
-  virtual void update() OVERRIDE {
+  virtual void update(const sf::Event &event) OVERRIDE {
 
     Player *player = _party->_players[_party->_curPlayer];
     bool newPos = false;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-      if (_level->validPosition(player->_posY, player->_posX-1)) {
-        newPos = true;
-        player->_posX--;
-      }
 
-    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-      if (_level->validPosition(player->_posY, player->_posX+1)) {
-        newPos = true;
-        player->_posX++;
-      }
+    if (event.type == sf::Event::KeyReleased) {
+      if (event.key.code == sf::Keyboard::Left) {
+        if (_level->validPosition(player->_posY, player->_posX-1)) {
+          newPos = true;
+          player->_posX--;
+        }
 
-    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-      if (_level->validPosition(player->_posY-1, player->_posX)) {
-        newPos = true;
-        player->_posY--;
-      }
+      } else if (event.key.code == sf::Keyboard::Right) {
+        if (_level->validPosition(player->_posY, player->_posX+1)) {
+          newPos = true;
+          player->_posX++;
+        }
 
-    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-      if (_level->validPosition(player->_posY+1, player->_posX)) {
-        newPos = true;
-        player->_posY++;
+      } else if (event.key.code == sf::Keyboard::Up) {
+        if (_level->validPosition(player->_posY-1, player->_posX)) {
+          newPos = true;
+          player->_posY--;
+        }
+
+      } else if (event.key.code == sf::Keyboard::Down) {
+        if (_level->validPosition(player->_posY+1, player->_posX)) {
+          newPos = true;
+          player->_posY++;
+        }
       }
     }
     
     if (newPos)
       _level->visitTile(player->_posY, player->_posX);
+
+    // Check if all the players have moved
   }
 
   Level *_level;
@@ -218,7 +249,7 @@ struct PlayerState : public StateBase {
 
 struct AiState : public StateBase {
 
-  virtual void update() OVERRIDE {
+  virtual void update(const sf::Event &event) OVERRIDE {
 
   }
 };
@@ -245,6 +276,9 @@ public:
     if (!_characterTexture.loadFromFile("oryx_lofi/lofi_char.png"))
       return EXIT_FAILURE;
 
+    if (!_font.loadFromFile("gfx/wscsnrg.ttf"))
+      return EXIT_FAILURE;
+
     LevelFactory::create();
     _level = LevelFactory::instance().makeLevel(20, 20, _environmentTexture);
 
@@ -254,8 +288,13 @@ public:
 
     _curState = &_playerState;
 
-    for (int i = 0; i < 4; ++i)
-      _party._players.push_back(new Player());
+    for (int i = 0; i < 4; ++i) {
+      auto *p = new Player();
+      p->_posX = i / 2;
+      p->_posY = i % 2;
+      _party._players.push_back(p);
+    }
+    _party._players[_party._curPlayer]->_activePlayer = true;
 
     _playerState._party = &_party;
     _playerState._level = _level;
@@ -263,18 +302,58 @@ public:
     return true;
   }
 
-  void update() {
-    _curState->update();
+  void update(const sf::Event &event) {
+    _curState->update(event);
+  }
+
+  void drawPartyStats() {
+
+    float x = 500;
+    float y = 0;
+    sf::Text heading("", _font, 20);
+    sf::Text normal("", _font, 10);
+
+    sf::Vector2f pos(x, y);
+
+    auto &drawHeading = [&](Player *player) {
+      heading.setString(player->_name);
+      heading.setPosition(pos);
+      sf::FloatRect r = heading.getLocalBounds();
+      sf::Vector2f tmpPos = pos;
+      pos.x += r.width + 10;
+      _window->draw(heading);
+      normal.setString(toString("(%s)", playerClassToString(player->_class).c_str()));
+      pos.y += (r.height - normal.getLocalBounds().height) / 2;
+      normal.setPosition(pos);
+      _window->draw(normal);
+      pos = tmpPos;
+      pos.y += 25;
+    };
+
+    auto &drawNormal = [&](const std::string &str) {
+      normal.setString(str);
+      normal.setPosition(pos);
+      pos.y += 15;
+      _window->draw(normal);
+    };
+
+    for (auto *player : _party._players) {
+
+      heading.setColor(player->_activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
+      normal.setColor(player->_activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
+
+      drawHeading(player);
+
+      drawNormal(toString("STR: %d", player->_strength));
+      drawNormal(toString("INT: %d", player->_intelligence));
+      drawNormal(toString("DEX: %d", player->_dexterity));
+      drawNormal(toString("VIT: %d", player->_vitality));
+    }
   }
 
   int run()
   {
 
-    // Create a graphical text to display
-    sf::Font font;
-    if (!font.loadFromFile("gfx/wscsnrg.ttf"))
-      return EXIT_FAILURE;
-    sf::Text text("Hello SFML", font, 20);
 
     // Start the game loop
     while (_window->isOpen())
@@ -283,7 +362,7 @@ public:
       sf::Event event;
       while (_window->pollEvent(event)) {
 
-        update();
+        update(event);
 
         if (event.type == sf::Event::Closed)
           _window->close();
@@ -296,12 +375,14 @@ public:
 
       for (size_t i = 0; i < _party._players.size(); ++i) {
         Player *cur = _party._players[i];
+        cur->_name = toString("Player %d", i);
+        cur->_class = (PlayerClass)i;
         _characterSprite.setPosition((float)cur->_posX*3*8, (float)cur->_posY*3*8);
+        _characterSprite.setColor(cur->_activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
         _window->draw(_characterSprite);
       }
 
-
-      //_window->draw(text);
+      drawPartyStats();
 
       _window->display();
     }
@@ -342,13 +423,14 @@ private:
   }
 
   Party _party;
-  //Player _player;
   PlayerState _playerState;
   AiState _aiState;
 
   StateBase *_curState;
 
   Level *_level;
+
+  sf::Font _font;
 
   sf::Texture _environmentTexture;
   sf::Texture _characterTexture;
