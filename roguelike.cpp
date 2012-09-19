@@ -65,8 +65,16 @@ string playerModeToString(PlayerMode pm) {
   }
 }
 
+struct Pos {
+  Pos() : row(~0), col(~0) {}
+  Pos(int r, int c) : row(r), col(c) {}
+  friend Pos operator+(const Pos &a, const Pos &b) { return Pos(a.row + b.row, a.col + b.col); }
+  friend Pos operator-(const Pos &a, const Pos &b) { return Pos(a.row - b.row, a.col - b.col); }
+  int row, col;
+};
+
 struct Player {
-  Player() : _posX(0), _posY(0), _mode(PlayerMode::kInteractive), _hasMoved(false), _activePlayer(false) {}
+  Player() : _mode(PlayerMode::kInteractive), _hasMoved(false), _activePlayer(false) {}
 
   string _name;
 
@@ -74,10 +82,11 @@ struct Player {
   int _strength;
   int _dexterity;
   int _vitality;
+  int _armor;
 
   int _health;
   int _mana;
-  int _posX, _posY;
+  Pos _pos;
 
   bool _activePlayer;
   bool _hasMoved;
@@ -87,6 +96,11 @@ struct Player {
   PlayerClass _class;
 };
 
+struct Monster {
+  sf::Sprite _sprite;
+  Pos _pos;
+};
+
 struct Party {
   Party() : _curPlayer(0) {}
   int _curPlayer;
@@ -94,36 +108,46 @@ struct Party {
 };
 
 struct Tile {
-  Tile() : _visited(0) {}
+  Tile() : _visited(0), _containsPlayer(false) {}
   TileType _type;
+  bool _containsPlayer;
   sf::Sprite _sprite;
   int _visited;
 };
 
-struct Level {
-
+class Level {
+  friend class LevelFactory;
+public:
   Tile &get(int row, int col) { return _tiles[row*_width+col]; }
+  Tile &get(const Pos &pos) { return _tiles[pos.row*_width+pos.col]; }
 
-  bool movable(int row, int col) {
-    return false;
+  void draw(sf::RenderWindow *window) {
+    for (auto &tile: _tiles)
+      window->draw(tile._sprite);
+
+    for (auto &monster : _monsters)
+      window->draw(monster._sprite);
   }
 
-  bool validPosition(int row, int col) {
-    bool inside = row >= 0 && row < _height && col >= 0 && col < _width;
-    if (!inside)
-      return false;
-
-    auto &tile = get(row, col);
-    return tile._type == TileType::kFloor;
+  bool movable(const Pos &pos) {
+    auto &tile = get(pos);
+    return tile._type != TileType::kWall && !tile._containsPlayer;
   }
 
-  void visitTile(int row, int col) {
+  bool validPosition(const Pos &pos) {
+    bool inside = pos.row >= 0 && pos.row < _height && pos.col >= 0 && pos.col < _width;
+    return inside && movable(pos);
+  }
+
+  void visitTile(const Pos &pos) {
+
+    get(pos)._containsPlayer = true;
 
     for (int i = -1; i <= 1; ++i) {
       for (int j = -1; j <= 1; ++j) {
-        int r = row + i;
-        int c = col + j;
-        if (!validPosition(r, c))
+        int r = pos.row + i;
+        int c = pos.col + j;
+        if (!validPosition(Pos(r,c)))
           continue;
         int dy = i < 0 ? -i : i;
         int dx = j < 0 ? -j : j;
@@ -136,11 +160,75 @@ struct Level {
     }
 
   }
-
+private:
   vector<Tile> _tiles;
+  vector<Monster> _monsters;
   int _width;
   int _height;
 };
+
+class PlayerFactory {
+public:
+  static bool create();
+  static void close();
+  static PlayerFactory &instance();
+
+  Player *createPlayer(PlayerClass pc);
+private:
+  static PlayerFactory *_instance;  
+};
+
+PlayerFactory *PlayerFactory::_instance;
+
+Player *PlayerFactory::createPlayer(PlayerClass pc) {
+  Player *player = new Player();
+  player->_class = pc;
+  player->_vitality = (int)gaussianRand(10, 2);
+
+  switch (pc) {
+
+    case PlayerClass::kWizard: 
+      player->_intelligence = (int)gaussianRand(20, 3); 
+      player->_strength = (int)gaussianRand(10, 2); 
+      player->_dexterity = (int)gaussianRand(10, 2); 
+      break;
+  
+    case PlayerClass::kRogue: 
+      player->_intelligence = (int)gaussianRand(10, 2); 
+      player->_strength = (int)gaussianRand(10, 2); 
+      player->_dexterity = (int)gaussianRand(20, 3); 
+      break;
+
+    case PlayerClass::kWarrior: 
+      player->_intelligence = (int)gaussianRand(10, 2); 
+      player->_strength = (int)gaussianRand(20, 3); 
+      player->_dexterity = (int)gaussianRand(10, 2); 
+      break;
+
+    case PlayerClass::kCleric:
+      player->_intelligence = (int)gaussianRand(20, 3); 
+      player->_strength = (int)gaussianRand(10, 2); 
+      player->_dexterity = (int)gaussianRand(10, 2); 
+      break;
+  }
+  return player;
+}
+
+bool PlayerFactory::create() {
+  assert(!_instance);
+  _instance = new PlayerFactory();
+  return true;
+}
+
+PlayerFactory &PlayerFactory::instance() {
+  assert(_instance);
+  return *_instance;
+}
+
+void PlayerFactory::close() {
+  assert(_instance);
+  delete exch_null(_instance);
+}
 
 class LevelFactory {
 
@@ -149,12 +237,12 @@ public:
   static void close();
   static LevelFactory &instance();
 
-  Level *makeLevel(int width, int height, const sf::Texture &texture);
+  Level *createLevel(int width, int height, const sf::Texture &envTexture, const sf::Texture &charTexture);
 private:
   static LevelFactory *_instance;
 };
 
-Level *LevelFactory::makeLevel(int width, int height, const sf::Texture &texture) {
+Level *LevelFactory::createLevel(int width, int height, const sf::Texture &envTexture, const sf::Texture &charTexture) {
   Level *level = new Level;
 
   level->_width = width;
@@ -171,7 +259,7 @@ Level *LevelFactory::makeLevel(int width, int height, const sf::Texture &texture
       sprite.setScale(3.0f, 3.0f);
       sprite.setColor(sf::Color(0,0,0,0));
       sprite.setTextureRect(sf::IntRect((int)Tiles::floorC*8, 0, 8, 8));
-      sprite.setTexture(texture);
+      sprite.setTexture(envTexture);
     }
   }
 
@@ -184,7 +272,7 @@ Level *LevelFactory::makeLevel(int width, int height, const sf::Texture &texture
       sprite.setScale(3.0f, 3.0f);
       sprite.setColor(sf::Color(255,255,255));
       sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
-      sprite.setTexture(texture);
+      sprite.setTexture(envTexture);
     }
   }
 
@@ -197,10 +285,24 @@ Level *LevelFactory::makeLevel(int width, int height, const sf::Texture &texture
       sprite.setScale(3.0f, 3.0f);
       sprite.setColor(sf::Color(255,255,255));
       sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
-      sprite.setTexture(texture);
+      sprite.setTexture(envTexture);
     }
   }
 
+  for (int i = 0; i < 10; ++i) {
+    Monster monster;
+    int r = 1 + (rand() % (height-2));
+    int c = 1 + (rand() % (width-2));
+    monster._pos = Pos(r, c);
+    auto &sprite = monster._sprite;
+    sprite.setPosition((float)r*3*8, (float)c*3*8);
+    sprite.setScale(3.0f, 3.0f);
+    sprite.setColor(sf::Color(255,255,255));
+    //sprite.setColor(sf::Color(0,0,0));
+    sprite.setTextureRect(sf::IntRect((rand() % 10)*8, (rand() % 10)*8, 8, 8));
+    sprite.setTexture(charTexture);
+    level->_monsters.push_back(monster);
+  }
 
   return level;
 }
@@ -259,40 +361,42 @@ struct PlayerState : public StateBase {
     bool newPos = false;
     bool skipPlayer = false;
 
+    Pos oldPos = player->_pos;
+
     if (event.type == sf::Event::KeyReleased) {
       auto code = event.key.code;
-      if (code == sf::Keyboard::Left) {
-        if (_level->validPosition(player->_posY, player->_posX-1)) {
-          newPos = true;
-          player->_posX--;
-        }
+      struct {
+        sf::Keyboard::Key code;
+        Pos ofs;
+      } moves[] = {
+        { sf::Keyboard::Left,   Pos(0,-1) },
+        { sf::Keyboard::Right,  Pos(0,+1) },
+        { sf::Keyboard::Up,     Pos(-1,0) },
+        { sf::Keyboard::Down,   Pos(+1,0) },
+      };
 
-      } else if (code == sf::Keyboard::Right) {
-        if (_level->validPosition(player->_posY, player->_posX+1)) {
-          newPos = true;
-          player->_posX++;
+      for (int i = 0; i < ELEMS_IN_ARRAY(moves); ++i) {
+        auto &cur = moves[i];
+        if (code == cur.code) {
+          if (_level->validPosition(player->_pos + cur.ofs)) {
+            player->_pos = player->_pos + cur.ofs;
+            newPos = true;
+            break;
+          }
         }
+      }
 
-      } else if (code == sf::Keyboard::Up) {
-        if (_level->validPosition(player->_posY-1, player->_posX)) {
-          newPos = true;
-          player->_posY--;
+      if (!newPos) {
+        if (code == sf::Keyboard::Space) {
+          skipPlayer = true;
         }
-
-      } else if (code == sf::Keyboard::Down) {
-        if (_level->validPosition(player->_posY+1, player->_posX)) {
-          newPos = true;
-          player->_posY++;
-        }
-
-      } else if (code == sf::Keyboard::Space) {
-        skipPlayer = true;
       }
     }
     
     if (newPos) {
       player->_hasMoved = true;
-      _level->visitTile(player->_posY, player->_posX);
+      _level->get(oldPos)._containsPlayer = false;
+      _level->visitTile(player->_pos);
       player->_activePlayer = false;
     }
 
@@ -342,6 +446,9 @@ class App {
 public:
 
   bool close() {
+    LevelFactory::close();
+    PlayerFactory::close();
+
     delete exch_null(_level);
     delete exch_null(_window);
     return true;
@@ -362,18 +469,19 @@ public:
       return EXIT_FAILURE;
 
     LevelFactory::create();
-    _level = LevelFactory::instance().makeLevel(20, 20, _environmentTexture);
+    PlayerFactory::create();
+
+    _level = LevelFactory::instance().createLevel(20, 20, _environmentTexture, _characterTexture);
 
     _curState = &_playerState;
 
     for (int i = 0; i < 4; ++i) {
-      auto *p = new Player();
+      auto *p = PlayerFactory::instance().createPlayer((PlayerClass)i);
       p->_sprite.setTexture(_characterTexture);
       p->_sprite.setScale(3, 3);
       p->_sprite.setTextureRect(sf::IntRect(0, 0, 8, 8));
-
-      p->_posX = 1 + i / 2;
-      p->_posY = 1 + i % 2;
+      p->_pos = Pos(1 + (i+1) % 2, 1 + (i+1)/2);
+      _level->visitTile(p->_pos);
       _party._players.push_back(p);
     }
     _party._players[_party._curPlayer]->_activePlayer = true;
@@ -452,14 +560,12 @@ public:
 
       _window->clear();
 
-      for (size_t i = 0; i < _level->_tiles.size(); ++i)
-        _window->draw(_level->_tiles[i]._sprite);
+      _level->draw(_window);
 
       for (size_t i = 0; i < _party._players.size(); ++i) {
         Player *cur = _party._players[i];
         cur->_name = toString("Player %d", i);
-        cur->_class = (PlayerClass)i;
-        cur->_sprite.setPosition((float)cur->_posX*3*8, (float)cur->_posY*3*8);
+        cur->_sprite.setPosition((float)cur->_pos.col*3*8, (float)cur->_pos.row*3*8);
         cur->_sprite.setColor(cur->_activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
         _window->draw(cur->_sprite);
       }
@@ -524,6 +630,8 @@ private:
 
 
 int main() {
+  srand(1337);
+
   App app;
   if (!app.init())
     return 1;

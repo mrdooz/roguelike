@@ -23,3 +23,23 @@ string toString(char const * const format, ... )
 
   return string(buf);
 }
+
+float lerp(float a, float b, float v) {
+  return (1-v) * a + v * b;
+}
+
+float randf(float a, float b) {
+  float t = (float)rand() / RAND_MAX;
+  return lerp(a, b, t);
+}
+
+float gaussianRand(float mean, float variance) {
+  // Generate a gaussian from the sum of uniformly distributed random numbers
+  // (Central Limit Theorem)
+  double sum = 0;
+  const int numIters = 10;
+  for (int i = 0; i < numIters; ++i) {
+    sum += randf(-variance, variance);
+  }
+  return (float)(mean + sum / numIters);
+}
