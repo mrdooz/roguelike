@@ -1,10 +1,5 @@
-// stdafx.h : include file for standard system include files,
-// or project specific include files that are used frequently, but
-// are changed infrequently
-//
-
-#ifndef _STDAFX_H_
-#define _STDAFX_H_
+#ifndef _PRECOMPILED_HPP_
+#define _PRECOMPILED_HPP_
 
 #include <stdio.h>
 
@@ -15,6 +10,10 @@
   #include <direct.h>
   #include <io.h>
 #endif
+
+#include <assert.h>
+#include <vector>
+#include <string>
 
 #include <sys/stat.h>
 #include <string>

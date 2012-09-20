@@ -10,6 +10,20 @@ T exch_null(T &t)
   return tmp;
 }
 
+template<class T> 
+void seq_delete(T *seq) {
+  for (auto it = begin(*seq); it != end(*seq); ++it)
+    delete *it;
+  seq->clear();
+}
+
+template<class T> 
+void assoc_delete(T* t) {
+  for (T::iterator it = t->begin(); it != t->end(); ++it)
+    delete it->second;
+  t->clear();
+}
+
 bool fileExists(const char *filename);
 
 inline uint32 setBit(uint32 value, int bit_num) {

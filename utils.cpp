@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "precompiled.hpp"
 #include "utils.hpp"
 
 using namespace std;
