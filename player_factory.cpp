@@ -7,7 +7,6 @@ PlayerFactory *PlayerFactory::_instance;
 Player *PlayerFactory::createPlayer(PlayerClass pc) {
   Player *player = new Player();
   player->_class = pc;
-  player->_vitality = (int)gaussianRand(10, 2);
 
   switch (pc) {
 
@@ -15,24 +14,28 @@ Player *PlayerFactory::createPlayer(PlayerClass pc) {
     player->_intelligence = (int)gaussianRand(20, 3); 
     player->_strength = (int)gaussianRand(10, 2); 
     player->_dexterity = (int)gaussianRand(10, 2); 
+    player->_vitality = (int)gaussianRand(10, 2);
     break;
 
   case PlayerClass::kRogue: 
     player->_intelligence = (int)gaussianRand(10, 2); 
     player->_strength = (int)gaussianRand(10, 2); 
     player->_dexterity = (int)gaussianRand(20, 3); 
+    player->_vitality = (int)gaussianRand(15, 2);
     break;
 
   case PlayerClass::kWarrior: 
     player->_intelligence = (int)gaussianRand(10, 2); 
     player->_strength = (int)gaussianRand(20, 3); 
     player->_dexterity = (int)gaussianRand(10, 2); 
+    player->_vitality = (int)gaussianRand(20, 3);
     break;
 
   case PlayerClass::kCleric:
     player->_intelligence = (int)gaussianRand(20, 3); 
     player->_strength = (int)gaussianRand(10, 2); 
     player->_dexterity = (int)gaussianRand(10, 2); 
+    player->_vitality = (int)gaussianRand(10, 2);
     break;
   }
   return player;

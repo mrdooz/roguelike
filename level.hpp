@@ -52,13 +52,14 @@ public:
   bool inside(int row, int col) const;
   bool inside(const Pos &pos) const { return inside(pos.row, pos.col); }
 
+  Tile &get(int row, int col);
+  Tile &get(const Pos &pos);
+  sf::Sprite &getEnvSprite(int row, int col);
+
 private:
 
   void updateFog(const Pos &pos);
 
-  Tile &get(int row, int col);
-  Tile &get(const Pos &pos);
-  sf::Sprite &getEnvSprite(int row, int col);
 
   sf::IntRect tileTypeToRect(TileType type);
 

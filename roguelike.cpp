@@ -134,7 +134,7 @@ public:
     LevelFactory::create();
     PlayerFactory::create();
 
-    _level = LevelFactory::instance().createLevel(100, 100, _environmentTexture, _characterTexture);
+    _level = LevelFactory::instance().createLevel(80, 50, _environmentTexture, _characterTexture);
 
     _curState = &_playerState;
 

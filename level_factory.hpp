@@ -12,6 +12,9 @@ public:
 
   Level *createLevel(int width, int height, const sf::Texture &envTexture, const sf::Texture &charTexture);
 private:
+
+  //void subdivide(Level *level, int top, int left, int width, int height, int depth);
+
   static LevelFactory *_instance;
 };
 
