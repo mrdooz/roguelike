@@ -29,14 +29,19 @@ typedef int64_t int64;
 typedef uint64_t uint64;
 
 
-#ifdef _DEBUG
-#pragma comment(lib, "sfml-graphics-s-d.lib")
-#pragma comment(lib, "sfml-window-s-d.lib")
-#pragma comment(lib, "sfml-system-s-d.lib")
+#ifdef _WIN32
+  #define OVERRIDE override
+  #ifdef _DEBUG
+    #pragma comment(lib, "sfml-graphics-s-d.lib")
+    #pragma comment(lib, "sfml-window-s-d.lib")
+    #pragma comment(lib, "sfml-system-s-d.lib")
+  #else
+    #pragma comment(lib, "sfml-graphics-s.lib")
+    #pragma comment(lib, "sfml-window-s.lib")
+    #pragma comment(lib, "sfml-system-s.lib")
+  #endif
 #else
-#pragma comment(lib, "sfml-graphics-s.lib")
-#pragma comment(lib, "sfml-window-s.lib")
-#pragma comment(lib, "sfml-system-s.lib")
+  #define OVERRIDE
 #endif
 
 #endif

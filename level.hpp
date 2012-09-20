@@ -4,6 +4,7 @@
 #include "game.hpp"
 
 struct Monster;
+struct Player;
 
 enum class Tiles {
   wallH,
@@ -31,31 +32,44 @@ enum class TileType {
 };
 
 struct Tile {
-  Tile() : _visited(0), _containsPlayer(false) {}
+  Tile() : _visited(0), _player(nullptr) {}
   TileType _type;
-  bool _containsPlayer;
-  sf::Sprite _sprite;
+  Player *_player;
   int _visited;
 };
 
 class Level {
   friend class LevelFactory;
 public:
+  Level(int width, int height, const sf::Texture &envTexture, const sf::Texture &charTexture);
   ~Level();
 
-  Tile &get(int row, int col) { return _tiles[row*_width+col]; }
-  Tile &get(const Pos &pos) { return _tiles[pos.row*_width+pos.col]; }
+  void draw(sf::RenderWindow *window, const Pos &topLeft, int rows, int cols);
+  bool validDestination(const Pos &pos);
+  void movePlayer(Player *p, const Pos &oldPos, const Pos &newPos);
+  void initPlayer(Player *p, const Pos &pos);
 
-  void draw(sf::RenderWindow *window);
-  bool movable(const Pos &pos);
-  bool validPosition(const Pos &pos);
-  void visitTile(const Pos &pos);
+  bool inside(int row, int col) const;
+  bool inside(const Pos &pos) const { return inside(pos.row, pos.col); }
 
 private:
+
+  void updateFog(const Pos &pos);
+
+  Tile &get(int row, int col);
+  Tile &get(const Pos &pos);
+  sf::Sprite &getEnvSprite(int row, int col);
+
+  sf::IntRect tileTypeToRect(TileType type);
+
+  std::vector<sf::Sprite> _tileSprites;
   std::vector<Tile> _tiles;
   std::vector<Monster *> _monsters;
   int _width;
   int _height;
+
+  sf::Texture _envTexture;
+  sf::Texture _charTexture;
 };
 
 

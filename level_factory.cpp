@@ -4,12 +4,26 @@
 #include "utils.hpp"
 
 Level *LevelFactory::createLevel(int width, int height, const sf::Texture &envTexture, const sf::Texture &charTexture) {
-  Level *level = new Level;
+  Level *level = new Level(width, height, envTexture, charTexture);
 
-  level->_width = width;
-  level->_height = height;
+  // fill floor
+  for (int i = 0; i < height; ++i) {
+    for (int j = 0; j < width; ++j) {
+      level->get(i, j)._type = TileType::kFloor;
+    }
+  }
 
-  level->_tiles.resize(width*height);
+  // outer wall
+  for (int i = 0; i < width; ++i) {
+    level->get(0, i)._type = TileType::kWall;
+    level->get(height-1, i)._type = TileType::kWall;
+  }
+
+  for (int i = 0; i < height; ++i) {
+    level->get(i, 0)._type = TileType::kWall;
+    level->get(i, width-1)._type = TileType::kWall;
+  }
+/*
 
   for (int i = 1; i < height-1; ++i) {
     for (int j = 1; j < width-1; ++j) {
@@ -64,7 +78,7 @@ Level *LevelFactory::createLevel(int width, int height, const sf::Texture &envTe
     sprite.setTexture(charTexture);
     level->_monsters.push_back(monster);
   }
-
+*/
   return level;
 }
 
