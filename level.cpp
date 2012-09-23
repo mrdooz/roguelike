@@ -54,7 +54,20 @@ void Level::draw(sf::RenderWindow *window, const Pos &topLeft, int rows, int col
         continue;
       Tile &tile = get(r, c);
       sf::Sprite &sprite = _tileSprites[idx++];
-      sprite.setTextureRect(tileTypeToRect(tile._type));
+
+      if (tile._type == TileType::kWall) {
+        if (inside(r+1, c) && get(r+1, c)._type != TileType::kWall) {
+          sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
+        } else {
+          sprite.setTextureRect(sf::IntRect((int)Tiles::wallV*8, 0, 8, 8));
+        }
+      } else if (tile._type == TileType::kFloor) {
+        sprite.setTextureRect(sf::IntRect((int)Tiles::floorC*8, 0, 8, 8));
+
+      } else {
+        assert(false);
+      }
+
       sprite.setColor(sf::Color(tile._visited, tile._visited, tile._visited));
       window->draw(sprite);
     }
@@ -112,14 +125,5 @@ void Level::updateFog(const Pos &pos) {
       tile._visited = std::min(255, tile._visited + 64 * v);
     }
   }
-}
-
-sf::IntRect Level::tileTypeToRect(TileType type) {
-  switch (type) {
-    case TileType::kFloor: return sf::IntRect((int)Tiles::floorC*8, 0, 8, 8);
-    case TileType::kWall: return sf::IntRect((int)Tiles::wallH*8, 0, 8, 8);
-  }
-  assert(false);
-  return sf::IntRect(0,0,0,0);
 }
 

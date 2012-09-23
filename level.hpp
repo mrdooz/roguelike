@@ -60,9 +60,6 @@ private:
 
   void updateFog(const Pos &pos);
 
-
-  sf::IntRect tileTypeToRect(TileType type);
-
   std::vector<sf::Sprite> _tileSprites;
   std::vector<Tile> _tiles;
   std::vector<Monster *> _monsters;

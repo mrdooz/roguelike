@@ -102,51 +102,50 @@ Level *LevelFactory::createLevel(int width, int height, const sf::Texture &envTe
   map<pair<int, int>, Crossover> crossovers;
 
   // Find all the crossovers
-  for (int i = 1; i < width-1; ++i) {
-    int j = 1;
-    while (j < height && roomIds[j*width+i] == 0)
-      ++j;
-    if (j == height)
-      continue;
-    int prev = roomIds[j*width+i];
-    for (int j = 2; j < height-1; ++j) {
-      int cur = roomIds[j*width+i];
-      if (cur != 0 && cur != prev) {
-        int a = min(cur, prev);
-        int b = max(cur, prev);
-        auto &c = crossovers[make_pair(a,b)];
-        c = Crossover(true, j-1, a, b, min(c.start, i), max(c.start, i));
-        prev = cur;
-      }
-    }
-  }
-
   for (int i = 1; i < height-1; ++i) {
-    int j = 1;
-    while (j < width && roomIds[i*width+j] == 0)
-      ++j;
-    if (j == width)
-      continue;
-    int prev = roomIds[i*width+j];
-    for (int j = 2; j < width-1; ++j) {
-      int cur = roomIds[i*width+j];
-      if (cur != 0 && cur != prev) {
-        int a = min(cur, prev);
-        int b = max(cur, prev);
+    for (int j = 1; j < width-1; ++j) {
+      int x0 = roomIds[i*width+j-1];
+      int x1 = roomIds[i*width+j];
+      int x2 = roomIds[i*width+j+1];
+
+      if (x0 != 0 && x1 == 0 && x2 != 0) {
+        int a = min(x0, x2);
+        int b = max(x0, x2);
         auto &c = crossovers[make_pair(a,b)];
-        c = Crossover(false, j-1, a, b, min(c.start, i), max(c.finish, i));
-        prev = cur;
+        c = Crossover(false, j, a, b, min(c.start, i), max(c.finish, i));
+
+      } else {
+        int y0 = roomIds[(i-1)*width+j];
+        int y1 = roomIds[(i)*width+j];
+        int y2 = roomIds[(i+1)*width+j];
+
+        if (y0 != 0 && y1 == 0 && y2 != 0) {
+
+          int a = min(y0, y2);
+          int b = max(y0, y2);
+          auto &c = crossovers[make_pair(a,b)];
+          c = Crossover(true, i, a, b, min(c.start, j), max(c.finish, j));
+        }
       }
     }
   }
 
   for (auto &kv: crossovers) {
     auto &crossover = kv.second;
-    int door = (int)randf(crossover.start, crossover.finish);
-    if (crossover.horiz) {
-      level->get(crossover.pos, door)._type = TileType::kFloor;
-    } else {
-      level->get(door, crossover.pos)._type = TileType::kFloor;
+    int p = crossover.pos;
+    while (true) {
+      int door = (int)randf(crossover.start, crossover.finish);
+      if (crossover.horiz) {
+        if (level->get(p-1, door)._type != TileType::kWall && level->get(p+1, door)._type != TileType::kWall) {
+          level->get(p, door)._type = TileType::kFloor;
+          break;
+        }
+      } else {
+        if (level->get(door, p-1)._type != TileType::kWall && level->get(door, p+1)._type != TileType::kWall) {
+          level->get(door, p)._type = TileType::kFloor;
+          break;
+        }
+      }
     }
   }
 
@@ -172,7 +171,7 @@ Level *LevelFactory::createLevel(int width, int height, const sf::Texture &envTe
   for (int i = 0; i < height; ++i) {
     for (int j = 0; j < width; ++j) {
       int id = roomIds[i*width+j];
-      //fprintf(f, "%c", level->get(i,j)._type == TileType::kWall ? 'X' : ('A' + roomIds[i*width+j]));
+      //fprintf(f, "%c", level->get(i,j)._type == TileType::kWall ? 'X' : ('a' + roomIds[i*width+j]));
       fprintf(f, "%c", level->get(i,j)._type == TileType::kWall ? 'X' : ' ');
       //fprintf(f, "%c", id == 0 ? 'X' : 'A' + id);// level->get(i,j)._type == TileType::kWall ? 'X' : ('A' + roomIds[i*width+j]));
     }
