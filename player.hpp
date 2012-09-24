@@ -17,11 +17,20 @@ enum class PlayerMode : uint8 {
   kInteractive,
 };
 
+enum class PlayerAction {
+  kUnknown,
+  kMove,
+  kMeleeAttack,
+  kRangedAttack,
+  kSpellAttack,
+  kHeal,
+};
+
 std::string playerClassToString(PlayerClass pc);
 
 class Player {
 public:
-  Player() : _mode(PlayerMode::kInteractive), _hasMoved(false) {}
+  Player() : _mode(PlayerMode::kInteractive), _action(PlayerAction::kUnknown), _hasMoved(false) {}
 
   std::string _name;
 
@@ -31,8 +40,10 @@ public:
   int _vitality;
   int _armor;
 
-  int _health;
-  int _mana;
+  int _curHealth;
+  int _maxHeath;
+  int _curMana;
+  int _maxMana;
   Pos _pos;
 
   int _level;
@@ -43,6 +54,7 @@ public:
   sf::Sprite _sprite;
   PlayerMode _mode;
   PlayerClass _class;
+  PlayerAction _action;
 };
 
 #endif

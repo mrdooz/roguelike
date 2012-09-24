@@ -1,7 +1,7 @@
 #ifndef _GAME_HPP_
 #define _GAME_HPP_
 
-#include "gamestate.hpp"
+#include "game_state.hpp"
 
 class Party;
 class Renderer;
@@ -10,12 +10,18 @@ class Game {
 
 public:
 
-  bool close();
-  bool init();
+  static Game &instance();
+  static bool create();
+  static bool close();
+
   void update(const sf::Event &event);
   int run();
 
+  void addLogMessage(const char *fmt, ...);
+
 private:
+  ~Game();
+  bool init();
 
   void findAppRoot();
 
@@ -30,6 +36,10 @@ private:
   Renderer *_renderer;
 
   std::string _appRoot;
+
+  static Game *_instance;
 };
+
+#define GAME Game::instance()
 
 #endif

@@ -45,6 +45,28 @@ void Level::initPlayer(Player *p, const Pos &pos) {
   updateFog(pos);
 }
 
+void Level::initMonsters() {
+  for (int i = 0; i < 100; ++i) {
+    Monster *monster = new Monster();
+    int r, c;
+    while (true) {
+      r = 1 + (rand() % (_height-2));
+      c = 1 + (rand() % (_width-2));
+      auto &tile = get(r, c);
+      if (tile._type == TileType::kFloor && !tile._monster && !tile._player) {
+        tile._monster = monster;
+        break;
+      }
+    }
+    monster->_pos = Pos(r, c);
+    auto &sprite = monster->_sprite;
+    sprite.setScale(3.0f, 3.0f);
+    sprite.setColor(sf::Color(255,255,255));
+    monster->_type = (MonsterType)(rand() % (int)MonsterType::cNumMonsters);
+    _monsters.push_back(monster);
+  }
+}
+
 void Level::movePlayer(Player *p, const Pos &oldPos, const Pos &newPos) {
 
   assert(inside(oldPos) && inside(newPos));

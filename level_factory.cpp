@@ -65,9 +65,9 @@ Room *subdivide(Level *level, int *roomIds, int pitch, int &curRoom, int top, in
   return cur;
 }
 
-struct Crossover {
-  Crossover() : start(INT_MAX), finish(INT_MIN) {}
-  Crossover(bool horiz, int pos, int from, int to, int start, int finish) : horiz(horiz), pos(pos), from(from), to(to), start(start), finish(finish) {}
+struct Wall {
+  Wall() : start(INT_MAX), finish(INT_MIN) {}
+  Wall(bool horiz, int pos, int from, int to, int start, int finish) : horiz(horiz), pos(pos), from(from), to(to), start(start), finish(finish) {}
   bool horiz;
   int pos;  // row if horizontal, col if vertical
   int from, to;
@@ -99,9 +99,9 @@ Level *LevelFactory::createLevel(int width, int height) {
   vector<int> roomIds(width*height);
   Room *root = subdivide(level, roomIds.data(), width, roomCount, 0, 0, width, height, 0, nullptr);
 
-  map<pair<int, int>, Crossover> crossovers;
+  map<pair<int, int>, Wall> walls;
 
-  // Find all the crossovers
+  // Find all the walls
   for (int i = 1; i < height-1; ++i) {
     for (int j = 1; j < width-1; ++j) {
       int x0 = roomIds[i*width+j-1];
@@ -111,8 +111,8 @@ Level *LevelFactory::createLevel(int width, int height) {
       if (x0 != 0 && x1 == 0 && x2 != 0) {
         int a = min(x0, x2);
         int b = max(x0, x2);
-        auto &c = crossovers[make_pair(a,b)];
-        c = Crossover(false, j, a, b, min(c.start, i), max(c.finish, i));
+        auto &c = walls[make_pair(a,b)];
+        c = Wall(false, j, a, b, min(c.start, i), max(c.finish, i));
 
       } else {
         int y0 = roomIds[(i-1)*width+j];
@@ -123,19 +123,19 @@ Level *LevelFactory::createLevel(int width, int height) {
 
           int a = min(y0, y2);
           int b = max(y0, y2);
-          auto &c = crossovers[make_pair(a,b)];
-          c = Crossover(true, i, a, b, min(c.start, j), max(c.finish, j));
+          auto &c = walls[make_pair(a,b)];
+          c = Wall(true, i, a, b, min(c.start, j), max(c.finish, j));
         }
       }
     }
   }
 
-  for (auto &kv: crossovers) {
-    auto &crossover = kv.second;
-    int p = crossover.pos;
+  for (auto &kv: walls) {
+    auto &Wall = kv.second;
+    int p = Wall.pos;
     while (true) {
-      int door = (int)randf(crossover.start, crossover.finish);
-      if (crossover.horiz) {
+      int door = (int)randf(Wall.start, Wall.finish);
+      if (Wall.horiz) {
         if (level->get(p-1, door)._type != TileType::kWall && level->get(p+1, door)._type != TileType::kWall) {
           level->get(p, door)._type = TileType::kFloor;
           break;
@@ -150,22 +150,6 @@ Level *LevelFactory::createLevel(int width, int height) {
   }
 
 
-/*
-  for (int i = 0; i < 10; ++i) {
-    Monster *monster = new Monster();
-    int r = 1 + (rand() % (height-2));
-    int c = 1 + (rand() % (width-2));
-    monster->_pos = Pos(r, c);
-    auto &sprite = monster->_sprite;
-    sprite.setPosition((float)r*3*8, (float)c*3*8);
-    sprite.setScale(3.0f, 3.0f);
-    sprite.setColor(sf::Color(255,255,255));
-    //sprite.setColor(sf::Color(0,0,0));
-    sprite.setTextureRect(sf::IntRect((rand() % 10)*8, (rand() % 10)*8, 8, 8));
-    sprite.setTexture(charTexture);
-    level->_monsters.push_back(monster);
-  }
-*/
 
   FILE *f = fopen("d:\\temp\\level1.txt", "wt");
   for (int i = 0; i < height; ++i) {

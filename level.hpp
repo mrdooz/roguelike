@@ -6,7 +6,6 @@
 class Monster;
 class Player;
 
-
 enum class TileType {
   kFloor,
   kWall,
@@ -15,9 +14,10 @@ enum class TileType {
 };
 
 struct Tile {
-  Tile() : _visited(0), _player(nullptr) {}
+  Tile() : _visited(0), _player(nullptr), _monster(nullptr) {}
   TileType _type;
   Player *_player;
+  Monster *_monster;
   int _visited;
 };
 
@@ -31,6 +31,8 @@ public:
   bool validDestination(const Pos &pos);
   void movePlayer(Player *p, const Pos &oldPos, const Pos &newPos);
   void initPlayer(Player *p, const Pos &pos);
+
+  void initMonsters();
 
   bool inside(int row, int col) const;
   bool inside(const Pos &pos) const { return inside(pos.row, pos.col); }

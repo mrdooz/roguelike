@@ -11,7 +11,9 @@
 
 using namespace std;
 
-bool Game::close() {
+Game *Game::_instance;
+
+Game::~Game() {
   LevelFactory::close();
   PlayerFactory::close();
 
@@ -19,7 +21,23 @@ bool Game::close() {
   delete exch_null(_level);
   delete exch_null(_renderer);
   delete exch_null(_window);
+}
+
+bool Game::close() {
+  assert(_instance);
+  delete exch_null(_instance);
   return true;
+}
+
+bool Game::create() {
+  assert(!_instance);
+  _instance = new Game();
+  return _instance->init();
+}
+
+Game &Game::instance() {
+  assert(_instance);
+  return *_instance;
 }
 
 bool Game::init() {
@@ -43,6 +61,7 @@ bool Game::init() {
     _level->initPlayer(p, p->_pos);
     _party->_players.push_back(p);
   }
+  _level->initMonsters();
 
   _playerState._party = _party;
   _playerState._level = _level;
@@ -81,9 +100,7 @@ int Game::run()
 
     _window->clear();
 
-    _renderer->drawLevel();
-    _renderer->drawParty();
-    _renderer->drawPartyStats();
+    _renderer->drawWorld();
 
     _window->display();
   }
@@ -119,4 +136,18 @@ void Game::findAppRoot()
   }
   _appRoot = startingDir;
 #endif
+}
+
+void Game::addLogMessage(const char *fmt, ...) {
+
+  va_list arg;
+  va_start(arg, fmt);
+
+  const int len = _vscprintf(fmt, arg) + 1;
+
+  char* buf = (char*)_alloca(len);
+  vsprintf_s(buf, len, fmt, arg);
+  va_end(arg);
+
+  OutputDebugStringA(buf);
 }

@@ -1,6 +1,8 @@
 #ifndef _RENDERER_HPP_
 #define _RENDERER_HPP_
 
+#include "types.hpp"
+
 class Level;
 class Party;
 
@@ -9,12 +11,15 @@ public:
   Renderer(sf::RenderWindow *window);
 
   bool init(Level *level, Party *party);
+  void drawWorld();
+private:
+
   void drawParty();
   void drawPartyStats();
   void drawLevel();
-  void onResize(int width, int height);
+  void drawMonsters();
 
-private:
+  void getVisibleArea(Pos *topLeft, int *rows, int *cols);
 
   int _partyStatsWidth;
   sf::RenderWindow *_window;

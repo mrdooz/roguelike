@@ -5,13 +5,12 @@
 int main() {
   srand(1337);
 
-  Game game;
-  if (!game.init())
+  if (!Game::create())
     return 1;
 
-  int res = game.run();
+  int res = GAME.run();
 
-  game.close();
+  GAME.close();
 
   if (res) {
 #ifdef _WIN32
