@@ -11,10 +11,11 @@ Player *PlayerFactory::createPlayer(PlayerClass pc) {
   switch (pc) {
 
   case PlayerClass::kWizard: 
-    player->_intelligence = (int)gaussianRand(20, 3); 
-    player->_strength = (int)gaussianRand(10, 2); 
-    player->_dexterity = (int)gaussianRand(10, 2); 
+    player->_intelligence = (int)gaussianRand(20, 3);
+    player->_strength = (int)gaussianRand(10, 2);
+    player->_dexterity = (int)gaussianRand(10, 2);
     player->_vitality = (int)gaussianRand(10, 2);
+    player->_sprite.setTextureRect(sf::IntRect(0, 2*8, 8, 8));
     break;
 
   case PlayerClass::kRogue: 
@@ -22,6 +23,7 @@ Player *PlayerFactory::createPlayer(PlayerClass pc) {
     player->_strength = (int)gaussianRand(10, 2); 
     player->_dexterity = (int)gaussianRand(20, 3); 
     player->_vitality = (int)gaussianRand(15, 2);
+    player->_sprite.setTextureRect(sf::IntRect(3*8, 0, 8, 8));
     break;
 
   case PlayerClass::kWarrior: 
@@ -29,6 +31,7 @@ Player *PlayerFactory::createPlayer(PlayerClass pc) {
     player->_strength = (int)gaussianRand(20, 3); 
     player->_dexterity = (int)gaussianRand(10, 2); 
     player->_vitality = (int)gaussianRand(20, 3);
+    player->_sprite.setTextureRect(sf::IntRect(15*8, 0, 8, 8));
     break;
 
   case PlayerClass::kCleric:
@@ -36,6 +39,7 @@ Player *PlayerFactory::createPlayer(PlayerClass pc) {
     player->_strength = (int)gaussianRand(10, 2); 
     player->_dexterity = (int)gaussianRand(10, 2); 
     player->_vitality = (int)gaussianRand(10, 2);
+    player->_sprite.setTextureRect(sf::IntRect(6*8, 0, 8, 8));
     break;
   }
   return player;

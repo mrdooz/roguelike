@@ -35,20 +35,14 @@ public:
   int _mana;
   Pos _pos;
 
-  //bool _activePlayer;
+  int _level;
+  int _xp;
+
   bool _hasMoved;
 
   sf::Sprite _sprite;
   PlayerMode _mode;
   PlayerClass _class;
 };
-
-class Party {
-public:
-  Party() : _activePlayer(0) {}
-  int _activePlayer;
-  std::vector<Player *> _players;
-};
-
 
 #endif

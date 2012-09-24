@@ -3,6 +3,7 @@
 #include "player.hpp"
 #include "utils.hpp"
 #include "level.hpp"
+#include "party.hpp"
 
 void PlayerState::update(const sf::Event &event) {
 

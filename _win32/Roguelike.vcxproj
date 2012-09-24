@@ -87,9 +87,11 @@
     <ClInclude Include="..\level.hpp" />
     <ClInclude Include="..\level_factory.hpp" />
     <ClInclude Include="..\monster.hpp" />
+    <ClInclude Include="..\party.hpp" />
     <ClInclude Include="..\player.hpp" />
     <ClInclude Include="..\player_factory.hpp" />
     <ClInclude Include="..\precompiled.hpp" />
+    <ClInclude Include="..\renderer.hpp" />
     <ClInclude Include="..\types.hpp" />
     <ClInclude Include="..\utils.hpp" />
   </ItemGroup>
@@ -99,12 +101,14 @@
     <ClCompile Include="..\level.cpp" />
     <ClCompile Include="..\level_factory.cpp" />
     <ClCompile Include="..\monster.cpp" />
+    <ClCompile Include="..\party.cpp" />
     <ClCompile Include="..\player.cpp" />
     <ClCompile Include="..\player_factory.cpp" />
     <ClCompile Include="..\precompiled.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\renderer.cpp" />
     <ClCompile Include="..\roguelike.cpp" />
     <ClCompile Include="..\utils.cpp" />
   </ItemGroup>

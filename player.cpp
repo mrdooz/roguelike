@@ -1,5 +1,6 @@
 #include "precompiled.hpp"
 #include "player.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
@@ -22,3 +23,4 @@ string playerModeToString(PlayerMode pm) {
   default: assert(false); return "";
   }
 }
+

@@ -3,11 +3,9 @@
 #include "monster.hpp"
 #include "utils.hpp"
 
-Level::Level(int width, int height, const sf::Texture &envTexture, const sf::Texture &charTexture)
+Level::Level(int width, int height)
   : _width(width)
   , _height(height)
-  , _envTexture(envTexture)
-  , _charTexture(charTexture)
 {
   _tiles.resize(width*height);
 }
@@ -26,56 +24,6 @@ Tile &Level::get(int row, int col) {
 
 Tile &Level::get(const Pos &pos) { 
   return _tiles[pos.row*_width+pos.col]; 
-}
-
-void Level::draw(sf::RenderWindow *window, const Pos &topLeft, int rows, int cols) {
-
-  // Recreate the sprites if the dimensions change
-  if (_tileSprites.size() != rows * cols) {
-    _tileSprites.resize(rows*cols);
-
-    for (int i = 0; i < rows; ++i) {
-      for (int j = 0; j < cols; ++j) {
-        auto &sprite = _tileSprites[i*cols+j];
-        sprite.setPosition((float)j*24, (float)i*24);
-        sprite.setScale(3.0f, 3.0f);
-        sprite.setTexture(_envTexture);
-      }
-    }
-
-  }
-
-  int idx = 0;
-  for (int i = 0; i < rows; ++i) {
-    for (int j = 0; j < cols; ++j) {
-      int r = topLeft.row + i;
-      int c = topLeft.col + j;
-      if (!inside(r, c))
-        continue;
-      Tile &tile = get(r, c);
-      sf::Sprite &sprite = _tileSprites[idx++];
-
-      if (tile._type == TileType::kWall) {
-        if (inside(r+1, c) && get(r+1, c)._type != TileType::kWall) {
-          sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
-        } else {
-          sprite.setTextureRect(sf::IntRect((int)Tiles::wallV*8, 0, 8, 8));
-        }
-      } else if (tile._type == TileType::kFloor) {
-        sprite.setTextureRect(sf::IntRect((int)Tiles::floorC*8, 0, 8, 8));
-
-      } else {
-        assert(false);
-      }
-
-      sprite.setColor(sf::Color(tile._visited, tile._visited, tile._visited));
-      window->draw(sprite);
-    }
-  }
-
-
-  for (auto &monster : _monsters)
-    window->draw(monster->_sprite);
 }
 
 bool Level::validDestination(const Pos &pos) {

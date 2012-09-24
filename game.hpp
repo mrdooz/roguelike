@@ -4,6 +4,7 @@
 #include "gamestate.hpp"
 
 class Party;
+class Renderer;
 
 class Game {
 
@@ -16,25 +17,19 @@ public:
 
 private:
 
-  void drawPartyStats(int width);
   void findAppRoot();
 
+  Level *_level;
   Party *_party;
+
   PlayerState _playerState;
   AiState _aiState;
-
   StateBase *_curState;
 
-  Level *_level;
-
-  sf::Font _font;
-
-  sf::Texture _environmentTexture;
-  sf::Texture _characterTexture;
   sf::RenderWindow *_window;
+  Renderer *_renderer;
 
   std::string _appRoot;
-
 };
 
 #endif

@@ -74,8 +74,8 @@ struct Crossover {
   int start, finish;
 };
 
-Level *LevelFactory::createLevel(int width, int height, const sf::Texture &envTexture, const sf::Texture &charTexture) {
-  Level *level = new Level(width, height, envTexture, charTexture);
+Level *LevelFactory::createLevel(int width, int height) {
+  Level *level = new Level(width, height);
 
   // fill floor
   for (int i = 0; i < height; ++i) {
