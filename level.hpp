@@ -1,10 +1,10 @@
 #ifndef _LEVEL_HPP_
 #define _LEVEL_HPP_
 
-#include "game.hpp"
+#include "types.hpp"
 
-struct Monster;
-struct Player;
+class Monster;
+class Player;
 
 enum class Tiles {
   wallH,

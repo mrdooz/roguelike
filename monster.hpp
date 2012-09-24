@@ -1,9 +1,10 @@
 #ifndef _MONSTER_HPP_
 #define _MONSTER_HPP_
 
-#include "game.hpp"
+#include "types.hpp"
 
-struct Monster {
+class Monster {
+public:
   sf::Sprite _sprite;
   Pos _pos;
 };

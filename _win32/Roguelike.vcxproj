@@ -83,16 +83,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\game.hpp" />
+    <ClInclude Include="..\gamestate.hpp" />
     <ClInclude Include="..\level.hpp" />
     <ClInclude Include="..\level_factory.hpp" />
     <ClInclude Include="..\monster.hpp" />
     <ClInclude Include="..\player.hpp" />
     <ClInclude Include="..\player_factory.hpp" />
     <ClInclude Include="..\precompiled.hpp" />
+    <ClInclude Include="..\types.hpp" />
     <ClInclude Include="..\utils.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\game.cpp" />
+    <ClCompile Include="..\gamestate.cpp" />
     <ClCompile Include="..\level.cpp" />
     <ClCompile Include="..\level_factory.cpp" />
     <ClCompile Include="..\monster.cpp" />

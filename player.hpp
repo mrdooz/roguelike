@@ -1,7 +1,7 @@
 #ifndef _PLAYER_HPP_
 #define _PLAYER_HPP_
 
-#include "game.hpp"
+#include "types.hpp"
 
 enum class PlayerClass : uint8 {
   kWizard,
@@ -19,8 +19,9 @@ enum class PlayerMode : uint8 {
 
 std::string playerClassToString(PlayerClass pc);
 
-struct Player {
-  Player() : _mode(PlayerMode::kInteractive), _hasMoved(false), _activePlayer(false) {}
+class Player {
+public:
+  Player() : _mode(PlayerMode::kInteractive), _hasMoved(false) {}
 
   std::string _name;
 
@@ -34,7 +35,7 @@ struct Player {
   int _mana;
   Pos _pos;
 
-  bool _activePlayer;
+  //bool _activePlayer;
   bool _hasMoved;
 
   sf::Sprite _sprite;
@@ -42,9 +43,10 @@ struct Player {
   PlayerClass _class;
 };
 
-struct Party {
-  Party() : _curPlayer(0) {}
-  int _curPlayer;
+class Party {
+public:
+  Party() : _activePlayer(0) {}
+  int _activePlayer;
   std::vector<Player *> _players;
 };
 
