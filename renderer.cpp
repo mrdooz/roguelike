@@ -29,7 +29,8 @@ enum class Tiles {
 
 Renderer::Renderer(sf::RenderWindow *window) 
   : _window(window)
-  , _partyStatsWidth(200)
+  , _partyStatsWidth(210)
+  , _zoomLevel(3)
 {
 }
 
@@ -46,10 +47,8 @@ void Renderer::drawLevel() {
   Pos topLeft(_party->getActivePlayer()->_pos);
 
   auto size = _window->getSize();
-  int partyWidth = 200;
-  int zoom = 3;
-  int rows = (size.y) / (zoom*8);
-  int cols = (size.x - partyWidth) / (zoom*8);
+  int rows = (size.y) / (_zoomLevel*8);
+  int cols = (size.x - _partyStatsWidth) / (_zoomLevel*8);
 
   topLeft.row = max(0, topLeft.row - rows/2);
   topLeft.col = max(0, topLeft.col - cols/2);
@@ -102,32 +101,35 @@ void Renderer::drawParty() {
   Pos topLeft(_party->getActivePlayer()->_pos);
 
   auto size = _window->getSize();
-  int partyWidth = 200;
-  int zoom = 3;
-  int cols = (size.x - partyWidth) / (zoom*8);
-  int rows = (size.y) / (zoom*8);
+  int cols = (size.x - _partyStatsWidth) / (_zoomLevel*8);
+  int rows = (size.y) / (_zoomLevel*8);
 
   topLeft.row = max(0, topLeft.row - rows/2);
   topLeft.col = max(0, topLeft.col - cols/2);
 
   auto *activePlayer = _party->_players[_party->_activePlayer];
   for (size_t i = 0; i < _party->_players.size(); ++i) {
-    Player *cur = _party->_players[i];
-    int x = cur->_pos.col - topLeft.col;
-    int y = cur->_pos.row - topLeft.row;
+    Player *player = _party->_players[i];
+    int x = player->_pos.col - topLeft.col;
+    int y = player->_pos.row - topLeft.row;
     if (x < 0 || x >= cols || y < 0 || y >= rows)
       continue;
-    cur->_name = toString("Player %d", i);
-    cur->_sprite.setPosition((float)x*zoom*8, (float)y*zoom*8);
-    cur->_sprite.setColor(cur == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
-    _window->draw(cur->_sprite);
+    player->_name = toString("Player %d", i);
+    player->_sprite.setPosition((float)x*_zoomLevel*8, (float)y*_zoomLevel*8);
+    player->_sprite.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
+    _window->draw(player->_sprite);
+
+    //drawHealthBar(player->_curHealth, player->_maxHeath, Pos(y, x));
   }
 }
 
 void Renderer::drawPartyStats() {
   auto size = _window->getSize();
   float x = (float)(size.x - _partyStatsWidth);
-  float y = 0;
+  float col0 = x;
+  float col1 = x + _partyStatsWidth/2;
+
+  float y = 10;
   sf::Text heading("", _font, 20);
   sf::Text normal("", _font, 10);
 
@@ -140,7 +142,7 @@ void Renderer::drawPartyStats() {
     sf::Vector2f tmpPos = pos;
     pos.x += r.width + 10;
     _window->draw(heading);
-    normal.setString(toString("(%s)", playerClassToString(player->_class).c_str()));
+    normal.setString(toString("(%s, level %d)", playerClassToString(player->_class).c_str(), player->_level));
     pos.y += (r.height - normal.getLocalBounds().height) / 2;
     normal.setPosition(pos);
     _window->draw(normal);
@@ -161,29 +163,56 @@ void Renderer::drawPartyStats() {
     heading.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
     normal.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
 
+    pos.x = col0;
     drawHeading(player);
+    float y = pos.y;
+    drawNormal(toString("HP: %d/%d", player->_curHealth, player->_maxHeath));
+    if (player->_maxMana > 0)
+      drawNormal(toString("MANA: %d/%d", player->_curMana, player->_maxMana));
 
+    pos.x = col1;
+    pos.y = y;
     drawNormal(toString("STR: %d", player->_strength));
     drawNormal(toString("INT: %d", player->_intelligence));
     drawNormal(toString("DEX: %d", player->_dexterity));
     drawNormal(toString("VIT: %d", player->_vitality));
+
+    pos.y += 10;
   }
 }
 
 void Renderer::getVisibleArea(Pos *topLeft, int *rows, int *cols) {
-
+/*
   auto *activePlayer = _party->getActivePlayer();
   Pos topLeft(activePlayer->_pos);
 
   auto size = _window->getSize();
-  int partyWidth = 200;
+  int _partyStatsWidth = 200;
   int zoom = 3;
   float zoomF = (float)zoom;
-  int cols = (size.x - partyWidth) / (zoom*8);
+  int cols = (size.x - _partyStatsWidth) / (zoom*8);
   int rows = (size.y) / (zoom*8);
 
   topLeft.row = max(0, topLeft.row - rows/2);
   topLeft.col = max(0, topLeft.col - cols/2);
+*/
+}
+
+void Renderer::drawHealthBar(int health, int maxHealth, const Pos &pos) {
+
+  float zoomF = (float)_zoomLevel;
+
+  sf::RectangleShape rectangle;
+  // deficit
+  rectangle.setSize(sf::Vector2f(zoomF*6, zoomF));
+  rectangle.setPosition((pos.col*8+1)*zoomF, (pos.row*8+7)*zoomF);
+  rectangle.setFillColor(sf::Color(200, 10, 10));
+  _window->draw(rectangle);
+  // cur health
+  rectangle.setSize(sf::Vector2f((float)health / maxHealth*zoomF*6, zoomF));
+  rectangle.setPosition((pos.col*8+1)*zoomF, (pos.row*8+7)*zoomF);
+  rectangle.setFillColor(sf::Color(10, 200, 10));
+  _window->draw(rectangle);
 
 }
 
@@ -193,10 +222,9 @@ void Renderer::drawMonsters() {
   Pos topLeft(activePlayer->_pos);
 
   auto size = _window->getSize();
-  int partyWidth = 200;
   int zoom = 3;
   float zoomF = (float)zoom;
-  int cols = (size.x - partyWidth) / (zoom*8);
+  int cols = (size.x - _partyStatsWidth) / (zoom*8);
   int rows = (size.y) / (zoom*8);
 
   topLeft.row = max(0, topLeft.row - rows/2);
@@ -213,17 +241,7 @@ void Renderer::drawMonsters() {
     monster->_sprite.setPosition(zoomF*x*8, zoomF*y*8);
     _window->draw(monster->_sprite);
 
-    sf::RectangleShape rectangle;
-    // deficit
-    rectangle.setSize(sf::Vector2f(zoomF*6, zoomF));
-    rectangle.setPosition((x*8+1)*zoomF, (y*8+7)*zoomF);
-    rectangle.setFillColor(sf::Color(200, 10, 10));
-    _window->draw(rectangle);
-    // cur health
-    rectangle.setSize(sf::Vector2f((float)monster->_health/monster->_maxHealth*zoomF*6, zoomF));
-    rectangle.setPosition((x*8+1)*zoomF, (y*8+7)*zoomF);
-    rectangle.setFillColor(sf::Color(10, 200, 10));
-    _window->draw(rectangle);
+    drawHealthBar(monster->_health, monster->_maxHealth, Pos(y, x));
   }
 }
 

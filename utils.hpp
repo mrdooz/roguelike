@@ -43,3 +43,8 @@ std::string toString(char const * const format, ...);
 float lerp(float a, float b, float v);
 float randf(float a, float b);
 float gaussianRand(float mean, float variance);
+
+template <class T>
+bool contains(const T &cont, const typename T::value_type &key) {
+  return cont.find(key) != std::end(cont);
+}

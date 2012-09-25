@@ -21,9 +21,12 @@ private:
 
   void getVisibleArea(Pos *topLeft, int *rows, int *cols);
 
+  void drawHealthBar(int health, int maxHealth, const Pos &pos);
+
   int _partyStatsWidth;
   sf::RenderWindow *_window;
 
+  int _zoomLevel;
   sf::Font _font;
   sf::Texture _environmentTexture;
   sf::Texture _characterTexture;

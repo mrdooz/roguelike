@@ -15,6 +15,7 @@ Player *PlayerFactory::createPlayer(PlayerClass pc) {
       player->_strength = (int)gaussianRand(10, 2);
       player->_dexterity = (int)gaussianRand(10, 2);
       player->_vitality = (int)gaussianRand(10, 2);
+      player->_curMana = player->_maxMana = (int)gaussianRand(20, 2);
       break;
 
     case PlayerClass::kRogue: 
@@ -22,6 +23,7 @@ Player *PlayerFactory::createPlayer(PlayerClass pc) {
       player->_strength = (int)gaussianRand(10, 2); 
       player->_dexterity = (int)gaussianRand(20, 3); 
       player->_vitality = (int)gaussianRand(15, 2);
+      player->_curMana = player->_maxMana = 0;
       break;
 
     case PlayerClass::kWarrior: 
@@ -29,6 +31,7 @@ Player *PlayerFactory::createPlayer(PlayerClass pc) {
       player->_strength = (int)gaussianRand(20, 3); 
       player->_dexterity = (int)gaussianRand(10, 2); 
       player->_vitality = (int)gaussianRand(20, 3);
+      player->_curMana = player->_maxMana = 0;
       break;
 
     case PlayerClass::kCleric:
@@ -36,8 +39,13 @@ Player *PlayerFactory::createPlayer(PlayerClass pc) {
       player->_strength = (int)gaussianRand(10, 2); 
       player->_dexterity = (int)gaussianRand(10, 2); 
       player->_vitality = (int)gaussianRand(10, 2);
+      player->_curMana = player->_maxMana = (int)gaussianRand(20, 2);
       break;
   }
+
+  player->_curHealth = player->_maxHeath = (int)gaussianRand(10, 2);
+  player->_level = 1;
+
   return player;
 }
 

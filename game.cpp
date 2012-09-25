@@ -51,11 +51,9 @@ bool Game::init() {
   _level = LevelFactory::instance().createLevel(80, 50);
   _party = new Party;
 
-  _curState = &_playerState;
 
   for (int i = 0; i < 4; ++i) {
     auto *p = PlayerFactory::instance().createPlayer((PlayerClass)i);
-    //p->_sprite.setTexture(_characterTexture);
     p->_sprite.setScale(3, 3);
     p->_pos = Pos(1 + (i+1) % 2, 1 + (i+1)/2);
     _level->initPlayer(p, p->_pos);
@@ -65,6 +63,12 @@ bool Game::init() {
 
   _playerState._party = _party;
   _playerState._level = _level;
+  _aiState._party = _party;
+  _aiState._level = _level;
+
+  _curState = &_playerState;
+  _curState->enterState();
+
 
   _renderer = new Renderer(_window);
   _renderer->init(_level, _party);
@@ -73,7 +77,18 @@ bool Game::init() {
 }
 
 void Game::update(const sf::Event &event) {
-  _curState->update(event);
+
+  GameState nextState = _curState->update(event);
+
+  if (nextState != _curState->stateId()) {
+    _curState->leaveState();
+    if (nextState == GameState::kAiState) {
+      _curState = &_aiState;
+    } else if (nextState == GameState::kPlayerState) {
+      _curState = &_playerState;
+    }
+    _curState->enterState();
+  }
 }
 
 int Game::run()

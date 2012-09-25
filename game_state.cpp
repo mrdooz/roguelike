@@ -7,6 +7,8 @@
 #include "monster.hpp"
 #include "game.hpp"
 
+using namespace std;
+
 static bool isTwoPhaseAction(PlayerAction action) {
   return action == PlayerAction::kMeleeAttack || action == PlayerAction::kRangedAttack || action == PlayerAction::kSpellAttack;
 }
@@ -40,12 +42,21 @@ Monster *StateBase::monsterAt(const Pos &pos) {
 
 void PlayerState::handleAttack(Player *player, Monster *monster) {
   if (0 == --monster->_health) {
-    _level->get(monster->_pos)._monster = nullptr;
+    _level->monsterKilled(monster);
     GAME.addLogMessage("Player %s killed monster!\n", player->_name.c_str());
   }
 }
 
-void PlayerState::update(const sf::Event &event) {
+void PlayerState::enterState() 
+{
+  for (Player *player : _party->_players) {
+    player->_hasMoved = false;
+    player->_action = PlayerAction::kUnknown;
+  }
+  _party->_activePlayer = 0;
+};
+
+GameState PlayerState::update(const sf::Event &event) {
 
   auto &players = _party->_players;
   Player *player = _party->getActivePlayer();
@@ -112,14 +123,50 @@ void PlayerState::update(const sf::Event &event) {
     }
   }
 
-  if (done) {
-    for (Player *player : players) {
-      player->_hasMoved = false;
-      player->_action = PlayerAction::kUnknown;
-    }
-    _party->_activePlayer = 0;
-  }
-
+  return done ? GameState::kAiState : GameState::kPlayerState;
 }
 
 
+GameState AiState::update(const sf::Event &event) {
+
+  auto &monsters = _level->monsters();
+  size_t cnt = monsters.size();
+  for (size_t i = 0; i < cnt; ++i) {
+    auto *monster = monsters[i];
+    if (monster->_action == MonsterAction::kUnknown) {
+      if (_level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath)) {
+        monster->_action = MonsterAction::kRoaming;
+        monster->_roamStep = 1;
+      }
+    }
+
+    if (monster->_action == MonsterAction::kRoaming) {
+      bool calcNewPath = monster->_roamStep >= monster->_roamPath.size();
+      if (!calcNewPath) {
+        Pos nextPos = monster->_roamPath[monster->_roamStep];
+        if (_level->tileFree(nextPos)) {
+          monster->_retryCount = 0;
+          _level->moveMonster(monster, monster->_pos, nextPos);
+          monster->_pos = nextPos;
+          monster->_roamStep++;
+        } else {
+          if (++monster->_retryCount > 3) {
+            calcNewPath = true;
+          }
+        }
+      }
+
+      if (calcNewPath) {
+        if (_level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath)) {
+          monster->_action = MonsterAction::kRoaming;
+          monster->_roamStep = 1;
+          monster->_retryCount = 0;
+        } else {
+          monster->_action = MonsterAction::kUnknown;
+        }
+      }
+    }
+  }
+
+  return GameState::kPlayerState;
+}

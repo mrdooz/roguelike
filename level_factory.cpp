@@ -6,6 +6,8 @@
 
 using namespace std;
 
+#define DEBUG_MAP 1
+
 struct Room {
   Room(Room *parent) : parent(parent) {}
 
@@ -149,19 +151,26 @@ Level *LevelFactory::createLevel(int width, int height) {
     }
   }
 
+#if DEBUG_MAP
 
+  vector<Pos> p;
+  level->calcPath(Pos(1,1), Pos(level->_height-2, 2), &p);
+  for (auto &pp : p) {
+    roomIds[pp.y*width+pp.x] = -2;
+  }
 
   FILE *f = fopen("d:\\temp\\level1.txt", "wt");
   for (int i = 0; i < height; ++i) {
     for (int j = 0; j < width; ++j) {
       int id = roomIds[i*width+j];
       //fprintf(f, "%c", level->get(i,j)._type == TileType::kWall ? 'X' : ('a' + roomIds[i*width+j]));
-      fprintf(f, "%c", level->get(i,j)._type == TileType::kWall ? 'X' : ' ');
+      fprintf(f, "%c", id == -2 ? '.' : level->get(i,j)._type == TileType::kWall ? 'X' : ' ');
       //fprintf(f, "%c", id == 0 ? 'X' : 'A' + id);// level->get(i,j)._type == TileType::kWall ? 'X' : ('A' + roomIds[i*width+j]));
     }
     fprintf(f, "\n");
   }
   fclose(f);
+#endif
 
   return level;
 }
