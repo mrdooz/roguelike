@@ -14,7 +14,6 @@ public:
   static bool create();
   static bool close();
 
-  void update(const sf::Event &event);
   int run();
 
   void addLogMessage(const char *fmt, ...);
@@ -24,6 +23,7 @@ private:
   bool init();
 
   void findAppRoot();
+  void handleNextState(GameState nextState);
 
   Level *_level;
   Party *_party;

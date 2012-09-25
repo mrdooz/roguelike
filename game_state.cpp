@@ -40,6 +40,10 @@ Monster *StateBase::monsterAt(const Pos &pos) {
   return _level->inside(pos) ? _level->get(pos)._monster : nullptr;
 }
 
+void PlayerState::addMoveDoneListener(const fnDoneListener &fn) {
+  _listeners.push_back(fn);
+}
+
 void PlayerState::handleAttack(Player *player, Monster *monster) {
   if (0 == --monster->_health) {
     _level->monsterKilled(monster);
@@ -49,6 +53,8 @@ void PlayerState::handleAttack(Player *player, Monster *monster) {
 
 void PlayerState::enterState() 
 {
+  GAME.addLogMessage("** ENTER PLAYER-STATE\n");
+
   for (Player *player : _party->_players) {
     player->_hasMoved = false;
     player->_action = PlayerAction::kUnknown;
@@ -56,7 +62,11 @@ void PlayerState::enterState()
   _party->_activePlayer = 0;
 };
 
-GameState PlayerState::update(const sf::Event &event) {
+void PlayerState::leaveState() {
+  GAME.addLogMessage("** LEAVE PLAYER-STATE\n");
+}
+
+GameState PlayerState::handleEvent(const sf::Event &event) {
 
   auto &players = _party->_players;
   Player *player = _party->getActivePlayer();
@@ -123,11 +133,18 @@ GameState PlayerState::update(const sf::Event &event) {
     }
   }
 
-  return done ? GameState::kAiState : GameState::kPlayerState;
+  if (done) {
+    for (auto &fn : _listeners)
+      fn();
+    return GameState::kAiState;
+  }
+
+  return GameState::kPlayerState;
 }
 
 
-GameState AiState::update(const sf::Event &event) {
+
+GameState AiState::update() {
 
   auto &monsters = _level->monsters();
   size_t cnt = monsters.size();
@@ -169,4 +186,12 @@ GameState AiState::update(const sf::Event &event) {
   }
 
   return GameState::kPlayerState;
+}
+
+void AiState::enterState() {
+  GAME.addLogMessage("** ENTER AI-STATE\n");
+}
+
+void AiState::leaveState() {
+  GAME.addLogMessage("** LEAVE AI-STATE\n");
 }

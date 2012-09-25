@@ -73,13 +73,12 @@ bool Game::init() {
   _renderer = new Renderer(_window);
   _renderer->init(_level, _party);
 
+  _playerState.addMoveDoneListener(std::bind(&Renderer::onMoveDone, _renderer));
+
   return true;
 }
 
-void Game::update(const sf::Event &event) {
-
-  GameState nextState = _curState->update(event);
-
+void Game::handleNextState(GameState nextState) {
   if (nextState != _curState->stateId()) {
     _curState->leaveState();
     if (nextState == GameState::kAiState) {
@@ -101,16 +100,20 @@ int Game::run()
   {
     // Process events
     sf::Event event;
-    while (_window->pollEvent(event)) {
+    if (_window->pollEvent(event)) {
+      do {
+        if (event.type == sf::Event::Resized) {
+          _window->setView(sf::View(sf::FloatRect(0,0,(float)event.size.width, (float)event.size.height)));
+        } else if (event.type == sf::Event::Closed) {
+          _window->close();
+        } else {
+          handleNextState(_curState->handleEvent(event));
+        }
 
-      update(event);
+      } while (_window->pollEvent(event));
+    } else {
+      handleNextState(_curState->update());
 
-      if (event.type == sf::Event::Resized) {
-        _window->setView(sf::View(sf::FloatRect(0,0,(float)event.size.width, (float)event.size.height)));
-        int a = 10;
-      } else if (event.type == sf::Event::Closed) {
-        _window->close();
-      }
     }
 
     _window->clear();

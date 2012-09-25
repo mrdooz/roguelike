@@ -12,6 +12,8 @@ public:
 
   bool init(Level *level, Party *party);
   void drawWorld();
+
+  void onMoveDone();
 private:
 
   void drawParty();

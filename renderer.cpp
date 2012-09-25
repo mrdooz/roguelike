@@ -34,6 +34,10 @@ Renderer::Renderer(sf::RenderWindow *window)
 {
 }
 
+void Renderer::onMoveDone() {
+  int a = 10;
+}
+
 void Renderer::drawWorld() {
 
   drawLevel();
