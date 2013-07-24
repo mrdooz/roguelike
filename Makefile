@@ -1,11 +1,11 @@
-CC=g++
+CC=clang
 CFLAGS=-std=c++11 -Wall
 
-stdafx.h.gch : stdafx.h
-	$(CC) $(CFLAGS) -c stdafx.h -o stdafx.h.gch
+precompiled.h.gch : precompiled.hpp
+	$(CC) $(CFLAGS) -c precompiled.hpp -o precompiled.hpp.gch
 
 roguelike.o: roguelike.cpp
 	$(CC) $(CFLAGS) -c roguelike.cpp -o roguelike.o
 
-main: roguelike.o stdafx.h.gch
+main: roguelike.o precompiled.hpp.gch
 	$(CC) roguelike.o -lsfml-graphics -lsfml-window -lsfml-system -o roguelike
