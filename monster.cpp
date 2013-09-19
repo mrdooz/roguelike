@@ -1,6 +1,8 @@
 #include "precompiled.hpp"
 #include "monster.hpp"
 
+using namespace rogue;
+
 Monster::Monster() 
   : _maxHealth(3)
   , _health(3)

@@ -2,6 +2,8 @@
 #include "player_factory.hpp"
 #include "utils.hpp"
 
+using namespace rogue;
+
 PlayerFactory *PlayerFactory::_instance;
 
 Player *PlayerFactory::createPlayer(PlayerClass pc) {

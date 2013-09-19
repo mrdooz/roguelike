@@ -3,17 +3,21 @@
 
 #include "level.hpp"
 
-class LevelFactory {
+namespace rogue
+{
+  class LevelFactory {
 
-public:
-  static bool create();
-  static void close();
-  static LevelFactory &instance();
+  public:
+    static bool create();
+    static void close();
+    static LevelFactory &instance();
 
-  Level *createLevel(int width, int height);
-private:
+    Level *createLevel(int width, int height);
+  private:
 
-  static LevelFactory *_instance;
-};
+    static LevelFactory *_instance;
+  };
+}
+
 
 #endif

@@ -7,44 +7,146 @@
 #include "monster.hpp"
 #include "game.hpp"
 
-using namespace std;
+using namespace rogue;
 
-static bool isTwoPhaseAction(PlayerAction action) {
-  return action == PlayerAction::kMeleeAttack || action == PlayerAction::kRangedAttack || action == PlayerAction::kSpellAttack;
-}
-
-static bool arrowKeyToOffset(sf::Keyboard::Key code, Pos *ofs) {
-  switch (code) {
-    case sf::Keyboard::Left:  *ofs = Pos(0,-1); return true;
-    case sf::Keyboard::Right: *ofs = Pos(0,+1); return true;
-    case sf::Keyboard::Up:    *ofs = Pos(-1,0); return true;
-    case sf::Keyboard::Down:  *ofs = Pos(+1,0); return true;
+namespace
+{
+  static bool isTwoPhaseAction(PlayerAction action)
+  {
+    return action == PlayerAction::kMeleeAttack
+      || action == PlayerAction::kRangedAttack
+      || action == PlayerAction::kSpellAttack;
   }
-  return false;
-}
 
-static bool keyToTwoPhase(sf::Keyboard::Key code, PlayerAction *action) {
-  switch (code) {
-    case sf::Keyboard::A: *action = PlayerAction::kMeleeAttack; return true;
-    case sf::Keyboard::R: *action = PlayerAction::kRangedAttack; return true;
-    case sf::Keyboard::S: *action = PlayerAction::kSpellAttack; return true;
+  bool arrowKeyToOffset(sf::Keyboard::Key code, Pos *ofs)
+  {
+    switch (code)
+    {
+      case sf::Keyboard::Left:  *ofs = Pos(0,-1); return true;
+      case sf::Keyboard::Right: *ofs = Pos(0,+1); return true;
+      case sf::Keyboard::Up:    *ofs = Pos(-1,0); return true;
+      case sf::Keyboard::Down:  *ofs = Pos(+1,0); return true;
+    }
+    return false;
   }
-  return false;
+
+  bool keyToTwoPhase(sf::Keyboard::Key code, PlayerAction *action)
+  {
+    switch (code)
+    {
+      case sf::Keyboard::A: *action = PlayerAction::kMeleeAttack; return true;
+      case sf::Keyboard::R: *action = PlayerAction::kRangedAttack; return true;
+      case sf::Keyboard::S: *action = PlayerAction::kSpellAttack; return true;
+    }
+    return false;
+  }
 }
 
-Player *StateBase::playerAt(const Pos &pos) {
-  return _level->inside(pos) ? _level->get(pos)._player : nullptr;
+void StateBase::DoFunkyStuff(UpdateCoro::caller_type& coro)
+{
+  _party->_activePlayer = 0;
+
+  // Handle player updates
+  for (auto& player : _party->_players)
+  {
+    coro(1);
+    auto key = coro.get();
+
+    // if the key is a two phase action, set action and
+    // wait for next key
+    if (keyToTwoPhase(key, &player->_action))
+    {
+      coro(1);
+      auto key = coro.get();
+
+      Pos ofs;
+      if (arrowKeyToOffset(key, &ofs))
+      {
+        if (Monster *monster = _level->monsterAt(player->_pos + ofs)) {
+          handleAttack(player, monster);
+          player->_hasMoved = true;
+        }
+      }
+    }
+    else
+    {
+      // Check if the input is a valid movement key, and the
+      // resulting position is valid
+      Pos ofs;
+      if (arrowKeyToOffset(key, &ofs))
+      {
+        Pos newPos(player->_pos + ofs);
+        if (_level->validDestination(newPos))
+        {
+          player->_hasMoved = true;
+          _level->movePlayer(player, player->_pos, newPos);
+          player->_pos = newPos;
+        }
+      }
+      else if (key == sf::Keyboard::Space)
+      {
+        // skip player
+        player->_hasMoved = true;
+      }
+    }
+
+    _party->_activePlayer = (_party->_activePlayer + 1) % _party->_players.size();
+  }
+
+  // Handle AI
+  auto &monsters = _level->monsters();
+  size_t cnt = monsters.size();
+  for (size_t i = 0; i < cnt; ++i)
+  {
+    auto *monster = monsters[i];
+    if (monster->_action == MonsterAction::kUnknown)
+    {
+      if (_level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath))
+      {
+        monster->_action = MonsterAction::kRoaming;
+        monster->_roamStep = 1;
+      }
+    }
+
+    if (monster->_action == MonsterAction::kRoaming)
+    {
+      bool calcNewPath = monster->_roamStep >= monster->_roamPath.size();
+      if (!calcNewPath) {
+        Pos nextPos = monster->_roamPath[monster->_roamStep];
+        if (_level->tileFree(nextPos)) {
+          monster->_retryCount = 0;
+          _level->moveMonster(monster, monster->_pos, nextPos);
+          monster->_pos = nextPos;
+          monster->_roamStep++;
+        } else {
+          if (++monster->_retryCount > 3) {
+            calcNewPath = true;
+          }
+        }
+      }
+
+      if (calcNewPath) {
+        if (_level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath)) {
+          monster->_action = MonsterAction::kRoaming;
+          monster->_roamStep = 1;
+          monster->_retryCount = 0;
+        } else {
+          monster->_action = MonsterAction::kUnknown;
+        }
+      }
+    }
+  }
+  coro(-1);
+
 }
 
-Monster *StateBase::monsterAt(const Pos &pos) {
-  return _level->inside(pos) ? _level->get(pos)._monster : nullptr;
-}
-
-void PlayerState::addMoveDoneListener(const fnDoneListener &fn) {
+void PlayerState::addMoveDoneListener(const fnDoneListener &fn)
+{
   _listeners.push_back(fn);
 }
 
-void PlayerState::handleAttack(Player *player, Monster *monster) {
+void StateBase::handleAttack(Player *player, Monster *monster)
+{
   if (0 == --monster->_health) {
     _level->monsterKilled(monster);
     GAME.addLogMessage("Player %s killed monster!\n", player->_name.c_str());
@@ -55,30 +157,38 @@ void PlayerState::enterState()
 {
   GAME.addLogMessage("** ENTER PLAYER-STATE\n");
 
-  for (Player *player : _party->_players) {
+  for (auto player : _party->_players)
+  {
     player->_hasMoved = false;
     player->_action = PlayerAction::kUnknown;
   }
   _party->_activePlayer = 0;
 };
 
-void PlayerState::leaveState() {
+void PlayerState::leaveState()
+{
   GAME.addLogMessage("** LEAVE PLAYER-STATE\n");
 }
 
-GameState PlayerState::handleEvent(const sf::Event &event) {
-
+GameState PlayerState::handleEvent(const sf::Event &event)
+{
   auto &players = _party->_players;
   Player *player = _party->getActivePlayer();
 
-  if (event.type == sf::Event::KeyReleased) {
+  if (event.type == sf::Event::KeyReleased)
+  {
     auto code = event.key.code;
 
-    auto &handleMove = [&](sf::Keyboard::Key code) -> bool {
+    auto &handleMove = [&](sf::Keyboard::Key code) -> bool
+    {
+      // Check if the input is a valid movement key, and the
+      // resulting position is valid
       Pos ofs;
-      if (arrowKeyToOffset(code, &ofs)) {
+      if (arrowKeyToOffset(code, &ofs))
+      {
         Pos newPos(player->_pos + ofs);
-        if (_level->validDestination(newPos)) {
+        if (_level->validDestination(newPos))
+        {
           player->_hasMoved = true;
           _level->movePlayer(player, player->_pos, newPos);
           player->_pos = newPos;
@@ -88,19 +198,23 @@ GameState PlayerState::handleEvent(const sf::Event &event) {
       return false;
     };
 
-    auto &handleTwoPhase = [&](sf::Keyboard::Key code) -> bool {
+    auto &handleTwoPhase = [&](sf::Keyboard::Key code) -> bool
+    {
       auto action = player->_action;
 
-      if (action == PlayerAction::kUnknown) {
+      if (action == PlayerAction::kUnknown)
+      {
         if (keyToTwoPhase(code, &player->_action))
           return true;
       }
       
       // check if we're in the second part of a two phase move
-      if (isTwoPhaseAction(action)) {
+      if (isTwoPhaseAction(action))
+      {
         Pos ofs;
-        if (arrowKeyToOffset(code, &ofs)) {
-          if (Monster *monster = monsterAt(player->_pos + ofs)) {
+        if (arrowKeyToOffset(code, &ofs))
+        {
+          if (Monster *monster = _level->monsterAt(player->_pos + ofs)) {
             handleAttack(player, monster);
             player->_hasMoved = true;
             return true;
@@ -115,7 +229,8 @@ GameState PlayerState::handleEvent(const sf::Event &event) {
     if (!playerMoved) 
       playerMoved = handleMove(code);
 
-    if (!playerMoved) {
+    if (!playerMoved)
+    {
       if (code == sf::Keyboard::Space)  // skip player
         _party->_activePlayer++;
     }
@@ -123,7 +238,8 @@ GameState PlayerState::handleEvent(const sf::Event &event) {
 
   // Set next player
   bool done = true;
-  for (size_t i = 0; i < players.size(); ++i) {
+  for (size_t i = 0; i < players.size(); ++i)
+  {
     int idx = (_party->_activePlayer + i) % players.size();
     Player *p = players[idx];
     if (!p->_hasMoved) {
@@ -133,7 +249,8 @@ GameState PlayerState::handleEvent(const sf::Event &event) {
     }
   }
 
-  if (done) {
+  if (done)
+  {
     for (auto &fn : _listeners)
       fn();
     return GameState::kAiState;
@@ -144,20 +261,24 @@ GameState PlayerState::handleEvent(const sf::Event &event) {
 
 
 
-GameState AiState::update() {
-
+GameState AiState::update()
+{
   auto &monsters = _level->monsters();
   size_t cnt = monsters.size();
-  for (size_t i = 0; i < cnt; ++i) {
+  for (size_t i = 0; i < cnt; ++i)
+  {
     auto *monster = monsters[i];
-    if (monster->_action == MonsterAction::kUnknown) {
-      if (_level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath)) {
+    if (monster->_action == MonsterAction::kUnknown)
+    {
+      if (_level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath))
+      {
         monster->_action = MonsterAction::kRoaming;
         monster->_roamStep = 1;
       }
     }
 
-    if (monster->_action == MonsterAction::kRoaming) {
+    if (monster->_action == MonsterAction::kRoaming)
+    {
       bool calcNewPath = monster->_roamStep >= monster->_roamPath.size();
       if (!calcNewPath) {
         Pos nextPos = monster->_roamPath[monster->_roamStep];

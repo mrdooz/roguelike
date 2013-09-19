@@ -3,43 +3,48 @@
 
 #include "game_state.hpp"
 
-class Party;
-class Renderer;
+namespace rogue
+{
+  class Party;
+  class Renderer;
 
-class Game {
+  class Game {
 
-public:
+  public:
 
-  static Game &instance();
-  static bool create();
-  static bool close();
+    static Game &instance();
+    static bool create();
+    static bool close();
 
-  int run();
+    int run();
 
-  void addLogMessage(const char *fmt, ...);
+    void addLogMessage(const char *fmt, ...);
 
-private:
-  ~Game();
-  bool init();
+  private:
+    ~Game();
+    bool init();
 
-  void findAppRoot();
-  void handleNextState(GameState nextState);
+    void findAppRoot();
+    void handleNextState(GameState nextState);
 
-  Level *_level;
-  Party *_party;
+    Level *_level;
+    Party *_party;
 
-  PlayerState _playerState;
-  AiState _aiState;
-  StateBase *_curState;
+    PlayerState _playerState;
+    AiState _aiState;
+    StateBase *_curState;
 
-  sf::RenderWindow *_window;
-  Renderer *_renderer;
+    sf::RenderWindow *_window;
+    Renderer *_renderer;
 
-  std::string _appRoot;
+    string _appRoot;
 
-  static Game *_instance;
-};
+    static Game *_instance;
+  };
 
-#define GAME Game::instance()
+#define GAME rogue::Game::instance()
+
+
+}
 
 #endif

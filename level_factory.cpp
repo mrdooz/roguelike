@@ -4,7 +4,7 @@
 #include "utils.hpp"
 #include <set>
 
-using namespace std;
+using namespace rogue;
 
 #define DEBUG_MAP 1
 
@@ -136,7 +136,7 @@ Level *LevelFactory::createLevel(int width, int height) {
     auto &Wall = kv.second;
     int p = Wall.pos;
     while (true) {
-      int door = (int)randf(Wall.start, Wall.finish);
+      int door = (int)randf((float)Wall.start, (float)Wall.finish);
       if (Wall.horiz) {
         if (level->get(p-1, door)._type != TileType::kWall && level->get(p+1, door)._type != TileType::kWall) {
           level->get(p, door)._type = TileType::kFloor;

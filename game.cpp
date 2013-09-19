@@ -9,7 +9,7 @@
 #include "renderer.hpp"
 #include "party.hpp"
 
-using namespace std;
+using namespace rogue;
 
 Game *Game::_instance;
 
@@ -95,24 +95,41 @@ int Game::run()
 
   sf::View view = _window->getDefaultView();
 
+  //auto fn = boost::bind(&StateBase::DoFunkyStuff, _curState);
+  UpdateCoro coro(boost::bind(&StateBase::DoFunkyStuff, _curState, _1));
+
   // Start the game loop
   while (_window->isOpen())
   {
     // Process events
     sf::Event event;
-    if (_window->pollEvent(event)) {
-      do {
-        if (event.type == sf::Event::Resized) {
+    if (_window->pollEvent(event))
+    {
+      do
+      {
+        if (event.type == sf::Event::Resized)
+        {
           _window->setView(sf::View(sf::FloatRect(0,0,(float)event.size.width, (float)event.size.height)));
-        } else if (event.type == sf::Event::Closed) {
+        }
+        else if (event.type == sf::Event::Closed)
+        {
           _window->close();
-        } else {
-          handleNextState(_curState->handleEvent(event));
+        }
+        else
+        {
+          // keep going until we get -1
+          if (event.type == sf::Event::KeyReleased)
+          {
+            coro(event.key.code);
+          }
+          //handleNextState(_curState->handleEvent(event));
         }
 
       } while (_window->pollEvent(event));
-    } else {
-      handleNextState(_curState->update());
+    }
+    else
+    {
+      //handleNextState(_curState->update());
 
     }
 

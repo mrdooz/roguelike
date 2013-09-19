@@ -92,6 +92,7 @@
     <ClInclude Include="..\player_factory.hpp" />
     <ClInclude Include="..\precompiled.hpp" />
     <ClInclude Include="..\renderer.hpp" />
+    <ClInclude Include="..\roguelike.hpp" />
     <ClInclude Include="..\types.hpp" />
     <ClInclude Include="..\utils.hpp" />
   </ItemGroup>

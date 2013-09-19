@@ -2,11 +2,8 @@
 #include "level.hpp"
 #include "monster.hpp"
 #include "utils.hpp"
-#include <queue>
-#include <set>
-#include <memory>
 
-using namespace std;
+using namespace rogue;
 
 Level::Level(int width, int height)
   : _width(width)
@@ -195,4 +192,14 @@ void Level::monsterKilled(Monster *m) {
       ++it;
     }
   }
+}
+
+Player *Level::playerAt(const Pos &pos)
+{
+  return inside(pos) ? get(pos)._player : nullptr;
+}
+
+Monster *Level::monsterAt(const Pos &pos)
+{
+  return inside(pos) ? get(pos)._monster : nullptr;
 }

@@ -1,6 +1,9 @@
 #include "precompiled.hpp"
 #include "game.hpp"
 #include "utils.hpp"
+#include "roguelike.hpp"
+
+using namespace rogue;
 
 int main() {
   srand(1337);

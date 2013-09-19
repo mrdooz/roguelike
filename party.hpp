@@ -1,19 +1,22 @@
 #ifndef _PARTY_HPP_
 #define _PARTY_HPP_
 
-class Player;
+namespace rogue
+{
+  class Player;
 
-class Party {
-  friend class Renderer;
-public:
+  class Party {
+    friend class Renderer;
+  public:
 
-  Party() : _activePlayer(0) {}
+    Party() : _activePlayer(0) {}
 
-  Player *getActivePlayer() { return _players[_activePlayer]; }
+    Player *getActivePlayer() { return _players[_activePlayer]; }
 
-  int _activePlayer;
-  std::vector<Player *> _players;
-};
+    size_t _activePlayer;
+    vector<Player *> _players;
+  };
+}
 
 
 #endif

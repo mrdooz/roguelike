@@ -2,7 +2,7 @@
 #include "player.hpp"
 #include "utils.hpp"
 
-using namespace std;
+using namespace rogue;
 
 string playerClassToString(PlayerClass pc) {
   switch (pc) {

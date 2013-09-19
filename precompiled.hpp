@@ -14,10 +14,23 @@
 #include <assert.h>
 #include <vector>
 #include <string>
+#include <deque>
+#include <functional>
+#include <queue>
+#include <set>
+
+#include <memory>
 
 #include <sys/stat.h>
 #include <string>
 #include <stdint.h>
+#include <boost/any.hpp>
+
+#pragma warning(disable: 4180)
+#define BOOST_DISABLE_ASSERTS
+#include <boost/bind.hpp>
+#include <boost/coroutine/coroutine.hpp>
+#include <boost/coroutine/all.hpp>
 
 typedef int8_t int8;
 typedef uint8_t uint8;
@@ -28,6 +41,7 @@ typedef uint32_t uint32;
 typedef int64_t int64;
 typedef uint64_t uint64;
 
+#include "roguelike.hpp"
 
 #ifdef _WIN32
   #define OVERRIDE override

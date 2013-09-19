@@ -3,38 +3,42 @@
 
 #include "types.hpp"
 
-class Level;
-class Party;
+namespace rogue
+{
+  class Level;
+  class Party;
 
-class Renderer {
-public:
-  Renderer(sf::RenderWindow *window);
+  class Renderer {
+  public:
+    Renderer(RenderWindow *window);
 
-  bool init(Level *level, Party *party);
-  void drawWorld();
+    bool init(Level *level, Party *party);
+    void drawWorld();
 
-  void onMoveDone();
-private:
+    void onMoveDone();
+  private:
 
-  void drawParty();
-  void drawPartyStats();
-  void drawLevel();
-  void drawMonsters();
+    void drawParty();
+    void drawPartyStats();
+    void drawLevel();
+    void drawMonsters();
 
-  void getVisibleArea(Pos *topLeft, int *rows, int *cols);
+    void getVisibleArea(Pos *topLeft, int *rows, int *cols);
 
-  void drawHealthBar(int health, int maxHealth, const Pos &pos);
+    void drawHealthBar(int health, int maxHealth, const Pos &pos);
 
-  int _partyStatsWidth;
-  sf::RenderWindow *_window;
+    int _partyStatsWidth;
+    RenderWindow *_window;
 
-  int _zoomLevel;
-  sf::Font _font;
-  sf::Texture _environmentTexture;
-  sf::Texture _characterTexture;
+    int _zoomLevel;
+    Font _font;
+    Texture _environmentTexture;
+    Texture _characterTexture;
 
-  Level *_level;
-  Party *_party;
-};
+    Level *_level;
+    Party *_party;
+  };
+}
+
 
 #endif

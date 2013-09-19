@@ -6,7 +6,7 @@
 #include "level.hpp"
 #include "monster.hpp"
 
-using namespace std;
+using namespace rogue;
 
 enum class Tiles {
   wallH,

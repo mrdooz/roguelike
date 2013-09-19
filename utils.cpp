@@ -1,16 +1,16 @@
 #include "precompiled.hpp"
 #include "utils.hpp"
 
-using namespace std;
+using namespace rogue;
 
-bool fileExists(const char *filename)
+bool rogue::fileExists(const char *filename)
 {
   struct _stat status;
   return _access(filename, 0) == 0 && _stat(filename, &status) == 0 && (status.st_mode & _S_IFREG);
 }
 
 
-string toString(char const * const format, ... ) 
+string rogue::toString(char const * const format, ... ) 
 {
   va_list arg;
   va_start(arg, format);
@@ -24,16 +24,16 @@ string toString(char const * const format, ... )
   return string(buf);
 }
 
-float lerp(float a, float b, float v) {
+float rogue::lerp(float a, float b, float v) {
   return (1-v) * a + v * b;
 }
 
-float randf(float a, float b) {
+float rogue::randf(float a, float b) {
   float t = (float)rand() / RAND_MAX;
   return lerp(a, b, t);
 }
 
-float gaussianRand(float mean, float variance) {
+float rogue::gaussianRand(float mean, float variance) {
   // Generate a gaussian from the sum of uniformly distributed random numbers
   // (Central Limit Theorem)
   double sum = 0;

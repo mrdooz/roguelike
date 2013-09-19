@@ -1,56 +1,61 @@
 #ifndef _GAME_STATE_HPP_
 #define _GAME_STATE_HPP_
 
-#include <functional>
 #include "types.hpp"
 
-class Level;
-class Party;
+namespace rogue
+{
+  class Level;
+  class Party;
 
-class Player;
-class Monster;
+  class Player;
+  class Monster;
 
-enum class GameState {
-  kPlayerState,
-  kAiState,
-};
+  enum class GameState {
+    kPlayerState,
+    kAiState,
+  };
 
-struct StateBase {
+  typedef boost::coroutines::coroutine<int(sf::Keyboard::Key)> UpdateCoro;
 
-  virtual GameState stateId() const = 0;
-  virtual void enterState() {}
-  virtual void leaveState() {}
-  virtual GameState update() = 0;
-  virtual GameState handleEvent(const sf::Event &event) = 0;
+  struct StateBase {
 
-  Player *playerAt(const Pos &pos);
-  Monster *monsterAt(const Pos &pos);
-  Level *_level;
-  Party *_party;
-};
+    virtual GameState stateId() const = 0;
+    virtual void enterState() {}
+    virtual void leaveState() {}
+    virtual GameState update() = 0;
+    virtual GameState handleEvent(const sf::Event &event) = 0;
 
-struct PlayerState : public StateBase {
+    void DoFunkyStuff(UpdateCoro::caller_type& coro);
+    void handleAttack(Player *player, Monster *monster);
 
-  virtual GameState stateId() const OVERRIDE { return GameState::kPlayerState; }
-  virtual void enterState() OVERRIDE;
-  virtual void leaveState() OVERRIDE;
-  virtual GameState update() OVERRIDE { return GameState::kPlayerState; }
-  virtual GameState handleEvent(const sf::Event &event) OVERRIDE;
-  void handleAttack(Player *player, Monster *monster);
+    Level *_level;
+    Party *_party;
+  };
 
-  typedef std::function<void()> fnDoneListener;
-  void addMoveDoneListener(const fnDoneListener &fn);
+  struct PlayerState : public StateBase {
 
-  std::vector<fnDoneListener> _listeners;
-};
+    virtual GameState stateId() const OVERRIDE { return GameState::kPlayerState; }
+    virtual void enterState() OVERRIDE;
+    virtual void leaveState() OVERRIDE;
+    virtual GameState update() OVERRIDE { return GameState::kPlayerState; }
+    virtual GameState handleEvent(const sf::Event &event) OVERRIDE;
+    //void handleAttack(Player *player, Monster *monster);
 
-struct AiState : public StateBase {
-  virtual void enterState() OVERRIDE;
-  virtual void leaveState() OVERRIDE;
-  virtual GameState stateId() const OVERRIDE { return GameState::kAiState; }
-  virtual GameState update() OVERRIDE;
-  virtual GameState handleEvent(const sf::Event &event) OVERRIDE { return GameState::kAiState; }
-};
+    typedef function<void()> fnDoneListener;
+    void addMoveDoneListener(const fnDoneListener &fn);
 
+    vector<fnDoneListener> _listeners;
+  };
+
+  struct AiState : public StateBase {
+    virtual void enterState() OVERRIDE;
+    virtual void leaveState() OVERRIDE;
+    virtual GameState stateId() const OVERRIDE { return GameState::kAiState; }
+    virtual GameState update() OVERRIDE;
+    virtual GameState handleEvent(const sf::Event &event) OVERRIDE { return GameState::kAiState; }
+  };
+
+}
 
 #endif
