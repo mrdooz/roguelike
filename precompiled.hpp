@@ -1,5 +1,4 @@
-#ifndef _PRECOMPILED_HPP_
-#define _PRECOMPILED_HPP_
+#pragma once
 
 #include <stdio.h>
 
@@ -15,6 +14,7 @@
 #include <vector>
 #include <string>
 #include <deque>
+#include <algorithm>
 #include <functional>
 #include <queue>
 #include <set>
@@ -41,7 +41,7 @@ typedef uint32_t uint32;
 typedef int64_t int64;
 typedef uint64_t uint64;
 
-#include "roguelike.hpp"
+// #include "roguelike.hpp"
 
 #ifdef _WIN32
   #define OVERRIDE override
@@ -56,6 +56,4 @@ typedef uint64_t uint64;
   #endif
 #else
   #define OVERRIDE
-#endif
-
 #endif

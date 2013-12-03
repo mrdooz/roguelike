@@ -2,6 +2,7 @@
 #define _GAME_HPP_
 
 #include "game_state.hpp"
+#include "roguelike.hpp"
 
 namespace rogue
 {

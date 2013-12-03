@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <functional>
+
 namespace rogue
 {
   using std::vector;

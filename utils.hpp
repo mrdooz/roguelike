@@ -21,7 +21,7 @@ namespace rogue
 
   template<class T> 
   void assoc_delete(T* t) {
-    for (T::iterator it = t->begin(); it != t->end(); ++it)
+    for (typename T::iterator it = t->begin(); it != t->end(); ++it)
       delete it->second;
     t->clear();
   }
