@@ -3,13 +3,21 @@
 
 using namespace rogue;
 
+#ifdef _WIN32
 bool rogue::fileExists(const char *filename)
 {
   struct _stat status;
   return _access(filename, 0) == 0 && _stat(filename, &status) == 0 && (status.st_mode & _S_IFREG);
 }
+#else
+bool rogue::fileExists(const char *filename)
+{
+  struct stat status;
+  return access(filename, 0) == 0 && stat(filename, &status) == 0 && (status.st_mode & S_IFREG);
+}
+#endif
 
-
+#ifdef _WIN32
 string rogue::toString(char const * const format, ... ) 
 {
   va_list arg;
@@ -23,6 +31,13 @@ string rogue::toString(char const * const format, ... )
 
   return string(buf);
 }
+#else
+string rogue::toString(char const * const format, ... ) 
+{
+  return string();
+}
+#endif
+
 
 float rogue::lerp(float a, float b, float v) {
   return (1-v) * a + v * b;

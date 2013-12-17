@@ -2,6 +2,8 @@
 
 #define ELEMS_IN_ARRAY(x) sizeof(x) / sizeof((x)[0])
 
+#include "roguelike.hpp"
+
 namespace rogue
 {
   template <class T>

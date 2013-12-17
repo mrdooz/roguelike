@@ -139,7 +139,7 @@ void Renderer::drawPartyStats() {
 
   sf::Vector2f pos(x, y);
 
-  auto &drawHeading = [&](Player *player) {
+  auto drawHeading = [&](Player *player) {
     heading.setString(player->_name);
     heading.setPosition(pos);
     sf::FloatRect r = heading.getLocalBounds();
@@ -154,7 +154,7 @@ void Renderer::drawPartyStats() {
     pos.y += 25;
   };
 
-  auto &drawNormal = [&](const std::string &str) {
+  auto drawNormal = [&](const std::string &str) {
     normal.setString(str);
     normal.setPosition(pos);
     pos.y += 15;

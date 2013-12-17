@@ -175,6 +175,7 @@ void Game::findAppRoot()
 
 void Game::addLogMessage(const char *fmt, ...) {
 
+#ifdef _WIN32
   va_list arg;
   va_start(arg, fmt);
 
@@ -185,4 +186,5 @@ void Game::addLogMessage(const char *fmt, ...) {
   va_end(arg);
 
   OutputDebugStringA(buf);
+#endif
 }

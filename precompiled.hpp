@@ -18,6 +18,7 @@
 #include <functional>
 #include <queue>
 #include <set>
+#include <math.h>
 
 #include <memory>
 

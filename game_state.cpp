@@ -179,7 +179,7 @@ GameState PlayerState::handleEvent(const sf::Event &event)
   {
     auto code = event.key.code;
 
-    auto &handleMove = [&](sf::Keyboard::Key code) -> bool
+    auto handleMove = [&](sf::Keyboard::Key code) -> bool
     {
       // Check if the input is a valid movement key, and the
       // resulting position is valid
@@ -198,7 +198,7 @@ GameState PlayerState::handleEvent(const sf::Event &event)
       return false;
     };
 
-    auto &handleTwoPhase = [&](sf::Keyboard::Key code) -> bool
+    auto handleTwoPhase = [&](sf::Keyboard::Key code) -> bool
     {
       auto action = player->_action;
 

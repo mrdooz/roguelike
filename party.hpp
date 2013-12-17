@@ -1,6 +1,8 @@
 #ifndef _PARTY_HPP_
 #define _PARTY_HPP_
 
+#include "roguelike.hpp"
+
 namespace rogue
 {
   class Player;

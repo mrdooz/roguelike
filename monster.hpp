@@ -2,6 +2,7 @@
 #define _MONSTER_HPP_
 
 #include "types.hpp"
+#include "roguelike.hpp"
 
 namespace rogue
 {

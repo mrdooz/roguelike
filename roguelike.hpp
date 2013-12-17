@@ -2,6 +2,9 @@
 
 #include <memory>
 #include <functional>
+#include <vector>
+#include <string>
+#include <set>
 
 namespace rogue
 {

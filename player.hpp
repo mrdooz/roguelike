@@ -2,6 +2,7 @@
 #define _PLAYER_HPP_
 
 #include "types.hpp"
+#include "roguelike.hpp"
 
 namespace rogue
 {
@@ -29,6 +30,8 @@ namespace rogue
   };
 
   string playerClassToString(PlayerClass pc);
+  string playerModeToString(PlayerMode pm);
+
 
   class Player {
   public:
