@@ -9,6 +9,7 @@ find_package(SFML 2 REQUIRED system window graphics network audio)
 find_package(Boost REQUIRED COMPONENTS coroutine context)
 
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${SFML_INCLUDE_DIRS})
 
 add_executable(roguelike game.cpp game_state.cpp level.cpp level_factory.cpp monster.cpp party.cpp player.cpp player_factory.cpp precompiled.cpp renderer.cpp roguelike.cpp utils.cpp)
 target_link_libraries(roguelike ${SFML_LIBRARIES} ${Boost_COROUTINE_LIBRARY} ${Boost_CONTEXT_LIBRARY})
