@@ -16,9 +16,6 @@ Game *Game::_instance;
 Game::~Game() {
   LevelFactory::close();
   PlayerFactory::close();
-
-  delete exch_null(_party);
-  delete exch_null(_level);
   delete exch_null(_renderer);
   delete exch_null(_window);
 }
@@ -40,7 +37,8 @@ Game &Game::instance() {
   return *_instance;
 }
 
-bool Game::init() {
+bool Game::init()
+{
   findAppRoot();
 
   _window = new sf::RenderWindow(sf::VideoMode(800, 600), "while (true) { kill(stuff); get(epix); }");
@@ -48,54 +46,31 @@ bool Game::init() {
   LevelFactory::create();
   PlayerFactory::create();
 
-  _level = LevelFactory::instance().createLevel(80, 50);
-  _party = new Party;
+  _gameState._level = LevelFactory::instance().CreateLevel(200, 200);
+  _gameState._party = new Party();
 
-
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 4; ++i)
+  {
     auto *p = PlayerFactory::instance().createPlayer((PlayerClass)i);
     p->_sprite.setScale(3, 3);
     p->_pos = Pos(1 + (i+1) % 2, 1 + (i+1)/2);
-    _level->initPlayer(p, p->_pos);
-    _party->_players.push_back(p);
+    _gameState._level->initPlayer(p, p->_pos);
+    _gameState._party->_players.push_back(p);
   }
-  _level->initMonsters();
-
-  _playerState._party = _party;
-  _playerState._level = _level;
-  _aiState._party = _party;
-  _aiState._level = _level;
-
-  _curState = &_playerState;
-  _curState->enterState();
-
+  _gameState._level->initMonsters();
 
   _renderer = new Renderer(_window);
-  _renderer->init(_level, _party);
+  _renderer->init(_gameState);
 
-  _playerState.addMoveDoneListener(std::bind(&Renderer::onMoveDone, _renderer));
+  //_playerState.addMoveDoneListener(std::bind(&Renderer::onMoveDone, _renderer));
 
   return true;
-}
-
-void Game::handleNextState(GameState nextState) {
-  if (nextState != _curState->stateId()) {
-    _curState->leaveState();
-    if (nextState == GameState::kAiState) {
-      _curState = &_aiState;
-    } else if (nextState == GameState::kPlayerState) {
-      _curState = &_playerState;
-    }
-    _curState->enterState();
-  }
 }
 
 int Game::run()
 {
 
   sf::View view = _window->getDefaultView();
-
-  UpdateCoro coro(boost::bind(&StateBase::DoFunkyStuff, _curState, _1));
 
   // Start the game loop
   while (_window->isOpen())
@@ -116,25 +91,21 @@ int Game::run()
         }
         else
         {
-          // keep going until we get -1
           if (event.type == sf::Event::KeyReleased)
           {
-            coro(event.key.code);
+            UpdateState(_gameState, event.key.code);
           }
-          //handleNextState(_curState->handleEvent(event));
         }
 
       } while (_window->pollEvent(event));
     }
     else
     {
-      //handleNextState(_curState->update());
-
     }
 
     _window->clear();
 
-    _renderer->drawWorld();
+    _renderer->drawWorld(_gameState);
 
     _window->display();
   }

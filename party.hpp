@@ -10,12 +10,7 @@ namespace rogue
   class Party {
     friend class Renderer;
   public:
-
-    Party() : _activePlayer(0) {}
-
-    Player *getActivePlayer() { return _players[_activePlayer]; }
-
-    size_t _activePlayer;
+    size_t GetNumPlayers() const { return _players.size(); }
     vector<Player *> _players;
   };
 }

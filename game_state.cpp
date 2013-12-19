@@ -42,28 +42,115 @@ namespace
   }
 }
 
-void StateBase::DoFunkyStuff(UpdateCoro::caller_type& coro)
+//-----------------------------------------------------------------------------
+GameState::GameState()
+  : _activePlayer(0)
+  , _level(nullptr)
+  , _party(nullptr)
+  , _twoPhaseAction(false)
+  , _monsterPhase(false)
 {
-  _party->_activePlayer = 0;
+}
 
-  // Handle player updates
-  for (auto& player : _party->_players)
+//-----------------------------------------------------------------------------
+GameState::~GameState()
+{
+  delete exch_null(_party);
+  delete exch_null(_level);
+}
+
+//-----------------------------------------------------------------------------
+Player* GameState::GetActivePlayer() const
+{
+  if (!_party || _activePlayer >= _party->GetNumPlayers())
+    return nullptr;
+
+  return _party->_players[_activePlayer];
+}
+//-----------------------------------------------------------------------------
+void HandleAttack(GameState& state, Player *player, Monster *monster)
+{
+  if (0 == --monster->_health)
   {
-    coro(1);
-    auto key = coro.get();
+    state._level->monsterKilled(monster);
+    GAME.addLogMessage("Player %s killed monster!\n", player->_name.c_str());
+  }
+}
 
-    // if the key is a two phase action, set action and
-    // wait for next key
-    if (keyToTwoPhase(key, &player->_action))
+//-----------------------------------------------------------------------------
+void rogue::UpdateState(GameState& state, Keyboard::Key key)
+{
+  size_t activePlayer = state._activePlayer;
+  auto level = state._level;
+  auto party = state._party;
+
+  if (state._monsterPhase)
+  {
+    // Monster AI
+    state._monsterPhase = false;
+
+    auto& monsters = level->monsters();
+    size_t cnt = monsters.size();
+    for (size_t i = 0; i < cnt; ++i)
     {
-      coro(1);
-      auto key = coro.get();
+      auto *monster = monsters[i];
+      if (monster->_action == MonsterAction::kUnknown)
+      {
+        // move towards the active player
+        Pos dest(state.GetActivePlayer()->_pos);
+        Pos rnd(monsters[rand() % cnt]->_pos);
+        if (level->calcPath(monster->_pos, dest, &monster->_roamPath))
+        {
+          monster->_action = MonsterAction::kRoaming;
+          monster->_roamStep = 1;
+        }
+      }
 
+      if (monster->_action == MonsterAction::kRoaming)
+      {
+        bool calcNewPath = monster->_roamStep >= monster->_roamPath.size();
+        if (!calcNewPath)
+        {
+          Pos nextPos = monster->_roamPath[monster->_roamStep];
+          if (level->tileFree(nextPos)) {
+            monster->_retryCount = 0;
+            level->moveMonster(monster, monster->_pos, nextPos);
+            monster->_pos = nextPos;
+            monster->_roamStep++;
+          } else {
+            if (++monster->_retryCount > 3) {
+              calcNewPath = true;
+            }
+          }
+        }
+
+        if (calcNewPath)
+        {
+          if (level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath))
+          {
+            monster->_action = MonsterAction::kRoaming;
+            monster->_roamStep = 1;
+            monster->_retryCount = 0;
+          }
+          else
+          {
+            monster->_action = MonsterAction::kUnknown;
+          }
+        }
+      }
+    }
+  }
+  else
+  {
+    // Tick the active player
+    auto player = party->_players[state._activePlayer];
+    if (state._twoPhaseAction)
+    {
       Pos ofs;
       if (arrowKeyToOffset(key, &ofs))
       {
-        if (Monster *monster = _level->monsterAt(player->_pos + ofs)) {
-          handleAttack(player, monster);
+        if (Monster *monster = level->monsterAt(player->_pos + ofs)) {
+          HandleAttack(state, player, monster);
           player->_hasMoved = true;
         }
       }
@@ -76,10 +163,10 @@ void StateBase::DoFunkyStuff(UpdateCoro::caller_type& coro)
       if (arrowKeyToOffset(key, &ofs))
       {
         Pos newPos(player->_pos + ofs);
-        if (_level->validDestination(newPos))
+        if (state._level->validDestination(newPos))
         {
           player->_hasMoved = true;
-          _level->movePlayer(player, player->_pos, newPos);
+          state._level->movePlayer(player, player->_pos, newPos);
           player->_pos = newPos;
         }
       }
@@ -89,230 +176,16 @@ void StateBase::DoFunkyStuff(UpdateCoro::caller_type& coro)
         player->_hasMoved = true;
       }
     }
-
-    _party->_activePlayer = (_party->_activePlayer + 1) % _party->_players.size();
+    activePlayer++;
   }
 
-  // Handle AI
-  auto &monsters = _level->monsters();
-  size_t cnt = monsters.size();
-  for (size_t i = 0; i < cnt; ++i)
+  if (activePlayer == state._party->GetNumPlayers())
   {
-    auto *monster = monsters[i];
-    if (monster->_action == MonsterAction::kUnknown)
-    {
-      if (_level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath))
-      {
-        monster->_action = MonsterAction::kRoaming;
-        monster->_roamStep = 1;
-      }
-    }
-
-    if (monster->_action == MonsterAction::kRoaming)
-    {
-      bool calcNewPath = monster->_roamStep >= monster->_roamPath.size();
-      if (!calcNewPath) {
-        Pos nextPos = monster->_roamPath[monster->_roamStep];
-        if (_level->tileFree(nextPos)) {
-          monster->_retryCount = 0;
-          _level->moveMonster(monster, monster->_pos, nextPos);
-          monster->_pos = nextPos;
-          monster->_roamStep++;
-        } else {
-          if (++monster->_retryCount > 3) {
-            calcNewPath = true;
-          }
-        }
-      }
-
-      if (calcNewPath) {
-        if (_level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath)) {
-          monster->_action = MonsterAction::kRoaming;
-          monster->_roamStep = 1;
-          monster->_retryCount = 0;
-        } else {
-          monster->_action = MonsterAction::kUnknown;
-        }
-      }
-    }
+    state._activePlayer = 0;
+    state._monsterPhase = true;
   }
-  coro(-1);
-
-}
-
-void PlayerState::addMoveDoneListener(const fnDoneListener &fn)
-{
-  _listeners.push_back(fn);
-}
-
-void StateBase::handleAttack(Player *player, Monster *monster)
-{
-  if (0 == --monster->_health) {
-    _level->monsterKilled(monster);
-    GAME.addLogMessage("Player %s killed monster!\n", player->_name.c_str());
-  }
-}
-
-void PlayerState::enterState() 
-{
-  GAME.addLogMessage("** ENTER PLAYER-STATE\n");
-
-  for (auto player : _party->_players)
+  else
   {
-    player->_hasMoved = false;
-    player->_action = PlayerAction::kUnknown;
+    state._activePlayer = activePlayer;
   }
-  _party->_activePlayer = 0;
-};
-
-void PlayerState::leaveState()
-{
-  GAME.addLogMessage("** LEAVE PLAYER-STATE\n");
-}
-
-GameState PlayerState::handleEvent(const sf::Event &event)
-{
-  auto &players = _party->_players;
-  Player *player = _party->getActivePlayer();
-
-  if (event.type == sf::Event::KeyReleased)
-  {
-    auto code = event.key.code;
-
-    auto handleMove = [&](sf::Keyboard::Key code) -> bool
-    {
-      // Check if the input is a valid movement key, and the
-      // resulting position is valid
-      Pos ofs;
-      if (arrowKeyToOffset(code, &ofs))
-      {
-        Pos newPos(player->_pos + ofs);
-        if (_level->validDestination(newPos))
-        {
-          player->_hasMoved = true;
-          _level->movePlayer(player, player->_pos, newPos);
-          player->_pos = newPos;
-          return true;
-        }
-      }
-      return false;
-    };
-
-    auto handleTwoPhase = [&](sf::Keyboard::Key code) -> bool
-    {
-      auto action = player->_action;
-
-      if (action == PlayerAction::kUnknown)
-      {
-        if (keyToTwoPhase(code, &player->_action))
-          return true;
-      }
-      
-      // check if we're in the second part of a two phase move
-      if (isTwoPhaseAction(action))
-      {
-        Pos ofs;
-        if (arrowKeyToOffset(code, &ofs))
-        {
-          if (Monster *monster = _level->monsterAt(player->_pos + ofs)) {
-            handleAttack(player, monster);
-            player->_hasMoved = true;
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-
-    bool playerMoved = handleTwoPhase(code);
-
-    if (!playerMoved) 
-      playerMoved = handleMove(code);
-
-    if (!playerMoved)
-    {
-      if (code == sf::Keyboard::Space)  // skip player
-        _party->_activePlayer++;
-    }
-  }
-
-  // Set next player
-  bool done = true;
-  for (size_t i = 0; i < players.size(); ++i)
-  {
-    int idx = (_party->_activePlayer + i) % players.size();
-    Player *p = players[idx];
-    if (!p->_hasMoved) {
-      _party->_activePlayer = idx;
-      done = false;
-      break;
-    }
-  }
-
-  if (done)
-  {
-    for (auto &fn : _listeners)
-      fn();
-    return GameState::kAiState;
-  }
-
-  return GameState::kPlayerState;
-}
-
-
-
-GameState AiState::update()
-{
-  auto &monsters = _level->monsters();
-  size_t cnt = monsters.size();
-  for (size_t i = 0; i < cnt; ++i)
-  {
-    auto *monster = monsters[i];
-    if (monster->_action == MonsterAction::kUnknown)
-    {
-      if (_level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath))
-      {
-        monster->_action = MonsterAction::kRoaming;
-        monster->_roamStep = 1;
-      }
-    }
-
-    if (monster->_action == MonsterAction::kRoaming)
-    {
-      bool calcNewPath = monster->_roamStep >= monster->_roamPath.size();
-      if (!calcNewPath) {
-        Pos nextPos = monster->_roamPath[monster->_roamStep];
-        if (_level->tileFree(nextPos)) {
-          monster->_retryCount = 0;
-          _level->moveMonster(monster, monster->_pos, nextPos);
-          monster->_pos = nextPos;
-          monster->_roamStep++;
-        } else {
-          if (++monster->_retryCount > 3) {
-            calcNewPath = true;
-          }
-        }
-      }
-
-      if (calcNewPath) {
-        if (_level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath)) {
-          monster->_action = MonsterAction::kRoaming;
-          monster->_roamStep = 1;
-          monster->_retryCount = 0;
-        } else {
-          monster->_action = MonsterAction::kUnknown;
-        }
-      }
-    }
-  }
-
-  return GameState::kPlayerState;
-}
-
-void AiState::enterState() {
-  GAME.addLogMessage("** ENTER AI-STATE\n");
-}
-
-void AiState::leaveState() {
-  GAME.addLogMessage("** LEAVE AI-STATE\n");
 }

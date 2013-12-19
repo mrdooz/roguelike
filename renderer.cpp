@@ -5,6 +5,7 @@
 #include "party.hpp"
 #include "level.hpp"
 #include "monster.hpp"
+#include "game_state.hpp"
 
 using namespace rogue;
 
@@ -34,21 +35,26 @@ Renderer::Renderer(sf::RenderWindow *window)
 {
 }
 
-void Renderer::onMoveDone() {
+void Renderer::onMoveDone()
+{
   int a = 10;
 }
 
-void Renderer::drawWorld() {
-
-  drawLevel();
-  drawMonsters();
-  drawParty();
-  drawPartyStats();
+void Renderer::drawWorld(const GameState& state)
+{
+  drawLevel(state);
+  drawMonsters(state);
+  drawParty(state);
+  drawPartyStats(state);
 }
 
-void Renderer::drawLevel() {
+void Renderer::drawLevel(const GameState& state)
+{
+  Player* activePlayer = state.GetActivePlayer();
+  assert(activePlayer);
+  Pos topLeft(activePlayer->_pos);
 
-  Pos topLeft(_party->getActivePlayer()->_pos);
+  Level* level = state._level;
 
   auto size = _window->getSize();
   int rows = (size.y) / (_zoomLevel*8);
@@ -58,12 +64,13 @@ void Renderer::drawLevel() {
   topLeft.col = max(0, topLeft.col - cols/2);
 
   // Recreate the sprites if the dimensions change
-  if (_level->_tileSprites.size() != rows * cols) {
-    _level->_tileSprites.resize(rows*cols);
+  if (level->_tileSprites.size() != rows * cols)
+  {
+    level->_tileSprites.resize(rows*cols);
 
     for (int i = 0; i < rows; ++i) {
       for (int j = 0; j < cols; ++j) {
-        auto &sprite = _level->_tileSprites[i*cols+j];
+        auto &sprite = level->_tileSprites[i*cols+j];
         sprite.setPosition((float)j*24, (float)i*24);
         sprite.setScale(3.0f, 3.0f);
         sprite.setTexture(_environmentTexture);
@@ -72,25 +79,34 @@ void Renderer::drawLevel() {
   }
 
   int idx = 0;
-  for (int i = 0; i < rows; ++i) {
-    for (int j = 0; j < cols; ++j) {
+  for (int i = 0; i < rows; ++i)
+  {
+    for (int j = 0; j < cols; ++j)
+    {
       int r = topLeft.row + i;
       int c = topLeft.col + j;
-      if (!_level->inside(r, c))
+      if (!level->inside(r, c))
         continue;
-      Tile &tile = _level->get(r, c);
-      sf::Sprite &sprite = _level->_tileSprites[idx++];
+      Tile &tile = level->get(r, c);
+      sf::Sprite &sprite = level->_tileSprites[idx++];
 
-      if (tile._type == TileType::kWall) {
-        if (_level->inside(r+1, c) && _level->get(r+1, c)._type != TileType::kWall) {
+      if (tile._type == TileType::kWall)
+      {
+        if (level->inside(r+1, c) && level->get(r+1, c)._type != TileType::kWall)
+        {
           sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
-        } else {
+        }
+        else
+        {
           sprite.setTextureRect(sf::IntRect((int)Tiles::wallV*8, 0, 8, 8));
         }
-      } else if (tile._type == TileType::kFloor) {
+      }
+      else if (tile._type == TileType::kFloor)
+      {
         sprite.setTextureRect(sf::IntRect((int)Tiles::floorC*8, 0, 8, 8));
-
-      } else {
+      }
+      else
+      {
         assert(false);
       }
 
@@ -100,9 +116,14 @@ void Renderer::drawLevel() {
   }
 }
 
-void Renderer::drawParty() {
+void Renderer::drawParty(const GameState& state)
+{
+  Player* activePlayer = state.GetActivePlayer();
+  assert(activePlayer);
+  Pos topLeft(activePlayer ? activePlayer->_pos : Pos());
 
-  Pos topLeft(_party->getActivePlayer()->_pos);
+  Level* level = state._level;
+  Party* party = state._party;
 
   auto size = _window->getSize();
   int cols = (size.x - _partyStatsWidth) / (_zoomLevel*8);
@@ -111,9 +132,9 @@ void Renderer::drawParty() {
   topLeft.row = max(0, topLeft.row - rows/2);
   topLeft.col = max(0, topLeft.col - cols/2);
 
-  auto *activePlayer = _party->_players[_party->_activePlayer];
-  for (size_t i = 0; i < _party->_players.size(); ++i) {
-    Player *player = _party->_players[i];
+  for (size_t i = 0; i < party->_players.size(); ++i)
+  {
+    Player *player = party->_players[i];
     int x = player->_pos.col - topLeft.col;
     int y = player->_pos.row - topLeft.row;
     if (x < 0 || x >= cols || y < 0 || y >= rows)
@@ -127,7 +148,14 @@ void Renderer::drawParty() {
   }
 }
 
-void Renderer::drawPartyStats() {
+void Renderer::drawPartyStats(const GameState& state)
+{
+  Player* activePlayer = state.GetActivePlayer();
+  assert(activePlayer);
+
+  Level* level = state._level;
+  Party* party = state._party;
+
   auto size = _window->getSize();
   float x = (float)(size.x - _partyStatsWidth);
   float col0 = x;
@@ -139,7 +167,8 @@ void Renderer::drawPartyStats() {
 
   sf::Vector2f pos(x, y);
 
-  auto drawHeading = [&](Player *player) {
+  auto drawHeading = [&](Player *player)
+  {
     heading.setString(player->_name);
     heading.setPosition(pos);
     sf::FloatRect r = heading.getLocalBounds();
@@ -154,15 +183,16 @@ void Renderer::drawPartyStats() {
     pos.y += 25;
   };
 
-  auto drawNormal = [&](const std::string &str) {
+  auto drawNormal = [&](const std::string &str)
+  {
     normal.setString(str);
     normal.setPosition(pos);
     pos.y += 15;
     _window->draw(normal);
   };
 
-  auto *activePlayer = _party->_players[_party->_activePlayer];
-  for (auto *player : _party->_players) {
+  for (auto *player : party->_players)
+  {
 
     heading.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
     normal.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
@@ -185,25 +215,8 @@ void Renderer::drawPartyStats() {
   }
 }
 
-void Renderer::getVisibleArea(Pos *topLeft, int *rows, int *cols) {
-/*
-  auto *activePlayer = _party->getActivePlayer();
-  Pos topLeft(activePlayer->_pos);
-
-  auto size = _window->getSize();
-  int _partyStatsWidth = 200;
-  int zoom = 3;
-  float zoomF = (float)zoom;
-  int cols = (size.x - _partyStatsWidth) / (zoom*8);
-  int rows = (size.y) / (zoom*8);
-
-  topLeft.row = max(0, topLeft.row - rows/2);
-  topLeft.col = max(0, topLeft.col - cols/2);
-*/
-}
-
-void Renderer::drawHealthBar(int health, int maxHealth, const Pos &pos) {
-
+void Renderer::drawHealthBar(int health, int maxHealth, const Pos &pos)
+{
   float zoomF = (float)_zoomLevel;
 
   sf::RectangleShape rectangle;
@@ -220,10 +233,14 @@ void Renderer::drawHealthBar(int health, int maxHealth, const Pos &pos) {
 
 }
 
-void Renderer::drawMonsters() {
+void Renderer::drawMonsters(const GameState& state)
+{
+  Player* activePlayer = state.GetActivePlayer();
+  assert(activePlayer);
+  Pos topLeft(activePlayer ? activePlayer->_pos : Pos());
 
-  auto *activePlayer = _party->getActivePlayer();
-  Pos topLeft(activePlayer->_pos);
+  Level* level = state._level;
+  Party* party = state._party;
 
   auto size = _window->getSize();
   int zoom = 3;
@@ -234,7 +251,8 @@ void Renderer::drawMonsters() {
   topLeft.row = max(0, topLeft.row - rows/2);
   topLeft.col = max(0, topLeft.col - cols/2);
 
-  for (auto monster : _level->monsters()) {
+  for (auto monster : level->monsters())
+  {
     if (!monster->_health)
       continue;
 
@@ -245,13 +263,24 @@ void Renderer::drawMonsters() {
     monster->_sprite.setPosition(zoomF*x*8, zoomF*y*8);
     _window->draw(monster->_sprite);
 
+    // draw the roam path
+    vector<sf::Vertex> path;
+    for (auto& p : monster->_roamPath)
+    {
+      path.push_back(sf::Vertex(sf::Vector2f(p.x*8*zoomF, p.y*8*zoomF)));
+    }
+
+    if (!path.empty())
+      _window->draw(path.data(), path.size(), sf::LinesStrip);
+
     drawHealthBar(monster->_health, monster->_maxHealth, Pos(y, x));
   }
 }
 
-bool Renderer::init(Level *level, Party *party) {
-  _level = level;
-  _party = party;
+bool Renderer::init(const GameState& state)
+{
+  Level* level = state._level;
+  Party* party = state._party;
 
   if (!_font.loadFromFile("gfx/wscsnrg.ttf"))
     return false;
@@ -262,8 +291,10 @@ bool Renderer::init(Level *level, Party *party) {
   if (!_characterTexture.loadFromFile("oryx_lofi/lofi_char.png"))
     return false;
 
-  for (auto *p : _party->_players) {
-    switch (p->_class) {
+  for (auto p : party->_players)
+  {
+    switch (p->_class)
+    {
       case PlayerClass::kWizard: p->_sprite.setTextureRect(sf::IntRect(0, 2*8, 8, 8)); break;
       case PlayerClass::kRogue: p->_sprite.setTextureRect(sf::IntRect(3*8, 0, 8, 8)); break;
       case PlayerClass::kWarrior: p->_sprite.setTextureRect(sf::IntRect(15*8, 0, 8, 8)); break;
@@ -272,8 +303,10 @@ bool Renderer::init(Level *level, Party *party) {
     p->_sprite.setTexture(_characterTexture);
   }
 
-  for (auto *m : _level->_monsters) {
-    switch (m->_type) {
+  for (auto m : level->_monsters)
+  {
+    switch (m->_type)
+    {
       case MonsterType::kGoblin: m->_sprite.setTextureRect(sf::IntRect(0, 5*8, 8, 8)); break;
       case MonsterType::kSkeleton: m->_sprite.setTextureRect(sf::IntRect(0, 6*8, 8, 8)); break;
       case MonsterType::kSkeletonWarrior: m->_sprite.setTextureRect(sf::IntRect(2*8, 6*8, 8, 8)); break;

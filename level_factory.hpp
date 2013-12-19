@@ -12,7 +12,7 @@ namespace rogue
     static void close();
     static LevelFactory &instance();
 
-    Level *createLevel(int width, int height);
+    Level *CreateLevel(int width, int height);
   private:
 
     static LevelFactory *_instance;

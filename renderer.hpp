@@ -8,23 +8,23 @@ namespace rogue
 {
   class Level;
   class Party;
+  struct GameState;
 
-  class Renderer {
+  class Renderer
+  {
   public:
     Renderer(RenderWindow *window);
 
-    bool init(Level *level, Party *party);
-    void drawWorld();
+    bool init(const GameState& state);
+    void drawWorld(const GameState& state);
 
     void onMoveDone();
   private:
 
-    void drawParty();
-    void drawPartyStats();
-    void drawLevel();
-    void drawMonsters();
-
-    void getVisibleArea(Pos *topLeft, int *rows, int *cols);
+    void drawParty(const GameState& state);
+    void drawPartyStats(const GameState& state);
+    void drawLevel(const GameState& state);
+    void drawMonsters(const GameState& state);
 
     void drawHealthBar(int health, int maxHealth, const Pos &pos);
 
@@ -35,9 +35,6 @@ namespace rogue
     Font _font;
     Texture _environmentTexture;
     Texture _characterTexture;
-
-    Level *_level;
-    Party *_party;
   };
 }
 

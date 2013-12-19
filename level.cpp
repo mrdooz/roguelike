@@ -126,10 +126,14 @@ bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
 
   struct PosLink
   {
-    PosLink(size_t idx, size_t parent = ~0) : idx(idx), parent(parent) {}
+    PosLink(size_t idx, size_t linkIdx, size_t parentIdx) : idx(idx), linkIdx(linkIdx), parentIdx(parentIdx) {}
     size_t idx;
-    size_t parent;
+    // note, these indices push into the links vector
+    size_t linkIdx;
+    size_t parentIdx;
   };
+
+  vector<PosLink> links;
 
   struct Distance
   {
@@ -150,13 +154,22 @@ bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
     Pos dst;
   };
 
-  set<Pos> visited;
   auto q = priority_queue<PosLink, vector<PosLink>, Distance>(Distance(*this, end));
-  q.push(PosLink(PosToIndex(start)));
+  PosLink s(PosToIndex(start), 0, ~0);
+  links.push_back(s);
+  q.push(s);
+  vector<u32> visited(_tiles.size() / 32 + 1);
+  auto IsVisited = [&](const Pos& p)
+  {
+    size_t idx = PosToIndex(p);
+    return (visited[idx/32] & (1 << (idx & 0x1f))) > 0;
+  };
 
-  //auto q = priority_queue<size_t, vector<size_t>, Distance>(Distance(end));
-
-  visited.insert(start);
+  auto SetVisited = [&](const Pos& p)
+  {
+    size_t idx = PosToIndex(p);
+    visited[idx/32] |= (1 << (idx & 0x1f));
+  };
 
   while (!q.empty())
   {
@@ -167,10 +180,10 @@ bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
     {
       // If we've reached the end, trace backwards to find the path
       vector<Pos> tmp;
-      while (cur.parent != ~0)
+      while (cur.parentIdx != ~0)
       {
         tmp.push_back(IndexToPos(cur.idx));
-        cur = cur.parent;
+        cur = links[cur.parentIdx];
       }
       path->resize(tmp.size());
       size_t cnt = tmp.size();
@@ -183,9 +196,12 @@ bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
     Pos offsets[] = { Pos(1,0), Pos(-1,0), Pos(0, 1), Pos(0, -1) };
     for (auto &ofs : offsets) {
       Pos cand(IndexToPos(cur.idx) + ofs);
-      if (inside(cand) && get(cand)._type != TileType::kWall && !contains(visited, cand)) {
-        q.push(PosLink(PosToIndex(cand), cur.idx));
-        visited.insert(cand);
+      if (inside(cand) && get(cand)._type != TileType::kWall && !IsVisited(cand))
+      {
+        PosLink x(PosToIndex(cand), links.size(), cur.linkIdx);
+        links.push_back(x);
+        q.push(x);
+        SetVisited(cand);
       }
     }
 

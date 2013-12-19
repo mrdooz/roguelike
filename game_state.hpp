@@ -12,51 +12,19 @@ namespace rogue
   class Player;
   class Monster;
 
-  enum class GameState {
-    kPlayerState,
-    kAiState,
-  };
-
-  typedef boost::coroutines::coroutine<int(sf::Keyboard::Key)> UpdateCoro;
-
-  struct StateBase {
-
-    virtual GameState stateId() const = 0;
-    virtual void enterState() {}
-    virtual void leaveState() {}
-    virtual GameState update() = 0;
-    virtual GameState handleEvent(const sf::Event &event) = 0;
-
-    void DoFunkyStuff(UpdateCoro::caller_type& coro);
-    void handleAttack(Player *player, Monster *monster);
-
+  struct GameState
+  {
+    GameState();
+    ~GameState();
+    Player* GetActivePlayer() const;
+    size_t _activePlayer;
     Level *_level;
     Party *_party;
+    bool _twoPhaseAction;
+    bool _monsterPhase;
   };
 
-  struct PlayerState : public StateBase {
-
-    virtual GameState stateId() const OVERRIDE { return GameState::kPlayerState; }
-    virtual void enterState() OVERRIDE;
-    virtual void leaveState() OVERRIDE;
-    virtual GameState update() OVERRIDE { return GameState::kPlayerState; }
-    virtual GameState handleEvent(const sf::Event &event) OVERRIDE;
-    //void handleAttack(Player *player, Monster *monster);
-
-    typedef function<void()> fnDoneListener;
-    void addMoveDoneListener(const fnDoneListener &fn);
-
-    vector<fnDoneListener> _listeners;
-  };
-
-  struct AiState : public StateBase {
-    virtual void enterState() OVERRIDE;
-    virtual void leaveState() OVERRIDE;
-    virtual GameState stateId() const OVERRIDE { return GameState::kAiState; }
-    virtual GameState update() OVERRIDE;
-    virtual GameState handleEvent(const sf::Event &event) OVERRIDE { return GameState::kAiState; }
-  };
-
+  void UpdateState(GameState& state, Keyboard::Key key);
 }
 
 #endif

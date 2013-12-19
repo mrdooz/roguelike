@@ -6,7 +6,9 @@
 
 using namespace rogue;
 
+#ifdef _WIN32
 #define DEBUG_MAP 1
+#endif
 
 struct Room
 {
@@ -19,7 +21,7 @@ struct Room
 
 vector<Room> rooms;
 
-const int cMaxDepth = 2;
+const int cMaxDepth = 3;
 
 size_t subdivide(
     Level *level,
@@ -35,11 +37,9 @@ size_t subdivide(
 {
   size_t curIdx = rooms.size();
   rooms.push_back(Room(parent));
-  //Room *cur = &rooms.back();
   rooms[curIdx].rect = sf::IntRect(left, top, width, height);
 
   bool horiz = !!(rand() % 2);
-
   if (horiz)
   {
     int split = (int)gaussianRand(height/2.0f, height/4.0f);
@@ -62,11 +62,9 @@ size_t subdivide(
       }
       curRoom += 2;
     }
-
   }
   else
   {
-
     int split = (int)gaussianRand(width/2.0f, width/4.0f);
     for (int i = 0; i < height; ++i)
       level->get(top+i, left+split)._type = TileType::kWall;
@@ -100,7 +98,8 @@ struct Wall {
   int start, finish;
 };
 
-Level *LevelFactory::createLevel(int width, int height) {
+Level *LevelFactory::CreateLevel(int width, int height)
+{
   Level *level = new Level(width, height);
 
   // fill floor
