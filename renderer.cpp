@@ -234,7 +234,7 @@ void Renderer::drawMonsters() {
   topLeft.row = max(0, topLeft.row - rows/2);
   topLeft.col = max(0, topLeft.col - cols/2);
 
-  for (auto *monster : _level->_monsters) {
+  for (auto monster : _level->monsters()) {
     if (!monster->_health)
       continue;
 

@@ -47,7 +47,7 @@ namespace rogue
     Tile &get(const Pos &pos);
     const Tile &get(const Pos &pos) const;
 
-    vector<Monster *> &monsters() { return _monsters; }
+    const vector<Monster* >& monsters() { return _monsters; }
 
     bool calcPath(const Pos &start, const Pos &end, vector<Pos> *path);
 
@@ -58,11 +58,13 @@ namespace rogue
 
   private:
 
+    Pos IndexToPos(size_t idx) const;
+    size_t PosToIndex(const Pos& pos) const;
     void updateFog(const Pos &pos);
 
     vector<sf::Sprite> _tileSprites;
     vector<Tile> _tiles;
-    vector<Monster *> _monsters;
+    vector<Monster* > _monsters;
     int _width;
     int _height;
   };

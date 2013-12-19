@@ -95,7 +95,6 @@ int Game::run()
 
   sf::View view = _window->getDefaultView();
 
-  //auto fn = boost::bind(&StateBase::DoFunkyStuff, _curState);
   UpdateCoro coro(boost::bind(&StateBase::DoFunkyStuff, _curState, _1));
 
   // Start the game loop

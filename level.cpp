@@ -121,43 +121,56 @@ bool Level::tileFree(const Pos &pos) const {
   return tile._monster == nullptr && tile._player == nullptr;
 }
 
-bool Level::calcPath(const Pos &start, const Pos &end, std::vector<Pos> *path) {
+bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
+{
 
-  struct PosLink {
-    PosLink(const Pos &pos, shared_ptr<PosLink> parent) : pos(pos), parent(parent) {}
-    Pos pos;
-    shared_ptr<PosLink> parent;
+  struct PosLink
+  {
+    PosLink(size_t idx, size_t parent = ~0) : idx(idx), parent(parent) {}
+    size_t idx;
+    size_t parent;
   };
 
-  struct Distance {
-    Distance(const Pos &dst) : dst(dst) {}
-    bool operator()(const shared_ptr<PosLink> &a, const shared_ptr<PosLink> &b) {
-      float ax = (float)(a->pos.x - dst.x);
-      float ay = (float)(a->pos.y - dst.y);
+  struct Distance
+  {
+    Distance(const Level& level, const Pos &dst) : level(level), dst(dst) {}
+    bool operator()(const PosLink& a, const PosLink& b)
+    {
+      const Pos& p0 = level.IndexToPos(a.idx);
+      const Pos& p1 = level.IndexToPos(b.idx);
 
-      float bx = (float)(b->pos.x - dst.x);
-      float by = (float)(b->pos.y - dst.y);
-      return sqrtf(ax*ax + ay*ay) > sqrtf(bx*bx+by*by);
+      float ax = fabsf((float)(p0.x - dst.x));
+      float ay = fabsf((float)(p0.y - dst.y));
+
+      float bx = fabsf((float)(p1.x - dst.x));
+      float by = fabsf((float)(p1.y - dst.y));
+      return ax + ay > bx + by;
     }
+    const Level& level;
     Pos dst;
   };
 
   set<Pos> visited;
-  auto q = priority_queue<PosLink *, vector<shared_ptr<PosLink>>, Distance>(Distance(end));
-  q.push(shared_ptr<PosLink>(new PosLink(start, nullptr)));
+  auto q = priority_queue<PosLink, vector<PosLink>, Distance>(Distance(*this, end));
+  q.push(PosLink(PosToIndex(start)));
+
+  //auto q = priority_queue<size_t, vector<size_t>, Distance>(Distance(end));
 
   visited.insert(start);
 
-  while (!q.empty()) {
+  while (!q.empty())
+  {
     auto cur = q.top();
     q.pop();
 
-    if (cur->pos == end) {
+    if (cur.idx == PosToIndex(end))
+    {
+      // If we've reached the end, trace backwards to find the path
       vector<Pos> tmp;
-      shared_ptr<PosLink> node = cur;
-      while (node) {
-        tmp.push_back(node->pos);
-        node = node->parent;
+      while (cur.parent != ~0)
+      {
+        tmp.push_back(IndexToPos(cur.idx));
+        cur = cur.parent;
       }
       path->resize(tmp.size());
       size_t cnt = tmp.size();
@@ -169,9 +182,9 @@ bool Level::calcPath(const Pos &start, const Pos &end, std::vector<Pos> *path) {
 
     Pos offsets[] = { Pos(1,0), Pos(-1,0), Pos(0, 1), Pos(0, -1) };
     for (auto &ofs : offsets) {
-      Pos cand(cur->pos + ofs);
+      Pos cand(IndexToPos(cur.idx) + ofs);
       if (inside(cand) && get(cand)._type != TileType::kWall && !contains(visited, cand)) {
-        q.push(shared_ptr<PosLink>(new PosLink(cand, cur)));
+        q.push(PosLink(PosToIndex(cand), cur.idx));
         visited.insert(cand);
       }
     }
@@ -202,4 +215,17 @@ Player *Level::playerAt(const Pos &pos)
 Monster *Level::monsterAt(const Pos &pos)
 {
   return inside(pos) ? get(pos)._monster : nullptr;
+}
+
+Pos Level::IndexToPos(size_t idx) const
+{
+  if (_width == 0)
+    return Pos();
+
+  return Pos(idx/_width, idx % _width);
+}
+
+size_t Level::PosToIndex(const Pos& pos) const
+{
+  return pos.row * _width + pos.col;
 }

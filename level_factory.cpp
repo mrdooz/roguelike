@@ -8,63 +8,87 @@ using namespace rogue;
 
 #define DEBUG_MAP 1
 
-struct Room {
-  Room(Room *parent) : parent(parent) {}
+struct Room
+{
+  Room(size_t parent) : parent(parent) {}
 
   sf::IntRect rect;
-  vector<Room *> children;
-  Room *parent;
+  vector<size_t> children;
+  size_t parent;
 };
+
+vector<Room> rooms;
 
 const int cMaxDepth = 2;
 
-Room *subdivide(Level *level, int *roomIds, int pitch, int &curRoom, int top, int left, int width, int height, int depth, Room *parent) {
-
-  Room *cur = new Room(parent);
-  cur->rect = sf::IntRect(left, top, width, height);
+size_t subdivide(
+    Level *level,
+    int *roomIds,
+    int pitch,
+    int &curRoom,
+    int top,
+    int left,
+    int width,
+    int height,
+    int depth,
+    size_t parent)
+{
+  size_t curIdx = rooms.size();
+  rooms.push_back(Room(parent));
+  //Room *cur = &rooms.back();
+  rooms[curIdx].rect = sf::IntRect(left, top, width, height);
 
   bool horiz = !!(rand() % 2);
 
-  if (horiz) {
-
+  if (horiz)
+  {
     int split = (int)gaussianRand(height/2.0f, height/4.0f);
-    for (int i = 0; i < width; ++i) {
+    for (int i = 0; i < width; ++i)
       level->get(top+split, left+i)._type = TileType::kWall;
-    }
 
-    if (depth <= cMaxDepth && width > 5 && height > 5) {
-      cur->children.push_back(subdivide(level, roomIds, pitch, curRoom, top, left, width, split+1, depth + 1, cur));
-      cur->children.push_back(subdivide(level, roomIds, pitch, curRoom, top + split, left, width, height - split, depth + 1, cur));
-    } else {
-      for (int i = top+1; i < top + height-1; ++i) {
-        for (int j = left+1; j < left + width-1; ++j) {
+    if (depth <= cMaxDepth && width > 5 && height > 5)
+    {
+      rooms[curIdx].children.push_back(subdivide(level, roomIds, pitch, curRoom, top, left, width, split+1, depth + 1, curIdx));
+      rooms[curIdx].children.push_back(subdivide(level, roomIds, pitch, curRoom, top + split, left, width, height - split, depth + 1, curIdx));
+    }
+    else
+    {
+      for (int i = top+1; i < top + height-1; ++i)
+      {
+        for (int j = left+1; j < left + width-1; ++j)
+        {
           roomIds[i*pitch+j] = i < top + split ? curRoom : i == top + split ? 0 : curRoom + 1;
         }
       }
       curRoom += 2;
     }
 
-  } else {
+  }
+  else
+  {
 
     int split = (int)gaussianRand(width/2.0f, width/4.0f);
-    for (int i = 0; i < height; ++i) {
+    for (int i = 0; i < height; ++i)
       level->get(top+i, left+split)._type = TileType::kWall;
-    }
 
-    if (depth <= cMaxDepth && width > 5 && height > 5) {
-      cur->children.push_back(subdivide(level, roomIds, pitch, curRoom, top, left, split+1, height, depth + 1, cur));
-      cur->children.push_back(subdivide(level, roomIds, pitch, curRoom, top, left + split, width - split, height, depth + 1, cur));
-    } else {
-      for (int i = top+1; i < top + height-1; ++i) {
-        for (int j = left+1; j < left + width-1; ++j) {
+    if (depth <= cMaxDepth && width > 5 && height > 5)
+    {
+      rooms[curIdx].children.push_back(subdivide(level, roomIds, pitch, curRoom, top, left, split+1, height, depth + 1, curIdx));
+      rooms[curIdx].children.push_back(subdivide(level, roomIds, pitch, curRoom, top, left + split, width - split, height, depth + 1, curIdx));
+    }
+    else
+    {
+      for (int i = top+1; i < top + height-1; ++i)
+      {
+        for (int j = left+1; j < left + width-1; ++j)
+        {
           roomIds[i*pitch+j] = j < left + split ? curRoom : j == left + split ? 0 : curRoom + 1;
         }
       }
       curRoom += 2;
     }
   }
-
-  return cur;
+  return curIdx;
 }
 
 struct Wall {
@@ -99,7 +123,7 @@ Level *LevelFactory::createLevel(int width, int height) {
 
   int roomCount = 1;
   vector<int> roomIds(width*height);
-  Room *root = subdivide(level, roomIds.data(), width, roomCount, 0, 0, width, height, 0, nullptr);
+  size_t root = subdivide(level, roomIds.data(), width, roomCount, 0, 0, width, height, 0, ~0);
 
   map<pair<int, int>, Wall> walls;
 
