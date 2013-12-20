@@ -16,49 +16,51 @@ Level::~Level() {
   seq_delete(&_monsters);
 }
 
-bool Level::inside(int row, int col) const {
+bool Level::Inside(int row, int col) const
+{
   return row >= 0 && row < _height && col >= 0 && col < _width;
 }
 
-Tile &Level::get(int row, int col) {
+Tile &Level::Get(int row, int col) {
   return _tiles[row*_width+col];
 }
 
-Tile &Level::get(const Pos &pos) {
+Tile &Level::Get(const Pos &pos) {
   return _tiles[pos.row*_width+pos.col];
 }
 
-const Tile &Level::get(const Pos &pos) const {
+const Tile &Level::Get(const Pos &pos) const {
   return _tiles[pos.row*_width+pos.col];
 }
 
 bool Level::validDestination(const Pos &pos) {
-  if (!inside(pos))
+  if (!Inside(pos))
     return false;
-  auto &tile = get(pos);
+  auto &tile = Get(pos);
   return tile._type != TileType::kWall && !tile._player && !tile._monster;
 
 }
 
 void Level::initPlayer(Player *p, const Pos &pos) {
 
-  assert(inside(pos));
+  assert(Inside(pos));
 
-  Tile &newTile = get(pos);
+  Tile &newTile = Get(pos);
   assert(!newTile._player);
   newTile._player = p;
 
   updateFog(pos);
 }
 
-void Level::initMonsters() {
-  for (int i = 0; i < 100; ++i) {
+void Level::initMonsters()
+{
+  for (int i = 0; i < 10; ++i) {
     Monster *monster = new Monster();
     int r, c;
     while (true) {
       r = 1 + (rand() % (_height-2));
       c = 1 + (rand() % (_width-2));
-      auto &tile = get(r, c);
+      auto &tile = Get(r, c);
       if (tile._type == TileType::kFloor && !tile._monster && !tile._player) {
         tile._monster = monster;
         break;
@@ -75,26 +77,26 @@ void Level::initMonsters() {
 
 void Level::moveMonster(Monster *m, const Pos &oldPos, const Pos &newPos) {
 
-  assert(inside(oldPos) && inside(newPos));
+  assert(Inside(oldPos) && Inside(newPos));
 
-  Tile &oldTile = get(oldPos);
+  Tile &oldTile = Get(oldPos);
   assert(oldTile._monster == m);
   oldTile._monster = nullptr;
 
-  Tile &newTile = get(newPos);
+  Tile &newTile = Get(newPos);
   assert(!newTile._monster);
   newTile._monster = m;
 }
 
 void Level::movePlayer(Player *p, const Pos &oldPos, const Pos &newPos) {
 
-  assert(inside(oldPos) && inside(newPos));
+  assert(Inside(oldPos) && Inside(newPos));
 
-  Tile &oldTile = get(oldPos);
+  Tile &oldTile = Get(oldPos);
   assert(oldTile._player == p);
   oldTile._player = nullptr;
 
-  Tile &newTile = get(newPos);
+  Tile &newTile = Get(newPos);
   assert(!newTile._player);
   newTile._player = p;
 
@@ -105,11 +107,11 @@ void Level::updateFog(const Pos &pos) {
   for (int i = -1; i <= 1; ++i) {
     for (int j = -1; j <= 1; ++j) {
       Pos p(pos.row + i, pos.col + j);
-      if (!inside(p))
+      if (!Inside(p))
         continue;
       int dy = i < 0 ? -i : i;
       int dx = j < 0 ? -j : j;
-      auto &tile = get(p);
+      auto &tile = Get(p);
       int v = std::min(2, std::max(0, 2 - (int)(sqrt(dx*dx+dy*dy) + 0.5f)));
       tile._visited = std::min(255, tile._visited + 64 * v);
     }
@@ -117,7 +119,7 @@ void Level::updateFog(const Pos &pos) {
 }
 
 bool Level::tileFree(const Pos &pos) const {
-  auto &tile = get(pos);
+  auto &tile = Get(pos);
   return tile._monster == nullptr && tile._player == nullptr;
 }
 
@@ -196,7 +198,7 @@ bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
     Pos offsets[] = { Pos(1,0), Pos(-1,0), Pos(0, 1), Pos(0, -1) };
     for (auto &ofs : offsets) {
       Pos cand(IndexToPos(cur.idx) + ofs);
-      if (inside(cand) && get(cand)._type != TileType::kWall && !IsVisited(cand))
+      if (Inside(cand) && Get(cand)._type != TileType::kWall && !IsVisited(cand))
       {
         PosLink x(PosToIndex(cand), links.size(), cur.linkIdx);
         links.push_back(x);
@@ -213,7 +215,7 @@ bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
 void Level::monsterKilled(Monster *m) {
   for (auto it = begin(_monsters); it != end(_monsters); ) {
     if (*it == m) {
-      get(m->_pos)._monster = nullptr;
+      Get(m->_pos)._monster = nullptr;
       _monsters.erase(it);
       delete m;
       return;
@@ -225,12 +227,12 @@ void Level::monsterKilled(Monster *m) {
 
 Player *Level::playerAt(const Pos &pos)
 {
-  return inside(pos) ? get(pos)._player : nullptr;
+  return Inside(pos) ? Get(pos)._player : nullptr;
 }
 
 Monster *Level::monsterAt(const Pos &pos)
 {
-  return inside(pos) ? get(pos)._monster : nullptr;
+  return Inside(pos) ? Get(pos)._monster : nullptr;
 }
 
 Pos Level::IndexToPos(size_t idx) const

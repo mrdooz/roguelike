@@ -15,22 +15,28 @@ namespace rogue
   public:
     Renderer(RenderWindow *window);
 
-    bool init(const GameState& state);
-    void drawWorld(const GameState& state);
+    bool Init(const GameState& state);
+    void DrawWorld(const GameState& state);
+    void Resize();
 
     void onMoveDone();
   private:
 
     void drawParty(const GameState& state);
     void drawPartyStats(const GameState& state);
-    void drawLevel(const GameState& state);
+    void DrawLevel(const GameState& state);
     void drawMonsters(const GameState& state);
 
     void drawHealthBar(int health, int maxHealth, const Pos &pos);
 
     int _partyStatsWidth;
+    void VisibleArea(int* rows, int* cols) const;
     RenderWindow *_window;
 
+    vector<sf::Sprite> _tileSprites;
+
+    int _leftMargin, _rightMargin, _topMargin, _bottomMargin;
+    int _leftOffset, _topOffset;
     int _zoomLevel;
     Font _font;
     Texture _environmentTexture;

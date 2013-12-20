@@ -9,7 +9,9 @@
 
 using namespace rogue;
 
-enum class Tiles {
+//-----------------------------------------------------------------------------
+enum class Tiles
+{
   wallH,
   wallH_torch_anim_1,
   wAllH_torch_anim_2,
@@ -27,72 +29,146 @@ enum class Tiles {
   cNumTiles,
 };
 
-
+//-----------------------------------------------------------------------------
 Renderer::Renderer(sf::RenderWindow *window) 
   : _window(window)
   , _partyStatsWidth(210)
   , _zoomLevel(3)
+  , _leftMargin(0)
+  , _rightMargin(210)
+  , _topMargin(0)
+  , _bottomMargin(0)
+  , _leftOffset(0)
+  , _topOffset(0)
 {
 }
 
+//-----------------------------------------------------------------------------
 void Renderer::onMoveDone()
 {
   int a = 10;
 }
 
-void Renderer::drawWorld(const GameState& state)
+//-----------------------------------------------------------------------------
+void Renderer::DrawWorld(const GameState& state)
 {
-  drawLevel(state);
+  // Because party members can be at totally differnet spots in the world, we
+  // might end up having to redraw once per member.
+
+  // Iterate all the players, and find the rectangle that displays the most players
+  // Remove this one, and keep going until all players have rectangles
+
+  const auto& players = state._party->_players;
+  size_t numPlayers = players.size();
+  vector<u8> playersAllocated(numPlayers);
+  vector<vector<size_t> > groupedPlayers;
+  size_t playersLeft = numPlayers;
+
+  int rows, cols;
+  VisibleArea(&rows, &cols);
+
+  while (playersLeft)
+  {
+    vector<size_t> curGroup;
+
+    // find the top left coordinate of the remaining players
+    Pos topLeft(players[0]->_pos);
+    for (size_t i = 1; i < numPlayers; ++i)
+    {
+      if (!playersAllocated[i])
+      {
+        Pos p(players[i]->_pos);
+        topLeft.x = min(topLeft.x, p.x);
+        topLeft.y = min(topLeft.y, p.y);
+      }
+    }
+
+    Rect rect(topLeft, cols, rows);
+
+    // Keep adding players until they no long fit in the rectangle
+    for (size_t i = 0; i < numPlayers; ++i)
+    {
+      if (!playersAllocated[i])
+      {
+        Pos pos = players[i]->_pos;
+        if (rect.PointInside(pos))
+        {
+          curGroup.push_back(i);
+          playersAllocated[i] = 1;
+          --playersLeft;
+        }
+      }
+    }
+    // Gone through all the players, so add the group
+    groupedPlayers.push_back(curGroup);
+
+  }
+
+  DrawLevel(state);
   drawMonsters(state);
   drawParty(state);
   drawPartyStats(state);
 }
 
-void Renderer::drawLevel(const GameState& state)
+//-----------------------------------------------------------------------------
+void Renderer::VisibleArea(int* rows, int* cols) const
 {
-  Player* activePlayer = state.GetActivePlayer();
-  assert(activePlayer);
-  Pos topLeft(activePlayer->_pos);
-
-  Level* level = state._level;
-
+  // Determine number of tiles in the visible area (rows x cols)
   auto size = _window->getSize();
-  int rows = (size.y) / (_zoomLevel*8);
-  int cols = (size.x - _partyStatsWidth) / (_zoomLevel*8);
+  size_t zoom = _zoomLevel * 8;
+  *rows = 1 + (max(0, (int)size.y - _topMargin - _bottomMargin)) / zoom;
+  *cols = 1 + (max(0, (int)size.x - _leftMargin - _rightMargin)) / zoom;
+}
 
-  topLeft.row = max(0, topLeft.row - rows/2);
-  topLeft.col = max(0, topLeft.col - cols/2);
+//-----------------------------------------------------------------------------
+void Renderer::Resize()
+{
+  int rows, cols;
+  VisibleArea(&rows, &cols);
 
-  // Recreate the sprites if the dimensions change
-  if (level->_tileSprites.size() != rows * cols)
+  // Return if the new window contains the same number of tiles
+  if (_tileSprites.size() == rows * cols)
+    return;
+
+  _tileSprites.resize(rows*cols);
+  size_t zoom = _zoomLevel * 8;
+  for (int i = 0; i < rows; ++i)
   {
-    level->_tileSprites.resize(rows*cols);
-
-    for (int i = 0; i < rows; ++i) {
-      for (int j = 0; j < cols; ++j) {
-        auto &sprite = level->_tileSprites[i*cols+j];
-        sprite.setPosition((float)j*24, (float)i*24);
-        sprite.setScale(3.0f, 3.0f);
-        sprite.setTexture(_environmentTexture);
-      }
+    for (int j = 0; j < cols; ++j)
+    {
+      auto &sprite = _tileSprites[i*cols+j];
+      sprite.setPosition((float)j*zoom, (float)i*zoom);
+      sprite.setScale(3.0f, 3.0f);
+      sprite.setTexture(_environmentTexture);
     }
   }
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::DrawLevel(const GameState& state)
+{
+  int rows, cols;
+  VisibleArea(&rows, &cols);
+
+  Level* level = state._level;
 
   int idx = 0;
   for (int i = 0; i < rows; ++i)
   {
     for (int j = 0; j < cols; ++j)
     {
-      int r = topLeft.row + i;
-      int c = topLeft.col + j;
-      if (!level->inside(r, c))
+      int r = _topOffset + i;
+      int c = _leftOffset + j;
+      if (!level->Inside(r, c))
         continue;
-      Tile &tile = level->get(r, c);
-      sf::Sprite &sprite = level->_tileSprites[idx++];
 
+      Tile &tile = level->Get(r, c);
+      sf::Sprite &sprite = _tileSprites[idx++];
+
+      // If the tile is a wall, determine if it should be horizontal or vertical
       if (tile._type == TileType::kWall)
       {
-        if (level->inside(r+1, c) && level->get(r+1, c)._type != TileType::kWall)
+        if (level->Inside(r+1, c) && level->Get(r+1, c)._type != TileType::kWall)
         {
           sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
         }
@@ -116,6 +192,7 @@ void Renderer::drawLevel(const GameState& state)
   }
 }
 
+//-----------------------------------------------------------------------------
 void Renderer::drawParty(const GameState& state)
 {
   Player* activePlayer = state.GetActivePlayer();
@@ -125,9 +202,8 @@ void Renderer::drawParty(const GameState& state)
   Level* level = state._level;
   Party* party = state._party;
 
-  auto size = _window->getSize();
-  int cols = (size.x - _partyStatsWidth) / (_zoomLevel*8);
-  int rows = (size.y) / (_zoomLevel*8);
+  int rows, cols;
+  VisibleArea(&rows, &cols);
 
   topLeft.row = max(0, topLeft.row - rows/2);
   topLeft.col = max(0, topLeft.col - cols/2);
@@ -277,7 +353,8 @@ void Renderer::drawMonsters(const GameState& state)
   }
 }
 
-bool Renderer::init(const GameState& state)
+//-----------------------------------------------------------------------------
+bool Renderer::Init(const GameState& state)
 {
   Level* level = state._level;
   Party* party = state._party;
@@ -291,8 +368,10 @@ bool Renderer::init(const GameState& state)
   if (!_characterTexture.loadFromFile("oryx_lofi/lofi_char.png"))
     return false;
 
+  // Set the texture coords for the players
   for (auto p : party->_players)
   {
+    p->_sprite.setTexture(_characterTexture);
     switch (p->_class)
     {
       case PlayerClass::kWizard: p->_sprite.setTextureRect(sf::IntRect(0, 2*8, 8, 8)); break;
@@ -300,11 +379,12 @@ bool Renderer::init(const GameState& state)
       case PlayerClass::kWarrior: p->_sprite.setTextureRect(sf::IntRect(15*8, 0, 8, 8)); break;
       case PlayerClass::kCleric: p->_sprite.setTextureRect(sf::IntRect(6*8, 0, 8, 8)); break;
     }
-    p->_sprite.setTexture(_characterTexture);
   }
 
+  // Set the texture coords for the monster
   for (auto m : level->_monsters)
   {
+    m->_sprite.setTexture(_characterTexture);
     switch (m->_type)
     {
       case MonsterType::kGoblin: m->_sprite.setTextureRect(sf::IntRect(0, 5*8, 8, 8)); break;
@@ -316,8 +396,9 @@ bool Renderer::init(const GameState& state)
       case MonsterType::kOgre: m->_sprite.setTextureRect(sf::IntRect(0, 8*8, 8, 8)); break;
       case MonsterType::kDemon: m->_sprite.setTextureRect(sf::IntRect(0, 9*8, 8, 8)); break;
     }
-    m->_sprite.setTexture(_characterTexture);
   }
+
+  Resize();
 
   return true;
 }

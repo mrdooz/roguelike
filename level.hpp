@@ -16,7 +16,8 @@ namespace rogue
     kStairDown,
   };
 
-  struct Tile {
+  struct Tile
+  {
     Tile() : _visited(0), _player(nullptr), _monster(nullptr) {}
     TileType _type;
     Player *_player;
@@ -24,7 +25,8 @@ namespace rogue
     int _visited;
   };
 
-  class Level {
+  class Level
+  {
     friend class LevelFactory;
     friend class Renderer;
   public:
@@ -39,13 +41,13 @@ namespace rogue
 
     void initMonsters();
 
-    bool inside(int row, int col) const;
-    bool inside(const Pos &pos) const { return inside(pos.row, pos.col); }
+    bool Inside(int row, int col) const;
+    bool Inside(const Pos &pos) const { return Inside(pos.row, pos.col); }
     bool tileFree(const Pos &pos) const;
 
-    Tile &get(int row, int col);
-    Tile &get(const Pos &pos);
-    const Tile &get(const Pos &pos) const;
+    Tile &Get(int row, int col);
+    Tile &Get(const Pos &pos);
+    const Tile &Get(const Pos &pos) const;
 
     const vector<Monster* >& monsters() { return _monsters; }
 
@@ -62,7 +64,6 @@ namespace rogue
     size_t PosToIndex(const Pos& pos) const;
     void updateFog(const Pos &pos);
 
-    vector<sf::Sprite> _tileSprites;
     vector<Tile> _tiles;
     vector<Monster* > _monsters;
     int _width;

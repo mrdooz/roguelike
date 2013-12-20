@@ -60,7 +60,7 @@ bool Game::init()
   _gameState._level->initMonsters();
 
   _renderer = new Renderer(_window);
-  _renderer->init(_gameState);
+  _renderer->Init(_gameState);
 
   //_playerState.addMoveDoneListener(std::bind(&Renderer::onMoveDone, _renderer));
 
@@ -79,19 +79,23 @@ int Game::run()
     sf::Event event;
     if (_window->pollEvent(event))
     {
+      sf::Event::EventType type = event.type;
       do
       {
-        if (event.type == sf::Event::Resized)
+        if (type == sf::Event::Resized)
         {
-          _window->setView(sf::View(sf::FloatRect(0,0,(float)event.size.width, (float)event.size.height)));
+          size_t width = event.size.width;
+          size_t height = event.size.height;
+          _window->setView(sf::View(sf::FloatRect(0,0,(float)width, (float)height)));
+          _renderer->Resize();
         }
-        else if (event.type == sf::Event::Closed)
+        else if (type == sf::Event::Closed)
         {
           _window->close();
         }
         else
         {
-          if (event.type == sf::Event::KeyReleased)
+          if (type == sf::Event::KeyReleased)
           {
             UpdateState(_gameState, event.key.code);
           }
@@ -105,7 +109,7 @@ int Game::run()
 
     _window->clear();
 
-    _renderer->drawWorld(_gameState);
+    _renderer->DrawWorld(_gameState);
 
     _window->display();
   }

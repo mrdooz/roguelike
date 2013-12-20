@@ -44,7 +44,7 @@ size_t subdivide(
   {
     int split = (int)gaussianRand(height/2.0f, height/4.0f);
     for (int i = 0; i < width; ++i)
-      level->get(top+split, left+i)._type = TileType::kWall;
+      level->Get(top+split, left+i)._type = TileType::kWall;
 
     if (depth <= cMaxDepth && width > 5 && height > 5)
     {
@@ -67,7 +67,7 @@ size_t subdivide(
   {
     int split = (int)gaussianRand(width/2.0f, width/4.0f);
     for (int i = 0; i < height; ++i)
-      level->get(top+i, left+split)._type = TileType::kWall;
+      level->Get(top+i, left+split)._type = TileType::kWall;
 
     if (depth <= cMaxDepth && width > 5 && height > 5)
     {
@@ -103,21 +103,25 @@ Level *LevelFactory::CreateLevel(int width, int height)
   Level *level = new Level(width, height);
 
   // fill floor
-  for (int i = 0; i < height; ++i) {
-    for (int j = 0; j < width; ++j) {
-      level->get(i, j)._type = TileType::kFloor;
+  for (int i = 0; i < height; ++i)
+  {
+    for (int j = 0; j < width; ++j)
+    {
+      level->Get(i, j)._type = TileType::kFloor;
     }
   }
 
   // outer wall
-  for (int i = 0; i < width; ++i) {
-    level->get(0, i)._type = TileType::kWall;
-    level->get(height-1, i)._type = TileType::kWall;
+  for (int i = 0; i < width; ++i)
+  {
+    level->Get(0, i)._type = TileType::kWall;
+    level->Get(height-1, i)._type = TileType::kWall;
   }
 
-  for (int i = 0; i < height; ++i) {
-    level->get(i, 0)._type = TileType::kWall;
-    level->get(i, width-1)._type = TileType::kWall;
+  for (int i = 0; i < height; ++i)
+  {
+    level->Get(i, 0)._type = TileType::kWall;
+    level->Get(i, width-1)._type = TileType::kWall;
   }
 
   int roomCount = 1;
@@ -161,13 +165,17 @@ Level *LevelFactory::CreateLevel(int width, int height)
     while (true) {
       int door = (int)randf((float)Wall.start, (float)Wall.finish);
       if (Wall.horiz) {
-        if (level->get(p-1, door)._type != TileType::kWall && level->get(p+1, door)._type != TileType::kWall) {
-          level->get(p, door)._type = TileType::kFloor;
+        if (level->Get(p-1, door)._type != TileType::kWall && level->Get(p+1, door)._type != TileType::kWall)
+        {
+          level->Get(p, door)._type = TileType::kFloor;
           break;
         }
-      } else {
-        if (level->get(door, p-1)._type != TileType::kWall && level->get(door, p+1)._type != TileType::kWall) {
-          level->get(door, p)._type = TileType::kFloor;
+      }
+      else
+      {
+        if (level->Get(door, p-1)._type != TileType::kWall && level->Get(door, p+1)._type != TileType::kWall)
+        {
+          level->Get(door, p)._type = TileType::kFloor;
           break;
         }
       }
@@ -187,7 +195,7 @@ Level *LevelFactory::CreateLevel(int width, int height)
     for (int j = 0; j < width; ++j) {
       int id = roomIds[i*width+j];
       //fprintf(f, "%c", level->get(i,j)._type == TileType::kWall ? 'X' : ('a' + roomIds[i*width+j]));
-      fprintf(f, "%c", id == -2 ? '.' : level->get(i,j)._type == TileType::kWall ? 'X' : ' ');
+      fprintf(f, "%c", id == -2 ? '.' : level->Get(i,j)._type == TileType::kWall ? 'X' : ' ');
       //fprintf(f, "%c", id == 0 ? 'X' : 'A' + id);// level->get(i,j)._type == TileType::kWall ? 'X' : ('A' + roomIds[i*width+j]));
     }
     fprintf(f, "\n");

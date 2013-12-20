@@ -111,6 +111,7 @@
     </ClCompile>
     <ClCompile Include="..\renderer.cpp" />
     <ClCompile Include="..\roguelike.cpp" />
+    <ClCompile Include="..\types.cpp" />
     <ClCompile Include="..\utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
