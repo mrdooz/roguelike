@@ -192,6 +192,32 @@ void Game::findAppRoot()
       break;
   }
   _appRoot = startingDir;
+#else
+  char startingDir[256];
+  getcwd(startingDir, 256);
+
+  // keep going up directory levels until we find "app.json", or we hit the bottom..
+  char prevDir[256], curDir[256];
+  memset(prevDir, 0, sizeof(prevDir));
+
+  while (true) {
+    getcwd(curDir, 256);
+    // check if we haven't moved
+    if (!strcmp(curDir, prevDir))
+      break;
+
+    memcpy(prevDir, curDir, 256);
+
+    if (fileExists("settings.ini")) {
+      _appRoot = curDir;
+      return;
+    }
+
+    if (chdir("..") == -1)
+      break;
+  }
+  _appRoot = startingDir;
+
 #endif
 }
 

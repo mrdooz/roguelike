@@ -48,8 +48,10 @@ size_t subdivide(
 
     if (depth <= cMaxDepth && width > 5 && height > 5)
     {
-      rooms[curIdx].children.push_back(subdivide(level, roomIds, pitch, curRoom, top, left, width, split+1, depth + 1, curIdx));
-      rooms[curIdx].children.push_back(subdivide(level, roomIds, pitch, curRoom, top + split, left, width, height - split, depth + 1, curIdx));
+      auto lhs = subdivide(level, roomIds, pitch, curRoom, top, left, width, split+1, depth + 1, curIdx);
+      auto rhs = subdivide(level, roomIds, pitch, curRoom, top + split, left, width, height - split, depth + 1, curIdx);
+      rooms[curIdx].children.push_back(lhs);
+      rooms[curIdx].children.push_back(rhs);
     }
     else
     {
@@ -71,8 +73,10 @@ size_t subdivide(
 
     if (depth <= cMaxDepth && width > 5 && height > 5)
     {
-      rooms[curIdx].children.push_back(subdivide(level, roomIds, pitch, curRoom, top, left, split+1, height, depth + 1, curIdx));
-      rooms[curIdx].children.push_back(subdivide(level, roomIds, pitch, curRoom, top, left + split, width - split, height, depth + 1, curIdx));
+      auto lhs = subdivide(level, roomIds, pitch, curRoom, top, left, split+1, height, depth + 1, curIdx);
+      auto rhs = subdivide(level, roomIds, pitch, curRoom, top, left + split, width - split, height, depth + 1, curIdx);
+      rooms[curIdx].children.push_back(lhs);
+      rooms[curIdx].children.push_back(rhs);
     }
     else
     {

@@ -41,8 +41,8 @@ enum class Tiles
 Renderer::Renderer(sf::RenderWindow *window) 
   : _window(window)
   , _partyStatsWidth(210)
-  , _zoomLevel(3)
   , _leftMargin(0)
+  , _zoomLevel(3)
   , _rightMargin(210)
   , _topMargin(0)
   , _bottomMargin(0)
@@ -194,7 +194,6 @@ void Renderer::DrawParty(const GameState& state)
   Player* activePlayer = state.GetActivePlayer();
   assert(activePlayer);
 
-  Level* level = state._level;
   Party* party = state._party;
 
   int rows, cols;
@@ -225,7 +224,6 @@ void Renderer::drawPartyStats(const GameState& state)
   Player* activePlayer = state.GetActivePlayer();
   assert(activePlayer);
 
-  Level* level = state._level;
   Party* party = state._party;
 
   auto size = _window->getSize();

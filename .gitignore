@@ -35,3 +35,9 @@ effects/obj_debug/*
 *.o
 *.gch
 roguelike
+.idea/*
+CMakeCache.txt
+CMakeFiles/*
+CMakeScripts/*
+cmake_install.cmake
+roguelike.xcodeproj/*
