@@ -9,6 +9,7 @@ namespace rogue
   class Party;
   class Renderer;
   class DebugRenderer;
+  class EventManager;
 
   class Game
   {
@@ -39,6 +40,8 @@ namespace rogue
     RenderWindow* _debugWindow;
     Renderer *_renderer;
     DebugRenderer* _debugRenderer;
+
+    EventManager* _eventManager;
 
     string _appRoot;
 

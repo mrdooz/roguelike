@@ -9,6 +9,7 @@
 #include "renderer.hpp"
 #include "debug_renderer.hpp"
 #include "party.hpp"
+#include "event_manager.hpp"
 
 using namespace rogue;
 
@@ -23,6 +24,7 @@ Game::~Game()
   delete exch_null(_debugRenderer);
   delete exch_null(_window);
   delete exch_null(_debugWindow);
+  delete exch_null(_eventManager);
 }
 
 //-----------------------------------------------------------------------------
@@ -80,6 +82,7 @@ bool Game::init()
 
   _debugWindow = new sf::RenderWindow(sf::VideoMode(800, 600), "debug");
   _window = new sf::RenderWindow(sf::VideoMode(800, 600), "...");
+  _eventManager = new EventManager(_window);
 
   LevelFactory::create();
   PlayerFactory::create();
@@ -106,10 +109,10 @@ void Game::ProcessMainWindow()
   _window->setActive();
 
   // Process events
-  sf::Event event;
+  Event event;
   while (_window->pollEvent(event))
   {
-    sf::Event::EventType type = event.type;
+    Event::EventType type = event.type;
     if (type == Event::Resized)
     {
       size_t width = event.size.width;

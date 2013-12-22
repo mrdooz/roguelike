@@ -86,6 +86,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\debug_renderer.hpp" />
+    <ClInclude Include="..\event_manager.hpp" />
     <ClInclude Include="..\game.hpp" />
     <ClInclude Include="..\game_state.hpp" />
     <ClInclude Include="..\level.hpp" />
@@ -102,6 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\debug_renderer.cpp" />
+    <ClCompile Include="..\event_manager.cpp" />
     <ClCompile Include="..\game.cpp" />
     <ClCompile Include="..\game_state.cpp" />
     <ClCompile Include="..\level.cpp" />

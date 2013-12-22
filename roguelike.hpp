@@ -5,14 +5,18 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <unordered_map>
 
 namespace rogue
 {
+  using std::function;
   using std::vector;
   using std::string;
   using std::set;
   using std::priority_queue;
   using std::map;
+  using std::unordered_multimap;
+  using std::unordered_map;
   using std::pair;
   using std::make_pair;
   using std::shared_ptr;
