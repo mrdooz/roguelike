@@ -24,7 +24,7 @@ namespace rogue
     bool _monsterPhase;
   };
 
-  void UpdateState(GameState& state, Keyboard::Key key);
+  void UpdateState(GameState& state, Event* event);
 }
 
 #endif

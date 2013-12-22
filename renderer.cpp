@@ -9,6 +9,14 @@
 
 using namespace rogue;
 
+namespace
+{
+  sf::Vertex MakeVertex(float x, float y)
+  {
+    return sf::Vertex(sf::Vector2f(x, y));
+  }
+}
+
 //-----------------------------------------------------------------------------
 enum class Tiles
 {
@@ -38,8 +46,7 @@ Renderer::Renderer(sf::RenderWindow *window)
   , _rightMargin(210)
   , _topMargin(0)
   , _bottomMargin(0)
-  , _leftOffset(0)
-  , _topOffset(0)
+  , _offset(0,0)
 {
 }
 
@@ -52,62 +59,41 @@ void Renderer::onMoveDone()
 //-----------------------------------------------------------------------------
 void Renderer::DrawWorld(const GameState& state)
 {
-  // Because party members can be at totally differnet spots in the world, we
-  // might end up having to redraw once per member.
-
-  // Iterate all the players, and find the rectangle that displays the most players
-  // Remove this one, and keep going until all players have rectangles
-
-  const auto& players = state._party->_players;
-  size_t numPlayers = players.size();
-  vector<u8> playersAllocated(numPlayers);
-  vector<vector<size_t> > groupedPlayers;
-  size_t playersLeft = numPlayers;
-
+  // Check that the active player is inside the currently visible area
   int rows, cols;
-  VisibleArea(&rows, &cols);
-
-  while (playersLeft)
+  ClampedVisibleArea(state._level, &rows, &cols);
+  Rect rect(_offset, cols, rows);
+  Player* player = state.GetActivePlayer();
+  if (player && !rect.PointInside(player->_pos))
   {
-    vector<size_t> curGroup;
+    // Player outside the visible area, so center the view on him
+    _offset.x = player->_pos.x - cols / 2;
+    _offset.y = player->_pos.y - rows / 2;
 
-    // find the top left coordinate of the remaining players
-    Pos topLeft(players[0]->_pos);
-    for (size_t i = 1; i < numPlayers; ++i)
-    {
-      if (!playersAllocated[i])
-      {
-        Pos p(players[i]->_pos);
-        topLeft.x = min(topLeft.x, p.x);
-        topLeft.y = min(topLeft.y, p.y);
-      }
-    }
-
-    Rect rect(topLeft, cols, rows);
-
-    // Keep adding players until they no long fit in the rectangle
-    for (size_t i = 0; i < numPlayers; ++i)
-    {
-      if (!playersAllocated[i])
-      {
-        Pos pos = players[i]->_pos;
-        if (rect.PointInside(pos))
-        {
-          curGroup.push_back(i);
-          playersAllocated[i] = 1;
-          --playersLeft;
-        }
-      }
-    }
-    // Gone through all the players, so add the group
-    groupedPlayers.push_back(curGroup);
-
+    // Clamp the new position, so it's fully inside the visible area
+    _offset.x = max(0, _offset.x);
+    _offset.y = max(0, _offset.y);
+    int w = state._level->Width();
+    int h = state._level->Height();
+    
+    if (_offset.x + cols > w)
+      _offset.x = w - cols;
+    if (_offset.y + rows > h)
+      _offset.y = h - rows;
   }
 
   DrawLevel(state);
-  drawMonsters(state);
-  drawParty(state);
+  DrawMonsters(state);
+  DrawParty(state);
   drawPartyStats(state);
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::ClampedVisibleArea(const Level* level, int* rows, int* cols) const
+{
+  VisibleArea(rows, cols);
+  *rows = min(*rows, level->Height());
+  *cols = min(*cols, level->Width());
 }
 
 //-----------------------------------------------------------------------------
@@ -121,10 +107,10 @@ void Renderer::VisibleArea(int* rows, int* cols) const
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::Resize()
+void Renderer::Resize(const GameState& state)
 {
   int rows, cols;
-  VisibleArea(&rows, &cols);
+  ClampedVisibleArea(state._level, &rows, &cols);
 
   // Return if the new window contains the same number of tiles
   if (_tileSprites.size() == rows * cols)
@@ -148,27 +134,22 @@ void Renderer::Resize()
 void Renderer::DrawLevel(const GameState& state)
 {
   int rows, cols;
-  VisibleArea(&rows, &cols);
+  ClampedVisibleArea(state._level, &rows, &cols);
 
   Level* level = state._level;
 
   int idx = 0;
-  for (int i = 0; i < rows; ++i)
+  for (int i = _offset.y; i < rows; ++i)
   {
-    for (int j = 0; j < cols; ++j)
+    for (int j = _offset.x; j < cols; ++j)
     {
-      int r = _topOffset + i;
-      int c = _leftOffset + j;
-      if (!level->Inside(r, c))
-        continue;
-
-      Tile &tile = level->Get(r, c);
+      Tile &tile = level->Get(i, j);
       sf::Sprite &sprite = _tileSprites[idx++];
 
       // If the tile is a wall, determine if it should be horizontal or vertical
       if (tile._type == TileType::kWall)
       {
-        if (level->Inside(r+1, c) && level->Get(r+1, c)._type != TileType::kWall)
+        if (level->Inside(i+1, j) && level->Get(i+1, j)._type != TileType::kWall)
         {
           sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
         }
@@ -188,39 +169,54 @@ void Renderer::DrawLevel(const GameState& state)
 
       sprite.setColor(sf::Color(tile._visited, tile._visited, tile._visited));
       _window->draw(sprite);
+
+      if (tile._selected)
+      {
+        Pos org(ToLocal(Pos(i, j)));
+
+        sf::Vertex verts[] = {
+          MakeVertex(0 + (float)org.x, 0 + (float)org.y),
+          MakeVertex(8 + (float)org.x, 0 + (float)org.y),
+          MakeVertex(8 + (float)org.x, 8 + (float)org.y),
+          MakeVertex(0 + (float)org.x, 8 + (float)org.y),
+        };
+
+        _window->draw(verts, 4, sf::LinesStrip);
+      }
+
     }
   }
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::drawParty(const GameState& state)
+void Renderer::DrawParty(const GameState& state)
 {
   Player* activePlayer = state.GetActivePlayer();
   assert(activePlayer);
-  Pos topLeft(activePlayer ? activePlayer->_pos : Pos());
 
   Level* level = state._level;
   Party* party = state._party;
 
   int rows, cols;
-  VisibleArea(&rows, &cols);
-
-  topLeft.row = max(0, topLeft.row - rows/2);
-  topLeft.col = max(0, topLeft.col - cols/2);
+  ClampedVisibleArea(state._level, &rows, &cols);
+  Rect rect(_offset, cols, rows);
 
   for (size_t i = 0; i < party->_players.size(); ++i)
   {
     Player *player = party->_players[i];
-    int x = player->_pos.col - topLeft.col;
-    int y = player->_pos.row - topLeft.row;
-    if (x < 0 || x >= cols || y < 0 || y >= rows)
+    Pos pos(player->_pos);
+
+    if (!rect.PointInside(pos))
       continue;
+
+    Pos p(ToLocal(pos));
+
     player->_name = toString("Player %d", i);
-    player->_sprite.setPosition((float)x*_zoomLevel*8, (float)y*_zoomLevel*8);
+    player->_sprite.setPosition((float)p.x*_zoomLevel*8, (float)p.y*_zoomLevel*8);
     player->_sprite.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
     _window->draw(player->_sprite);
 
-    //drawHealthBar(player->_curHealth, player->_maxHeath, Pos(y, x));
+    //DrawHealthBar(player->_curHealth, player->_maxHeath, Pos(y, x));
   }
 }
 
@@ -291,7 +287,8 @@ void Renderer::drawPartyStats(const GameState& state)
   }
 }
 
-void Renderer::drawHealthBar(int health, int maxHealth, const Pos &pos)
+//-----------------------------------------------------------------------------
+void Renderer::DrawHealthBar(int health, int maxHealth, const Pos &pos)
 {
   float zoomF = (float)_zoomLevel;
 
@@ -309,47 +306,56 @@ void Renderer::drawHealthBar(int health, int maxHealth, const Pos &pos)
 
 }
 
-void Renderer::drawMonsters(const GameState& state)
+//-----------------------------------------------------------------------------
+Pos Renderer::ToLocal(const Pos& pos) const
 {
-  Player* activePlayer = state.GetActivePlayer();
-  assert(activePlayer);
-  Pos topLeft(activePlayer ? activePlayer->_pos : Pos());
+  return pos - _offset;
+}
 
+//-----------------------------------------------------------------------------
+Pos Renderer::ToGlobal(const Pos& pos) const
+{
+  return pos + _offset;
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::DrawMonsters(const GameState& state)
+{
   Level* level = state._level;
   Party* party = state._party;
+
+  int rows, cols;
+  ClampedVisibleArea(state._level, &rows, &cols);
+  Rect rect(_offset, cols, rows);
 
   auto size = _window->getSize();
   int zoom = 3;
   float zoomF = (float)zoom;
-  int cols = (size.x - _partyStatsWidth) / (zoom*8);
-  int rows = (size.y) / (zoom*8);
-
-  topLeft.row = max(0, topLeft.row - rows/2);
-  topLeft.col = max(0, topLeft.col - cols/2);
 
   for (auto monster : level->monsters())
   {
     if (!monster->_health)
       continue;
 
-    int x = monster->_pos.col - topLeft.col;
-    int y = monster->_pos.row - topLeft.row;
-    if (x < 0 || x >= cols || y < 0 || y >= rows)
+    Pos pos(ToLocal(monster->_pos));
+    if (!rect.PointInside(pos))
       continue;
-    monster->_sprite.setPosition(zoomF*x*8, zoomF*y*8);
+
+    monster->_sprite.setPosition(zoomF*pos.x*8, zoomF*pos.y*8);
     _window->draw(monster->_sprite);
 
     // draw the roam path
     vector<sf::Vertex> path;
     for (auto& p : monster->_roamPath)
     {
-      path.push_back(sf::Vertex(sf::Vector2f(p.x*8*zoomF, p.y*8*zoomF)));
+      Pos pp(ToLocal(p));
+      path.push_back(sf::Vertex(sf::Vector2f(pp.x*8*zoomF, pp.y*8*zoomF)));
     }
 
     if (!path.empty())
       _window->draw(path.data(), path.size(), sf::LinesStrip);
 
-    drawHealthBar(monster->_health, monster->_maxHealth, Pos(y, x));
+    DrawHealthBar(monster->_health, monster->_maxHealth, pos);
   }
 }
 
@@ -398,7 +404,7 @@ bool Renderer::Init(const GameState& state)
     }
   }
 
-  Resize();
+  Resize(state);
 
   return true;
 }

@@ -18,11 +18,13 @@ namespace rogue
 
   struct Tile
   {
-    Tile() : _visited(0), _player(nullptr), _monster(nullptr) {}
+    Tile() : _player(nullptr), _monster(nullptr), _visited(0), _selected(false) {}
+    bool IsEmpty() const { return !_player && !_monster; }
     TileType _type;
     Player *_player;
     Monster *_monster;
     int _visited;
+    bool _selected;
   };
 
   class Level
@@ -44,6 +46,9 @@ namespace rogue
     bool Inside(int row, int col) const;
     bool Inside(const Pos &pos) const { return Inside(pos.row, pos.col); }
     bool tileFree(const Pos &pos) const;
+
+    int Width() const { return _width; }
+    int Height() const { return _height; }
 
     Tile &Get(int row, int col);
     Tile &Get(const Pos &pos);

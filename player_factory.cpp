@@ -6,12 +6,14 @@ using namespace rogue;
 
 PlayerFactory *PlayerFactory::_instance;
 
-Player *PlayerFactory::createPlayer(PlayerClass pc) {
+Player *PlayerFactory::CreatePlayer(PlayerClass pc)
+{
 
   Player *player = new Player();
   player->_class = pc;
 
-  switch (pc) {
+  switch (pc)
+  {
     case PlayerClass::kWizard: 
       player->_intelligence = (int)gaussianRand(20, 3);
       player->_strength = (int)gaussianRand(10, 2);

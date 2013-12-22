@@ -7,111 +7,156 @@
 #include "player_factory.hpp"
 #include "level_factory.hpp"
 #include "renderer.hpp"
+#include "debug_renderer.hpp"
 #include "party.hpp"
 
 using namespace rogue;
 
 Game *Game::_instance;
 
-Game::~Game() {
+//-----------------------------------------------------------------------------
+Game::~Game()
+{
   LevelFactory::close();
   PlayerFactory::close();
   delete exch_null(_renderer);
+  delete exch_null(_debugRenderer);
   delete exch_null(_window);
+  delete exch_null(_debugWindow);
 }
 
-bool Game::close() {
+//-----------------------------------------------------------------------------
+bool Game::close()
+{
   assert(_instance);
   delete exch_null(_instance);
   return true;
 }
 
-bool Game::create() {
+//-----------------------------------------------------------------------------
+bool Game::create()
+{
   assert(!_instance);
   _instance = new Game();
   return _instance->init();
 }
 
-Game &Game::instance() {
+//-----------------------------------------------------------------------------
+Game &Game::instance()
+{
   assert(_instance);
   return *_instance;
 }
 
-bool Game::init()
+//-----------------------------------------------------------------------------
+void Game::CreateParty()
 {
-  findAppRoot();
-
-  _window = new sf::RenderWindow(sf::VideoMode(800, 600), "while (true) { kill(stuff); get(epix); }");
-
-  LevelFactory::create();
-  PlayerFactory::create();
-
-  _gameState._level = LevelFactory::instance().CreateLevel(200, 200);
   _gameState._party = new Party();
 
   for (int i = 0; i < 4; ++i)
   {
-    auto *p = PlayerFactory::instance().createPlayer((PlayerClass)i);
+    auto *p = PlayerFactory::instance().CreatePlayer((PlayerClass)i);
     p->_sprite.setScale(3, 3);
-    p->_pos = Pos(1 + (i+1) % 2, 1 + (i+1)/2);
+    while (true)
+    {
+      int x = rand() % _gameState._level->Width();
+      int y = rand() % _gameState._level->Height();
+      auto& tile = _gameState._level->Get(y, x);
+      if (tile.IsEmpty() && tile._type == TileType::kFloor)
+      {
+        p->_pos = Pos(y, x);
+        break;
+      }
+    }
     _gameState._level->initPlayer(p, p->_pos);
     _gameState._party->_players.push_back(p);
   }
+}
+
+//-----------------------------------------------------------------------------
+bool Game::init()
+{
+  findAppRoot();
+
+  _debugWindow = new sf::RenderWindow(sf::VideoMode(800, 600), "debug");
+  _window = new sf::RenderWindow(sf::VideoMode(800, 600), "...");
+
+  LevelFactory::create();
+  PlayerFactory::create();
+
+  _gameState._level = LevelFactory::instance().CreateLevel(40, 40);
   _gameState._level->initMonsters();
 
-  _renderer = new Renderer(_window);
-  _renderer->Init(_gameState);
+  CreateParty();
 
-  //_playerState.addMoveDoneListener(std::bind(&Renderer::onMoveDone, _renderer));
+  _debugRenderer = new DebugRenderer(_debugWindow);
+  if (!_debugRenderer->Init())
+    return false;
+
+  _renderer = new Renderer(_window);
+  if (!_renderer->Init(_gameState))
+    return false;
 
   return true;
 }
 
-int Game::run()
+//-----------------------------------------------------------------------------
+void Game::ProcessMainWindow()
 {
+  _window->setActive();
 
-  sf::View view = _window->getDefaultView();
-
-  // Start the game loop
-  while (_window->isOpen())
+  // Process events
+  sf::Event event;
+  while (_window->pollEvent(event))
   {
-    // Process events
-    sf::Event event;
-    if (_window->pollEvent(event))
+    sf::Event::EventType type = event.type;
+    if (type == Event::Resized)
     {
-      sf::Event::EventType type = event.type;
-      do
-      {
-        if (type == sf::Event::Resized)
-        {
-          size_t width = event.size.width;
-          size_t height = event.size.height;
-          _window->setView(sf::View(sf::FloatRect(0,0,(float)width, (float)height)));
-          _renderer->Resize();
-        }
-        else if (type == sf::Event::Closed)
-        {
-          _window->close();
-        }
-        else
-        {
-          if (type == sf::Event::KeyReleased)
-          {
-            UpdateState(_gameState, event.key.code);
-          }
-        }
-
-      } while (_window->pollEvent(event));
+      size_t width = event.size.width;
+      size_t height = event.size.height;
+      _window->setView(sf::View(sf::FloatRect(0,0,(float)width, (float)height)));
+      _renderer->Resize(_gameState);
+    }
+    else if (type == Event::Closed)
+    {
+      _window->close();
     }
     else
     {
+      UpdateState(_gameState, &event);
     }
+  }
 
-    _window->clear();
+  UpdateState(_gameState, nullptr);
 
-    _renderer->DrawWorld(_gameState);
+  _window->clear();
+  _renderer->DrawWorld(_gameState);
+  _window->display();
+}
 
-    _window->display();
+//-----------------------------------------------------------------------------
+void Game::ProcessDebugWindow()
+{
+  _window->setActive();
+  sf::Event event;
+  while (_debugWindow->pollEvent(event))
+  {
+    _debugRenderer->Update(_gameState, &event);
+  }
+
+  _debugWindow->clear();
+  _debugRenderer->Update(_gameState, nullptr);
+  _debugWindow->display();
+}
+
+//-----------------------------------------------------------------------------
+int Game::run()
+{
+  // Start the game loop
+  while (_window->isOpen())
+  {
+    ProcessMainWindow();
+    ProcessDebugWindow();
   }
 
   return EXIT_SUCCESS;

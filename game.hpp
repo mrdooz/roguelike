@@ -8,6 +8,7 @@ namespace rogue
 {
   class Party;
   class Renderer;
+  class DebugRenderer;
 
   class Game
   {
@@ -23,14 +24,21 @@ namespace rogue
 
   private:
     ~Game();
+
+    void ProcessMainWindow();
+    void ProcessDebugWindow();
+
     bool init();
 
+    void CreateParty();
     void findAppRoot();
 
     GameState _gameState;
 
-    sf::RenderWindow *_window;
+    RenderWindow* _window;
+    RenderWindow* _debugWindow;
     Renderer *_renderer;
+    DebugRenderer* _debugRenderer;
 
     string _appRoot;
 

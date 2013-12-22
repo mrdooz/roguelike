@@ -21,7 +21,8 @@ bool Level::Inside(int row, int col) const
   return row >= 0 && row < _height && col >= 0 && col < _width;
 }
 
-Tile &Level::Get(int row, int col) {
+Tile &Level::Get(int row, int col)
+{
   return _tiles[row*_width+col];
 }
 
@@ -103,9 +104,11 @@ void Level::movePlayer(Player *p, const Pos &oldPos, const Pos &newPos) {
   updateFog(newPos);
 }
 
-void Level::updateFog(const Pos &pos) {
-  for (int i = -1; i <= 1; ++i) {
-    for (int j = -1; j <= 1; ++j) {
+void Level::updateFog(const Pos &pos)
+{
+  int lightRadius = 2;
+  for (int i = -lightRadius; i <= lightRadius; ++i) {
+    for (int j = -lightRadius; j <= lightRadius; ++j) {
       Pos p(pos.row + i, pos.col + j);
       if (!Inside(p))
         continue;

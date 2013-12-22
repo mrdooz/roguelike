@@ -41,7 +41,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SFML)/include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SFML_ROOT)/include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SFML_ROOT)/lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -55,11 +56,13 @@
       <PreprocessorDefinitions>SFML_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>precompiled.hpp</PrecompiledHeaderFile>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SFML)\_win32\lib\$(ConfigurationName)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -82,6 +85,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\debug_renderer.hpp" />
     <ClInclude Include="..\game.hpp" />
     <ClInclude Include="..\game_state.hpp" />
     <ClInclude Include="..\level.hpp" />
@@ -97,6 +101,7 @@
     <ClInclude Include="..\utils.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\debug_renderer.cpp" />
     <ClCompile Include="..\game.cpp" />
     <ClCompile Include="..\game_state.cpp" />
     <ClCompile Include="..\level.cpp" />

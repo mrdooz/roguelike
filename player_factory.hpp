@@ -12,7 +12,7 @@ namespace rogue
     static void close();
     static PlayerFactory &instance();
 
-    Player *createPlayer(PlayerClass pc);
+    Player *CreatePlayer(PlayerClass pc);
   private:
     static PlayerFactory *_instance;  
   };

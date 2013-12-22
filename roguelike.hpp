@@ -29,4 +29,8 @@ namespace rogue
   using sf::Sprite;
   using sf::RenderWindow;
   using sf::Keyboard;
+  using sf::Event;
+
+  using sf::Vector2f;
+
 }
