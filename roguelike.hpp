@@ -6,6 +6,10 @@
 #include <string>
 #include <set>
 #include <unordered_map>
+#include <queue>
+
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 
 namespace rogue
 {

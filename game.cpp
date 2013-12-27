@@ -10,6 +10,7 @@
 #include "debug_renderer.hpp"
 #include "party.hpp"
 #include "event_manager.hpp"
+#include "error.hpp"
 
 #define USE_DEBUG_WINDOW
 
@@ -118,6 +119,7 @@ void Game::ProcessMainWindow()
   Event event;
   while (_window->pollEvent(event))
   {
+    LOG_DEBUG(LogKeyValue("event", event.type));
     Event::EventType type = event.type;
     if (type == Event::Resized)
     {
