@@ -33,10 +33,10 @@ namespace rogue
     Monster();
     sf::Sprite _sprite;
     MonsterType _type;
-    int _level;
+    Pos _pos;
     int _maxHealth;
     int _health;
-    Pos _pos;
+    int _level;
     vector<Player *> _seenPlayers;
 
     MonsterAction _action;

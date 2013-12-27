@@ -11,6 +11,8 @@
 #include "party.hpp"
 #include "event_manager.hpp"
 
+#define USE_DEBUG_WINDOW
+
 using namespace rogue;
 
 Game *Game::_instance;
@@ -21,9 +23,11 @@ Game::~Game()
   LevelFactory::close();
   PlayerFactory::close();
   delete exch_null(_renderer);
-  delete exch_null(_debugRenderer);
   delete exch_null(_window);
+#ifdef _USE_DEBUG_WINDOW
+  delete exch_null(_debugRenderer);
   delete exch_null(_debugWindow);
+#endif
   delete exch_null(_eventManager);
 }
 
@@ -80,7 +84,13 @@ bool Game::init()
 {
   findAppRoot();
 
+#ifdef USE_DEBUG_WINDOW
   _debugWindow = new sf::RenderWindow(sf::VideoMode(800, 600), "debug");
+  _debugRenderer = new DebugRenderer(_debugWindow);
+  if (!_debugRenderer->Init())
+    return false;
+#endif
+
   _window = new sf::RenderWindow(sf::VideoMode(800, 600), "...");
   _eventManager = new EventManager(_window);
 
@@ -91,10 +101,6 @@ bool Game::init()
   _gameState._level->initMonsters();
 
   CreateParty();
-
-  _debugRenderer = new DebugRenderer(_debugWindow);
-  if (!_debugRenderer->Init())
-    return false;
 
   _renderer = new Renderer(_window);
   if (!_renderer->Init(_gameState))
@@ -130,6 +136,8 @@ void Game::ProcessMainWindow()
     }
   }
 
+  // why! i need to set a breakpoint on this line for stuff to draw..
+  // so, log the events..
   UpdateState(_gameState, nullptr);
 
   _window->clear();
@@ -140,6 +148,7 @@ void Game::ProcessMainWindow()
 //-----------------------------------------------------------------------------
 void Game::ProcessDebugWindow()
 {
+#ifdef USE_DEBUG_WINDOW
   _window->setActive();
   sf::Event event;
   while (_debugWindow->pollEvent(event))
@@ -150,6 +159,7 @@ void Game::ProcessDebugWindow()
   _debugWindow->clear();
   _debugRenderer->Update(_gameState, nullptr);
   _debugWindow->display();
+#endif
 }
 
 //-----------------------------------------------------------------------------

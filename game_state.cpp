@@ -162,7 +162,7 @@ void rogue::UpdateState(GameState& state, Event* event)
         {
           // move towards the active player
           Pos dest(state.GetActivePlayer()->_pos);
-          Pos rnd(monsters[rand() % cnt]->_pos);
+          //Pos rnd(monsters[rand() % cnt]->_pos);
           if (level->calcPath(monster->_pos, dest, &monster->_roamPath))
           {
             monster->_action = MonsterAction::kRoaming;

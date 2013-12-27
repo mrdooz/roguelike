@@ -35,15 +35,15 @@ namespace rogue
 
     void DrawHealthBar(int health, int maxHealth, const Pos &pos);
 
-    int _partyStatsWidth;
     void VisibleArea(int* rows, int* cols) const;
     void ClampedVisibleArea(const Level* level, int* rows, int* cols) const;
     RenderWindow *_window;
-
+    int _partyStatsWidth;
+      
     vector<sf::Sprite> _tileSprites;
 
-    int _leftMargin, _rightMargin, _topMargin, _bottomMargin;
     Pos _offset;
+    int _leftMargin, _rightMargin, _topMargin, _bottomMargin;
     int _zoomLevel;
     Font _font;
     Texture _environmentTexture;

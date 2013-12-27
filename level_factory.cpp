@@ -130,7 +130,7 @@ Level *LevelFactory::CreateLevel(int width, int height)
 
   int roomCount = 1;
   vector<int> roomIds(width*height);
-  size_t root = subdivide(level, roomIds.data(), width, roomCount, 0, 0, width, height, 0, ~0);
+  subdivide(level, roomIds.data(), width, roomCount, 0, 0, width, height, 0, ~0);
 
   map<pair<int, int>, Wall> walls;
 

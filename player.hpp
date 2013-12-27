@@ -54,12 +54,12 @@ namespace rogue
     int _level;
     int _xp;
 
-    bool _hasMoved;
-
     sf::Sprite _sprite;
     PlayerMode _mode;
     PlayerClass _class;
     PlayerAction _action;
+    bool _hasMoved;
+
   };
 }
 

@@ -37,23 +37,34 @@ enum class Tiles
   cNumTiles,
 };
 
+struct LogEvent
+{
+
+};
+
+template <typename T>
+struct LogKeyValue
+{
+  LogKeyValue(const string& key, const T& value);
+};
+
 //-----------------------------------------------------------------------------
 Renderer::Renderer(sf::RenderWindow *window) 
   : _window(window)
   , _partyStatsWidth(210)
+  , _offset(0,0)
   , _leftMargin(0)
-  , _zoomLevel(3)
   , _rightMargin(210)
   , _topMargin(0)
   , _bottomMargin(0)
-  , _offset(0,0)
+  , _zoomLevel(3)
 {
 }
 
 //-----------------------------------------------------------------------------
 void Renderer::onMoveDone()
 {
-  int a = 10;
+//  int a = 10;
 }
 
 //-----------------------------------------------------------------------------
@@ -320,13 +331,11 @@ Pos Renderer::ToGlobal(const Pos& pos) const
 void Renderer::DrawMonsters(const GameState& state)
 {
   Level* level = state._level;
-  Party* party = state._party;
 
   int rows, cols;
   ClampedVisibleArea(state._level, &rows, &cols);
   Rect rect(_offset, cols, rows);
 
-  auto size = _window->getSize();
   int zoom = 3;
   float zoomF = (float)zoom;
 
