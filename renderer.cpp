@@ -1,4 +1,3 @@
-#include "precompiled.hpp"
 #include "renderer.hpp"
 #include "player.hpp"
 #include "utils.hpp"

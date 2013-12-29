@@ -1,7 +1,4 @@
-#ifndef _TYPES_HPP_
-#define _TYPES_HPP_
-
-#include "roguelike.hpp"
+#pragma once
 
 namespace rogue
 {
@@ -49,5 +46,3 @@ namespace rogue
     int right;
   };
 }
-
-#endif

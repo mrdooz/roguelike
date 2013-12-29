@@ -1,4 +1,3 @@
-#include "precompiled.hpp"
 #include "player_factory.hpp"
 #include "utils.hpp"
 

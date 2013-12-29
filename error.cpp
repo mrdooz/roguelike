@@ -1,5 +1,4 @@
 #include "error.hpp"
-#include "roguelike.hpp"
 
 using namespace rogue;
 

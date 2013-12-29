@@ -1,4 +1,3 @@
-#include "precompiled.hpp"
 #include "utils.hpp"
 
 using namespace rogue;

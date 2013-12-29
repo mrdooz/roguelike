@@ -1,8 +1,4 @@
-#ifndef _RENDERER_HPP_
-#define _RENDERER_HPP_
-
-#include "types.hpp"
-#include "roguelike.hpp"
+#pragma once
 
 namespace rogue
 {
@@ -50,6 +46,3 @@ namespace rogue
     Texture _characterTexture;
   };
 }
-
-
-#endif

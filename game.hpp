@@ -1,8 +1,6 @@
-#ifndef _GAME_HPP_
-#define _GAME_HPP_
+#pragma once
 
 #include "game_state.hpp"
-#include "roguelike.hpp"
 #include "event_manager.hpp"
 
 namespace rogue
@@ -63,7 +61,4 @@ namespace rogue
 
 #define GAME rogue::Game::instance()
 
-
 }
-
-#endif

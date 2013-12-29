@@ -1,7 +1,5 @@
-#include "precompiled.hpp"
 #include "game.hpp"
 #include "utils.hpp"
-#include "roguelike.hpp"
 #include "error.hpp"
 
 using namespace rogue;

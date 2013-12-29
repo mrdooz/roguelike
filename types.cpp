@@ -1,6 +1,3 @@
-#include "precompiled.hpp"
-#include "types.hpp"
-
 namespace rogue
 {
   //-----------------------------------------------------------------------------

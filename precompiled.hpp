@@ -1,8 +1,7 @@
-#pragma once
-
 #include <stdio.h>
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
 
 #ifdef _WIN32
   #include <windows.h>
@@ -11,6 +10,8 @@
 #endif
 
 #include <assert.h>
+#include <math.h>
+
 #include <vector>
 #include <string>
 #include <deque>
@@ -18,9 +19,16 @@
 #include <functional>
 #include <queue>
 #include <set>
-#include <math.h>
-
 #include <memory>
+#include <functional>
+#include <vector>
+#include <string>
+#include <set>
+#include <unordered_map>
+#include <queue>
+#include <memory>
+#include <ostream>
+#include <sstream>
 
 #include <sys/stat.h>
 #include <string>
@@ -29,7 +37,8 @@
 
 #pragma warning(disable: 4180)
 #define BOOST_DISABLE_ASSERTS
-#include <boost/bind.hpp>
+//#include <boost/bind.hpp>
+
 
 typedef int8_t int8;
 typedef uint8_t uint8;
@@ -50,8 +59,6 @@ typedef int16_t s16;
 typedef int32_t s32;
 typedef int64_t s64;
 
-// #include "roguelike.hpp"
-
 #ifdef _WIN32
   #define OVERRIDE override
   #ifdef _DEBUG
@@ -66,3 +73,6 @@ typedef int64_t s64;
 #else
   #define OVERRIDE
 #endif
+
+#include "types.hpp"
+#include "roguelike.hpp"

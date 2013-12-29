@@ -1,8 +1,4 @@
-#ifndef _MONSTER_HPP_
-#define _MONSTER_HPP_
-
-#include "types.hpp"
-#include "roguelike.hpp"
+#pragma once
 
 namespace rogue
 {
@@ -45,5 +41,3 @@ namespace rogue
     int _retryCount;
   };
 }
-
-#endif

@@ -1,8 +1,4 @@
 #pragma once
-#include <ostream>
-#include <sstream>
-
-#include "roguelike.hpp"
 
 namespace rogue
 {

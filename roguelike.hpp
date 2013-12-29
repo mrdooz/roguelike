@@ -1,16 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <functional>
-#include <vector>
-#include <string>
-#include <set>
-#include <unordered_map>
-#include <queue>
-
-#include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp>
-
 namespace rogue
 {
   using std::bind;
@@ -44,5 +33,4 @@ namespace rogue
   using sf::Event;
 
   using sf::Vector2f;
-
 }

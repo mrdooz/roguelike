@@ -1,4 +1,3 @@
-#include "precompiled.hpp"
 #include "event_manager.hpp"
 
 using namespace rogue;

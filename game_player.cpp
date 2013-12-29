@@ -20,6 +20,25 @@ namespace
     return false;
   }
 
+#if 0
+  static bool isTwoPhaseAction(PlayerAction action)
+  {
+    return action == PlayerAction::kMeleeAttack
+    || action == PlayerAction::kRangedAttack
+    || action == PlayerAction::kSpellAttack;
+  }
+
+  bool keyToTwoPhase(sf::Keyboard::Key code, PlayerAction *action)
+  {
+    switch (code)
+    {
+      case sf::Keyboard::A: *action = PlayerAction::kMeleeAttack; return true;
+      case sf::Keyboard::R: *action = PlayerAction::kRangedAttack; return true;
+      case sf::Keyboard::S: *action = PlayerAction::kSpellAttack; return true;
+    }
+    return false;
+  }
+#endif
   //-----------------------------------------------------------------------------
   void HandleAttack(GameState& state, Player *player, Monster *monster)
   {
@@ -40,55 +59,55 @@ void GamePlayer::Update(GameState& gameState)
 //-----------------------------------------------------------------------------
 bool GamePlayer::OnKeyPressed(GameState& state, const Event& event)
 {
+  if (state._monsterPhase)
+    return false;
+
   size_t activePlayer = state._activePlayer;
   auto level = state._level;
   auto party = state._party;
 
   bool validMove = false;
 
-  if (!state._monsterPhase)
+  Keyboard::Key key = event.key.code;
+  // Tick the active player
+  auto player = party->_players[state._activePlayer];
+  if (state._twoPhaseAction)
   {
-    Keyboard::Key key = event.key.code;
-    // Tick the active player
-    auto player = party->_players[state._activePlayer];
-    if (state._twoPhaseAction)
+    Pos ofs;
+    if (arrowKeyToOffset(key, &ofs))
     {
-      Pos ofs;
-      if (arrowKeyToOffset(key, &ofs))
+      if (Monster *monster = level->monsterAt(player->_pos + ofs))
       {
-        if (Monster *monster = level->monsterAt(player->_pos + ofs))
-        {
-          HandleAttack(state, player, monster);
-          player->_hasMoved = true;
-          validMove = true;
-        }
-      }
-    }
-    else
-    {
-      // Check if the input is a valid movement key, and the
-      // resulting position is valid
-      Pos ofs;
-      if (arrowKeyToOffset(key, &ofs))
-      {
-        Pos newPos(player->_pos + ofs);
-        if (state._level->validDestination(newPos))
-        {
-          player->_hasMoved = true;
-          state._level->movePlayer(player, player->_pos, newPos);
-          player->_pos = newPos;
-          validMove = true;
-        }
-      }
-      else if (key == sf::Keyboard::Space)
-      {
-        // skip player
+        HandleAttack(state, player, monster);
         player->_hasMoved = true;
         validMove = true;
       }
     }
-    activePlayer++;
   }
+  else
+  {
+    // Check if the input is a valid movement key, and the
+    // resulting position is valid
+    Pos ofs;
+    if (arrowKeyToOffset(key, &ofs))
+    {
+      Pos newPos(player->_pos + ofs);
+      if (state._level->validDestination(newPos))
+      {
+        player->_hasMoved = true;
+        state._level->movePlayer(player, player->_pos, newPos);
+        player->_pos = newPos;
+        validMove = true;
+      }
+    }
+    else if (key == sf::Keyboard::Space)
+    {
+      // skip player
+      player->_hasMoved = true;
+      validMove = true;
+    }
+  }
+  activePlayer++;
 
   if (validMove)
   {

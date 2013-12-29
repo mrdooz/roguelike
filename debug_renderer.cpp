@@ -1,5 +1,3 @@
-#include "precompiled.hpp"
-#include "roguelike.hpp"
 #include "debug_renderer.hpp"
 
 using namespace rogue;

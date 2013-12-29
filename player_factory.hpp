@@ -1,5 +1,4 @@
-#ifndef _PLAYER_FACTORY_HPP_
-#define _PLAYER_FACTORY_HPP_
+#pragma once
 
 #include "player.hpp"
 
@@ -18,6 +17,3 @@ namespace rogue
   };
 
 }
-
-
-#endif

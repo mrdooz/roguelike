@@ -1,5 +1,4 @@
 #pragma once
-#include "roguelike.hpp"
 
 namespace rogue
 {

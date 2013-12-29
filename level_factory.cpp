@@ -1,8 +1,6 @@
-#include "precompiled.hpp"
 #include "level_factory.hpp"
 #include "monster.hpp"
 #include "utils.hpp"
-#include <set>
 
 using namespace rogue;
 

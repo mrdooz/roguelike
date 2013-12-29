@@ -1,5 +1,4 @@
 #pragma once
-#include "roguelike.hpp"
 #include "game_state.hpp"
 #include "event_manager.hpp"
 

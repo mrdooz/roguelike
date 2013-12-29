@@ -1,4 +1,3 @@
-#include "precompiled.hpp"
 #include "monster.hpp"
 
 using namespace rogue;

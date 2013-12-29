@@ -1,8 +1,4 @@
-#ifndef _GAME_STATE_HPP_
-#define _GAME_STATE_HPP_
-
-#include "types.hpp"
-#include "roguelike.hpp"
+#pragma once
 
 namespace rogue
 {
@@ -17,7 +13,7 @@ namespace rogue
   public:
     GameState();
     ~GameState();
-    
+
     Player* GetActivePlayer() const;
     size_t _activePlayer;
     Level *_level;
@@ -28,5 +24,3 @@ namespace rogue
 
   void UpdateState(GameState& state, Event* event);
 }
-
-#endif

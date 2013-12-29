@@ -1,8 +1,4 @@
-#ifndef _LEVEL_HPP_
-#define _LEVEL_HPP_
-
-#include "types.hpp"
-#include "roguelike.hpp"
+#pragma once
 
 namespace rogue
 {
@@ -76,5 +72,3 @@ namespace rogue
   };
 
 }
-
-#endif

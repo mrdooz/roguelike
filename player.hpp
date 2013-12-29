@@ -1,9 +1,4 @@
-#ifndef _PLAYER_HPP_
-#define _PLAYER_HPP_
-
-#include "types.hpp"
-#include "roguelike.hpp"
-#include "precompiled.hpp"
+#pragma once
 
 namespace rogue
 {
@@ -64,4 +59,3 @@ namespace rogue
   };
 }
 
-#endif

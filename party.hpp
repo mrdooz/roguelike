@@ -1,7 +1,4 @@
-#ifndef _PARTY_HPP_
-#define _PARTY_HPP_
-
-#include "roguelike.hpp"
+#pragma once
 
 namespace rogue
 {
@@ -14,5 +11,3 @@ namespace rogue
     vector<Player *> _players;
   };
 }
-
-#endif
