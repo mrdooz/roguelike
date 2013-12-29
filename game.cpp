@@ -151,7 +151,7 @@ void Game::ProcessMainWindow()
 void Game::ProcessDebugWindow()
 {
 #ifdef USE_DEBUG_WINDOW
-  _window->setActive();
+  _debugWindow->setActive();
   sf::Event event;
   while (_debugWindow->pollEvent(event))
   {
@@ -170,8 +170,11 @@ int Game::run()
   // Start the game loop
   while (_window->isOpen())
   {
-    ProcessMainWindow();
-    ProcessDebugWindow();
+    if (_debugWindow && _debugRenderer)
+      ProcessDebugWindow();
+
+    if (_window && _renderer)
+      ProcessMainWindow();
   }
 
   return EXIT_SUCCESS;
