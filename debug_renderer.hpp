@@ -2,7 +2,7 @@
 
 namespace rogue
 {
-  struct GameState;
+  class GameState;
 
   class DebugRenderer
   {

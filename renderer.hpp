@@ -8,7 +8,7 @@ namespace rogue
 {
   class Level;
   class Party;
-  struct GameState;
+  class GameState;
 
   class Renderer
   {

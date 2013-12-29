@@ -12,10 +12,12 @@ namespace rogue
   class Player;
   class Monster;
 
-  struct GameState
+  class GameState
   {
+  public:
     GameState();
     ~GameState();
+    
     Player* GetActivePlayer() const;
     size_t _activePlayer;
     Level *_level;

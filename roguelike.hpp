@@ -13,7 +13,11 @@
 
 namespace rogue
 {
+  using std::bind;
   using std::function;
+  using std::placeholders::_1;
+  using std::placeholders::_2;
+  using std::placeholders::_3;
   using std::vector;
   using std::string;
   using std::set;

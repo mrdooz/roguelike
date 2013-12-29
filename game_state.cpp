@@ -11,13 +11,14 @@ using namespace rogue;
 
 namespace
 {
+/*
   static bool isTwoPhaseAction(PlayerAction action)
   {
     return action == PlayerAction::kMeleeAttack
       || action == PlayerAction::kRangedAttack
       || action == PlayerAction::kSpellAttack;
   }
-
+*/
   bool arrowKeyToOffset(sf::Keyboard::Key code, Pos *ofs)
   {
     switch (code)
@@ -29,7 +30,7 @@ namespace
     }
     return false;
   }
-
+/*
   bool keyToTwoPhase(sf::Keyboard::Key code, PlayerAction *action)
   {
     switch (code)
@@ -40,6 +41,7 @@ namespace
     }
     return false;
   }
+ */
 }
 
 //-----------------------------------------------------------------------------

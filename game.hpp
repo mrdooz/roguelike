@@ -3,6 +3,7 @@
 
 #include "game_state.hpp"
 #include "roguelike.hpp"
+#include "event_manager.hpp"
 
 namespace rogue
 {
@@ -10,6 +11,8 @@ namespace rogue
   class Renderer;
   class DebugRenderer;
   class EventManager;
+  class GameAI;
+  class GamePlayer;
 
   class Game
   {
@@ -24,7 +27,14 @@ namespace rogue
     void addLogMessage(const char *fmt, ...);
 
   private:
+    Game();
     ~Game();
+
+    bool InitMainWindow();
+    bool InitDebugWindow();
+
+    bool OnMouseMove(const Event& event);
+    bool OnResized(const Event& event);
 
     void ProcessMainWindow();
     void ProcessDebugWindow();
@@ -33,6 +43,9 @@ namespace rogue
 
     void CreateParty();
     void findAppRoot();
+
+    GamePlayer* _gamePlayer;
+    GameAI* _gameAI;
 
     GameState _gameState;
 

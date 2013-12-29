@@ -3,17 +3,18 @@
 
 #include "types.hpp"
 #include "roguelike.hpp"
+#include "precompiled.hpp"
 
 namespace rogue
 {
-  enum class PlayerClass : uint8 {
+  enum class PlayerClass : u8 {
     kWizard,
     kRogue,
     kWarrior,
     kCleric,
   };
 
-  enum class PlayerMode : uint8 {
+  enum class PlayerMode : u8 {
     kExplore,
     kGuard,
     kFollow,
