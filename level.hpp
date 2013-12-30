@@ -39,8 +39,8 @@ namespace rogue
 
     void initMonsters();
 
-    bool Inside(int row, int col) const;
-    bool Inside(const Pos &pos) const { return Inside(pos.row, pos.col); }
+    bool Inside(int x, int y) const;
+    bool Inside(const Pos &pos) const { return Inside(pos.x, pos.y); }
     bool tileFree(const Pos &pos) const;
 
     int Width() const { return _width; }

@@ -15,9 +15,9 @@ Level::~Level() {
   seq_delete(&_monsters);
 }
 
-bool Level::Inside(int row, int col) const
+bool Level::Inside(int x, int y) const
 {
-  return row >= 0 && row < _height && col >= 0 && col < _width;
+  return x >= 0 && x < _width && y >= 0 && y < _height;
 }
 
 Tile &Level::Get(int row, int col)
@@ -25,12 +25,14 @@ Tile &Level::Get(int row, int col)
   return _tiles[row*_width+col];
 }
 
-Tile &Level::Get(const Pos &pos) {
-  return _tiles[pos.row*_width+pos.col];
+Tile &Level::Get(const Pos &pos)
+{
+  return _tiles[pos.y*_width+pos.x];
 }
 
-const Tile &Level::Get(const Pos &pos) const {
-  return _tiles[pos.row*_width+pos.col];
+const Tile &Level::Get(const Pos &pos) const
+{
+  return _tiles[pos.y*_width+pos.x];
 }
 
 bool Level::validDestination(const Pos &pos) {
@@ -54,19 +56,22 @@ void Level::initPlayer(Player *p, const Pos &pos) {
 
 void Level::initMonsters()
 {
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < 10; ++i)
+  {
     Monster *monster = new Monster();
-    int r, c;
+    int x, y;
     while (true) {
-      r = 1 + (rand() % (_height-2));
-      c = 1 + (rand() % (_width-2));
-      auto &tile = Get(r, c);
-      if (tile._type == TileType::kFloor && !tile._monster && !tile._player) {
+      x = 1 + (rand() % (_width-2));
+      y = 1 + (rand() % (_height-2));
+      auto &tile = Get(x, y);
+      if (tile._type == TileType::kFloor && !tile._monster && !tile._player)
+      {
         tile._monster = monster;
         break;
       }
     }
-    monster->_pos = Pos(r, c);
+
+    monster->_pos = Pos(x,y);
     auto &sprite = monster->_sprite;
     sprite.setScale(3.0f, 3.0f);
     sprite.setColor(sf::Color(255,255,255));
@@ -108,7 +113,7 @@ void Level::updateFog(const Pos &pos)
   int lightRadius = 2;
   for (int i = -lightRadius; i <= lightRadius; ++i) {
     for (int j = -lightRadius; j <= lightRadius; ++j) {
-      Pos p(pos.row + i, pos.col + j);
+      Pos p(pos.x + j, pos.y + i);
       if (!Inside(p))
         continue;
       int dy = i < 0 ? -i : i;
@@ -120,7 +125,8 @@ void Level::updateFog(const Pos &pos)
   }
 }
 
-bool Level::tileFree(const Pos &pos) const {
+bool Level::tileFree(const Pos &pos) const
+{
   auto &tile = Get(pos);
   return tile._monster == nullptr && tile._player == nullptr;
 }
@@ -242,10 +248,10 @@ Pos Level::IndexToPos(size_t idx) const
   if (_width == 0)
     return Pos();
 
-  return Pos(idx/_width, idx % _width);
+  return Pos(idx % _width, idx/_width);
 }
 
 size_t Level::PosToIndex(const Pos& pos) const
 {
-  return pos.row * _width + pos.col;
+  return pos.y * _width + pos.x;
 }

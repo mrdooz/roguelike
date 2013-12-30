@@ -74,5 +74,4 @@ typedef int64_t s64;
   #define OVERRIDE
 #endif
 
-#include "types.hpp"
 #include "roguelike.hpp"

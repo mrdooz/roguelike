@@ -72,9 +72,9 @@ void Renderer::DrawWorld(const GameState& state)
   // Check that the active player is inside the currently visible area
   int rows, cols;
   ClampedVisibleArea(state._level, &rows, &cols);
-  Rect rect(_offset, cols, rows);
+  Rect rect(_offset, Pos(cols, rows));
   Player* player = state.GetActivePlayer();
-  if (player && !rect.PointInside(player->_pos))
+  if (player && !rect.contains(player->_pos))
   {
     // Player outside the visible area, so center the view on him
     _offset.x = player->_pos.x - cols / 2;
@@ -182,7 +182,7 @@ void Renderer::DrawLevel(const GameState& state)
 
       if (tile._selected)
       {
-        Pos org(ToLocal(Pos(i, j)));
+        Pos org(ToLocal(Pos(j,i)));
 
         sf::Vertex verts[] = {
           MakeVertex(0 + (float)org.x, 0 + (float)org.y),
@@ -208,14 +208,14 @@ void Renderer::DrawParty(const GameState& state)
 
   int rows, cols;
   ClampedVisibleArea(state._level, &rows, &cols);
-  Rect rect(_offset, cols, rows);
+  Rect rect(_offset, Pos(cols, rows));
 
   for (size_t i = 0; i < party->_players.size(); ++i)
   {
     Player *player = party->_players[i];
     Pos pos(player->_pos);
 
-    if (!rect.PointInside(pos))
+    if (!rect.contains(pos))
       continue;
 
     Pos p(ToLocal(pos));
@@ -303,12 +303,12 @@ void Renderer::DrawHealthBar(int health, int maxHealth, const Pos &pos)
   sf::RectangleShape rectangle;
   // deficit
   rectangle.setSize(sf::Vector2f(zoomF*6, zoomF));
-  rectangle.setPosition((pos.col*8+1)*zoomF, (pos.row*8+7)*zoomF);
+  rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
   rectangle.setFillColor(sf::Color(200, 10, 10));
   _window->draw(rectangle);
   // cur health
   rectangle.setSize(sf::Vector2f((float)health / maxHealth*zoomF*6, zoomF));
-  rectangle.setPosition((pos.col*8+1)*zoomF, (pos.row*8+7)*zoomF);
+  rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
   rectangle.setFillColor(sf::Color(10, 200, 10));
   _window->draw(rectangle);
 
@@ -333,7 +333,7 @@ void Renderer::DrawMonsters(const GameState& state)
 
   int rows, cols;
   ClampedVisibleArea(state._level, &rows, &cols);
-  Rect rect(_offset, cols, rows);
+  Rect rect(_offset, Pos(cols, rows));
 
   int zoom = 3;
   float zoomF = (float)zoom;
@@ -344,7 +344,7 @@ void Renderer::DrawMonsters(const GameState& state)
       continue;
 
     Pos pos(ToLocal(monster->_pos));
-    if (!rect.PointInside(pos))
+    if (!rect.contains(pos))
       continue;
 
     monster->_sprite.setPosition(zoomF*pos.x*8, zoomF*pos.y*8);

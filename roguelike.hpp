@@ -33,4 +33,8 @@ namespace rogue
   using sf::Event;
 
   using sf::Vector2f;
+  using sf::Vector2i;
+
+  typedef sf::Vector2i Pos;
+  typedef sf::Rect<int> Rect;
 }

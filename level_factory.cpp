@@ -91,7 +91,8 @@ size_t subdivide(
   return curIdx;
 }
 
-struct Wall {
+struct Wall
+{
   Wall() : start(INT_MAX), finish(INT_MIN) {}
   Wall(bool horiz, int pos, int from, int to, int start, int finish) : horiz(horiz), pos(pos), from(from), to(to), start(start), finish(finish) {}
   bool horiz;
@@ -187,7 +188,7 @@ Level *LevelFactory::CreateLevel(int width, int height)
 #if DEBUG_MAP
 
   vector<Pos> p;
-  level->calcPath(Pos(1,1), Pos(level->_height-2, 2), &p);
+  level->calcPath(Pos(1,1), Pos(2, level->_height-2), &p);
   for (auto &pp : p) {
     roomIds[pp.y*width+pp.x] = -2;
   }

@@ -12,10 +12,10 @@ namespace
   {
     switch (code)
     {
-      case sf::Keyboard::Left:  *ofs = Pos(0,-1); return true;
-      case sf::Keyboard::Right: *ofs = Pos(0,+1); return true;
-      case sf::Keyboard::Up:    *ofs = Pos(-1,0); return true;
-      case sf::Keyboard::Down:  *ofs = Pos(+1,0); return true;
+      case sf::Keyboard::Left:  *ofs = Pos(-1,0); return true;
+      case sf::Keyboard::Right: *ofs = Pos(+1,0); return true;
+      case sf::Keyboard::Up:    *ofs = Pos(0,-1); return true;
+      case sf::Keyboard::Down:  *ofs = Pos(0,+1); return true;
     }
     return false;
   }
