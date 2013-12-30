@@ -36,17 +36,6 @@ enum class Tiles
   cNumTiles,
 };
 
-struct LogEvent
-{
-
-};
-
-template <typename T>
-struct LogKeyValue
-{
-  LogKeyValue(const string& key, const T& value);
-};
-
 //-----------------------------------------------------------------------------
 Renderer::Renderer(sf::RenderWindow *window) 
   : _window(window)
@@ -61,17 +50,12 @@ Renderer::Renderer(sf::RenderWindow *window)
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::onMoveDone()
-{
-//  int a = 10;
-}
-
-//-----------------------------------------------------------------------------
 void Renderer::DrawWorld(const GameState& state)
 {
   // Check that the active player is inside the currently visible area
+/*
   int rows, cols;
-  ClampedVisibleArea(state._level, &rows, &cols);
+  VisibleArea(state._level, &rows, &cols);
   Rect rect(_offset, Pos(cols, rows));
   Player* player = state.GetActivePlayer();
   if (player && !rect.contains(player->_pos))
@@ -91,7 +75,7 @@ void Renderer::DrawWorld(const GameState& state)
     if (_offset.y + rows > h)
       _offset.y = h - rows;
   }
-
+*/
   DrawLevel(state);
   DrawMonsters(state);
   DrawParty(state);
@@ -99,67 +83,73 @@ void Renderer::DrawWorld(const GameState& state)
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::ClampedVisibleArea(const Level* level, int* rows, int* cols) const
-{
-  VisibleArea(rows, cols);
-  *rows = min(*rows, level->Height());
-  *cols = min(*cols, level->Width());
-}
-
-//-----------------------------------------------------------------------------
-void Renderer::VisibleArea(int* rows, int* cols) const
+void Renderer::VisibleArea(const Level* level, int* rows, int* cols) const
 {
   // Determine number of tiles in the visible area (rows x cols)
   auto size = _window->getSize();
   size_t zoom = _zoomLevel * 8;
   *rows = 1 + (max(0, (int)size.y - _topMargin - _bottomMargin)) / zoom;
   *cols = 1 + (max(0, (int)size.x - _leftMargin - _rightMargin)) / zoom;
+
+  *rows = min(*rows, level->Height());
+  *cols = min(*cols, level->Width());
 }
 
 //-----------------------------------------------------------------------------
 void Renderer::Resize(const GameState& state)
 {
+/*
   int rows, cols;
-  ClampedVisibleArea(state._level, &rows, &cols);
-
-  // Return if the new window contains the same number of tiles
-  if (_tileSprites.size() == rows * cols)
-    return;
+  VisibleArea(state._level, &rows, &cols);
 
   _tileSprites.resize(rows*cols);
   size_t zoom = _zoomLevel * 8;
-  for (int i = 0; i < rows; ++i)
+  for (int y = 0; y < rows; ++y)
   {
-    for (int j = 0; j < cols; ++j)
+    for (int x = 0; x < cols; ++x)
     {
-      auto &sprite = _tileSprites[i*cols+j];
-      sprite.setPosition((float)j*zoom, (float)i*zoom);
+      auto &sprite = _tileSprites[y*cols+x];
+      sprite.setPosition((float)x*zoom, (float)y*zoom);
       sprite.setScale(3.0f, 3.0f);
       sprite.setTexture(_environmentTexture);
     }
   }
+*/
+}
+
+//-----------------------------------------------------------------------------
+View Renderer::CreateViewOnActivePlayer(const GameState& state) const
+{
+  auto size = _window->getSize();
+  auto p = state.GetActivePlayer()->_pos;
+  View view;
+  view.setCenter(p.x, p.y);
+  view.setSize(size.x, size.y);
+  return view;
 }
 
 //-----------------------------------------------------------------------------
 void Renderer::DrawLevel(const GameState& state)
 {
   int rows, cols;
-  ClampedVisibleArea(state._level, &rows, &cols);
+  VisibleArea(state._level, &rows, &cols);
 
   Level* level = state._level;
 
-  int idx = 0;
-  for (int i = _offset.y; i < rows; ++i)
+  // center on the active player
+  _window->setView(CreateViewOnActivePlayer(state));
+
+  for (int y = _offset.y; y < _offset.y+rows; ++y)
   {
-    for (int j = _offset.x; j < cols; ++j)
+    for (int x = _offset.x; x < _offset.x+cols; ++x)
     {
-      Tile &tile = level->Get(i, j);
-      sf::Sprite &sprite = _tileSprites[idx++];
+      Tile &tile = level->Get(x,y);
+      sf::Sprite &sprite = _tileSprites[y*level->Width()+x];
 
       // If the tile is a wall, determine if it should be horizontal or vertical
       if (tile._type == TileType::kWall)
       {
-        if (level->Inside(i+1, j) && level->Get(i+1, j)._type != TileType::kWall)
+        if (level->Inside(x,y+1) && level->Get(x,y+1)._type != TileType::kWall)
         {
           sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
         }
@@ -177,12 +167,12 @@ void Renderer::DrawLevel(const GameState& state)
         assert(false);
       }
 
-      sprite.setColor(sf::Color(tile._visited, tile._visited, tile._visited));
+//      sprite.setColor(sf::Color(tile._visited, tile._visited, tile._visited));
       _window->draw(sprite);
 
       if (tile._selected)
       {
-        Pos org(ToLocal(Pos(j,i)));
+        Pos org(ToLocal(Pos(x,y)));
 
         sf::Vertex verts[] = {
           MakeVertex(0 + (float)org.x, 0 + (float)org.y),
@@ -206,22 +196,25 @@ void Renderer::DrawParty(const GameState& state)
 
   Party* party = state._party;
 
+  // center on the active player
+  _window->setView(CreateViewOnActivePlayer(state));
+
   int rows, cols;
-  ClampedVisibleArea(state._level, &rows, &cols);
+  VisibleArea(state._level, &rows, &cols);
   Rect rect(_offset, Pos(cols, rows));
 
   for (size_t i = 0; i < party->_players.size(); ++i)
   {
     Player *player = party->_players[i];
     Pos pos(player->_pos);
-
+/*
     if (!rect.contains(pos))
       continue;
 
     Pos p(ToLocal(pos));
-
+*/
     player->_name = toString("Player %d", i);
-    player->_sprite.setPosition((float)p.x*_zoomLevel*8, (float)p.y*_zoomLevel*8);
+    player->_sprite.setPosition((float)pos.x*_zoomLevel*8, (float)pos.y*_zoomLevel*8);
     player->_sprite.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
     _window->draw(player->_sprite);
 
@@ -332,7 +325,7 @@ void Renderer::DrawMonsters(const GameState& state)
   Level* level = state._level;
 
   int rows, cols;
-  ClampedVisibleArea(state._level, &rows, &cols);
+  VisibleArea(state._level, &rows, &cols);
   Rect rect(_offset, Pos(cols, rows));
 
   int zoom = 3;
@@ -410,7 +403,21 @@ bool Renderer::Init(const GameState& state)
     }
   }
 
-  Resize(state);
+  // For now, create a sprite per tile in the level
+  int height = level->Height();
+  int width = level->Width();
+  _tileSprites.resize(width*height);
+  size_t zoom = _zoomLevel * 8;
+  for (int y = 0; y < height; ++y)
+  {
+    for (int x = 0; x < width; ++x)
+    {
+      auto &sprite = _tileSprites[y*width+x];
+      sprite.setPosition((float)x*zoom, (float)y*zoom);
+      sprite.setScale(3.0f, 3.0f);
+      sprite.setTexture(_environmentTexture);
+    }
+  }
 
   return true;
 }

@@ -46,9 +46,9 @@ namespace rogue
     int Width() const { return _width; }
     int Height() const { return _height; }
 
-    Tile &Get(int row, int col);
-    Tile &Get(const Pos &pos);
-    const Tile &Get(const Pos &pos) const;
+    Tile &Get(int x, int y);
+    Tile& Get(const Pos &pos);
+    const Tile& Get(const Pos &pos) const;
 
     const vector<Monster* >& monsters() { return _monsters; }
 

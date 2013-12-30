@@ -34,7 +34,6 @@ Game::Game()
 //-----------------------------------------------------------------------------
 Game::~Game()
 {
-  LevelFactory::close();
   PlayerFactory::close();
   delete exch_null(_gamePlayer);
   delete exch_null(_gameAI);
@@ -83,10 +82,10 @@ void Game::CreateParty()
     {
       int x = rand() % _gameState._level->Width();
       int y = rand() % _gameState._level->Height();
-      auto& tile = _gameState._level->Get(y, x);
+      auto& tile = _gameState._level->Get(x, y);
       if (tile.IsEmpty() && tile._type == TileType::kFloor)
       {
-        p->_pos = Pos(y, x);
+        p->_pos = Pos(x, y);
         break;
       }
     }
@@ -118,7 +117,7 @@ bool Game::InitMainWindow()
   _window = new sf::RenderWindow(sf::VideoMode(800, 600), "...");
   _eventManager = new EventManager(_window);
 
-  _eventManager->RegisterHandler(Event::MouseMoved, bind(&Game::OnMouseMove, this, _1));
+//  _eventManager->RegisterHandler(Event::MouseMoved, bind(&Game::OnMouseMove, this, _1));
   _eventManager->RegisterHandler(Event::Resized, bind(&Game::OnResized, this, _1));
   _eventManager->RegisterHandler(Event::Closed, [this](const Event&) { _window->close(); return true; });
   _eventManager->RegisterHandler(Event::KeyReleased, bind(&GamePlayer::OnKeyPressed, _gamePlayer, std::ref(_gameState), _1));
@@ -146,10 +145,9 @@ bool Game::init()
 {
   findAppRoot();
 
-  LevelFactory::create();
   PlayerFactory::create();
 
-  _gameState._level = LevelFactory::instance().CreateLevel(40, 40);
+  _gameState._level = LevelFactory::CreateLevel(40, 40);
   _gameState._level->initMonsters();
 
   _gamePlayer = new GamePlayer();

@@ -17,168 +17,214 @@ struct Room
   size_t parent;
 };
 
-vector<Room> rooms;
-
-const int cMaxDepth = 3;
-
-size_t subdivide(
-    Level *level,
-    int *roomIds,
-    int pitch,
-    int &curRoom,
-    int top,
-    int left,
-    int width,
-    int height,
-    int depth,
-    size_t parent)
+//-----------------------------------------------------------------------------
+struct LevelSubdivide
 {
-  size_t curIdx = rooms.size();
-  rooms.push_back(Room(parent));
-  rooms[curIdx].rect = sf::IntRect(left, top, width, height);
+  const int cMaxDepth = 3;
 
-  bool horiz = !!(rand() % 2);
-  if (horiz)
+  LevelSubdivide(Level* level)
+    : _level(level)
+    , _pitch(level->Width())
+    , _roomIds(level->Width()*level->Height())
   {
-    int split = (int)gaussianRand(height/2.0f, height/4.0f);
-    for (int i = 0; i < width; ++i)
-      level->Get(top+split, left+i)._type = TileType::kWall;
+  }
 
-    if (depth <= cMaxDepth && width > 5 && height > 5)
+  void Run()
+  {
+    int roomCount = 1;
+    Subdivide(roomCount, 0, 0, _level->Width(), _level->Height(), 0, ~0);
+  }
+
+  size_t Subdivide(
+      int &curRoom,
+      int top,
+      int left,
+      int width,
+      int height,
+      int depth,
+      size_t parent)
+  {
+    size_t curIdx = _rooms.size();
+    // Note, please stop trying to be smart and grab a reference into the vector here! It will
+    // resize in the recursive call!
+    Room room(parent);
+    room.rect = sf::IntRect(left, top, width, height);
+
+    // Should the splitting wall be horizontal or vertical
+    bool horiz = !!(rand() % 2);
+    if (horiz)
     {
-      auto lhs = subdivide(level, roomIds, pitch, curRoom, top, left, width, split+1, depth + 1, curIdx);
-      auto rhs = subdivide(level, roomIds, pitch, curRoom, top + split, left, width, height - split, depth + 1, curIdx);
-      rooms[curIdx].children.push_back(lhs);
-      rooms[curIdx].children.push_back(rhs);
+      // Create a split, with a mean position in the middle of the room
+      // TODO: What is the extreme point of the gaussian distribution? should this be clamped?
+      int splitPos = (int)gaussianRand(height/2.0f, height/4.0f);
+      for (int i = 0; i < width; ++i)
+        _level->Get(left+i, top+splitPos)._type = TileType::kWall;
+
+      if (depth <= cMaxDepth && width > 5 && height > 5)
+      {
+        auto lhs = Subdivide(curRoom, top, left, width, splitPos+1, depth + 1, curIdx);
+        auto rhs = Subdivide(curRoom, top + splitPos, left, width, height - splitPos, depth + 1, curIdx);
+        room.children.push_back(lhs);
+        room.children.push_back(rhs);
+      }
+      else
+      {
+        // At bottom of recursion, set the room ids (either to cur, 0 for the wall, or cur+1 for under the split)
+        for (int i = top+1; i < top + height-1; ++i)
+        {
+          for (int j = left+1; j < left + width-1; ++j)
+          {
+            _roomIds[i*_pitch+j] = i < top + splitPos ? curRoom : i == top + splitPos ? 0 : curRoom + 1;
+          }
+        }
+        curRoom += 2;
+      }
     }
     else
     {
-      for (int i = top+1; i < top + height-1; ++i)
-      {
-        for (int j = left+1; j < left + width-1; ++j)
-        {
-          roomIds[i*pitch+j] = i < top + split ? curRoom : i == top + split ? 0 : curRoom + 1;
-        }
-      }
-      curRoom += 2;
-    }
-  }
-  else
-  {
-    int split = (int)gaussianRand(width/2.0f, width/4.0f);
-    for (int i = 0; i < height; ++i)
-      level->Get(top+i, left+split)._type = TileType::kWall;
+      int split = (int)gaussianRand(width/2.0f, width/4.0f);
+      for (int i = 0; i < height; ++i)
+        _level->Get(left+split, top+i)._type = TileType::kWall;
 
-    if (depth <= cMaxDepth && width > 5 && height > 5)
-    {
-      auto lhs = subdivide(level, roomIds, pitch, curRoom, top, left, split+1, height, depth + 1, curIdx);
-      auto rhs = subdivide(level, roomIds, pitch, curRoom, top, left + split, width - split, height, depth + 1, curIdx);
-      rooms[curIdx].children.push_back(lhs);
-      rooms[curIdx].children.push_back(rhs);
-    }
-    else
-    {
-      for (int i = top+1; i < top + height-1; ++i)
+      if (depth <= cMaxDepth && width > 5 && height > 5)
       {
-        for (int j = left+1; j < left + width-1; ++j)
-        {
-          roomIds[i*pitch+j] = j < left + split ? curRoom : j == left + split ? 0 : curRoom + 1;
-        }
+        auto lhs = Subdivide(curRoom, top, left, split+1, height, depth + 1, curIdx);
+        auto rhs = Subdivide(curRoom, top, left + split, width - split, height, depth + 1, curIdx);
+        room.children.push_back(lhs);
+        room.children.push_back(rhs);
       }
-      curRoom += 2;
+      else
+      {
+        for (int i = top+1; i < top + height-1; ++i)
+        {
+          for (int j = left+1; j < left + width-1; ++j)
+          {
+            _roomIds[i*_pitch+j] = j < left + split ? curRoom : j == left + split ? 0 : curRoom + 1;
+          }
+        }
+        curRoom += 2;
+      }
     }
+    _rooms.emplace_back(room);
+    return curIdx;
   }
-  return curIdx;
-}
 
-struct Wall
-{
-  Wall() : start(INT_MAX), finish(INT_MIN) {}
-  Wall(bool horiz, int pos, int from, int to, int start, int finish) : horiz(horiz), pos(pos), from(from), to(to), start(start), finish(finish) {}
-  bool horiz;
-  int pos;  // row if horizontal, col if vertical
-  int from, to;
-  int start, finish;
+  Level* _level;
+  size_t _pitch;
+  vector<int> _roomIds;
+  vector<Room> _rooms;
 };
 
+//-----------------------------------------------------------------------------
+struct Wall
+{
+  enum class Orientation
+  {
+    Horizontal,
+    Vertical,
+  };
+
+  Wall() : start(INT_MAX), finish(INT_MIN) {}
+  Wall(Orientation orientation, int pos, int from, int to, int start, int finish)
+    : orientation(orientation), pos(pos), from(from), to(to), start(start), finish(finish) {}
+  Orientation orientation;
+  int pos;            // Row if horizontal, col if vertical
+  int from, to;       // The rooms the wall splits
+  int start, finish;  // Extents of the wall
+};
+
+//-----------------------------------------------------------------------------
 Level *LevelFactory::CreateLevel(int width, int height)
 {
   Level *level = new Level(width, height);
 
   // fill floor
-  for (int i = 0; i < height; ++i)
+  for (int y = 0; y < height; ++y)
   {
-    for (int j = 0; j < width; ++j)
+    for (int x = 0; x < width; ++x)
     {
-      level->Get(i, j)._type = TileType::kFloor;
+      level->Get(x,y)._type = TileType::kFloor;
     }
   }
 
-  // outer wall
+  // outer walls
   for (int i = 0; i < width; ++i)
   {
-    level->Get(0, i)._type = TileType::kWall;
-    level->Get(height-1, i)._type = TileType::kWall;
+    level->Get(i,0)._type = TileType::kWall;
+    level->Get(i,height-1)._type = TileType::kWall;
   }
 
   for (int i = 0; i < height; ++i)
   {
-    level->Get(i, 0)._type = TileType::kWall;
-    level->Get(i, width-1)._type = TileType::kWall;
+    level->Get(0,i)._type = TileType::kWall;
+    level->Get(width-1,i)._type = TileType::kWall;
   }
 
-  int roomCount = 1;
-  vector<int> roomIds(width*height);
-  subdivide(level, roomIds.data(), width, roomCount, 0, 0, width, height, 0, ~0);
+  LevelSubdivide sub(level);
+  sub.Run();
+  auto& roomIds = sub._roomIds;
 
   map<pair<int, int>, Wall> walls;
 
   // Find all the walls
-  for (int i = 1; i < height-1; ++i) {
-    for (int j = 1; j < width-1; ++j) {
+  for (int i = 1; i < height-1; ++i)
+  {
+    for (int j = 1; j < width-1; ++j)
+    {
+      // Grab 3 adjacent horizontal tiles
       int x0 = roomIds[i*width+j-1];
-      int x1 = roomIds[i*width+j];
+      int x1 = roomIds[i*width+j+0];
       int x2 = roomIds[i*width+j+1];
 
-      if (x0 != 0 && x1 == 0 && x2 != 0) {
+      // Check if middle tile is a wall (and the outer tiles aren't)
+      if (x0 != 0 && x1 == 0 && x2 != 0)
+      {
         int a = min(x0, x2);
         int b = max(x0, x2);
-        auto &c = walls[make_pair(a,b)];
-        c = Wall(false, j, a, b, min(c.start, i), max(c.finish, i));
-
-      } else {
+        // Create an entry for a wall between room 'a' and room 'b', and update the extents of it.
+        auto& wall = walls[make_pair(a,b)];
+        wall = Wall(Wall::Orientation::Vertical, j, a, b, min(wall.start, i), max(wall.finish, i));
+      }
+      else
+      {
         int y0 = roomIds[(i-1)*width+j];
-        int y1 = roomIds[(i)*width+j];
+        int y1 = roomIds[(i+0)*width+j];
         int y2 = roomIds[(i+1)*width+j];
 
-        if (y0 != 0 && y1 == 0 && y2 != 0) {
-
+        if (y0 != 0 && y1 == 0 && y2 != 0)
+        {
           int a = min(y0, y2);
           int b = max(y0, y2);
-          auto &c = walls[make_pair(a,b)];
-          c = Wall(true, i, a, b, min(c.start, j), max(c.finish, j));
+          auto& wall = walls[make_pair(a,b)];
+          wall = Wall(Wall::Orientation::Horizontal, i, a, b, min(wall.start, j), max(wall.finish, j));
         }
       }
     }
   }
 
-  for (auto &kv: walls) {
-    auto &Wall = kv.second;
-    int p = Wall.pos;
-    while (true) {
-      int door = (int)randf((float)Wall.start, (float)Wall.finish);
-      if (Wall.horiz) {
-        if (level->Get(p-1, door)._type != TileType::kWall && level->Get(p+1, door)._type != TileType::kWall)
+  // Make doors in the walls
+  for (auto &kv: walls)
+  {
+    auto& wall = kv.second;
+    int p = wall.pos;
+    while (true)
+    {
+      int door = (int)randf((float)wall.start, (float)wall.finish);
+      if (wall.orientation == Wall::Orientation::Horizontal)
+      {
+        // Check that each side of the candidate door isn't a wall (avoid T junctions etc)
+        if (level->Get(door, p-1)._type != TileType::kWall && level->Get(door, p+1)._type != TileType::kWall)
         {
-          level->Get(p, door)._type = TileType::kFloor;
+          level->Get(door, p)._type = TileType::kFloor;
           break;
         }
       }
       else
       {
-        if (level->Get(door, p-1)._type != TileType::kWall && level->Get(door, p+1)._type != TileType::kWall)
+        // Vertical wall..
+        if (level->Get(p-1, door)._type != TileType::kWall && level->Get(p+1, door)._type != TileType::kWall)
         {
-          level->Get(door, p)._type = TileType::kFloor;
+          level->Get(p, door)._type = TileType::kFloor;
           break;
         }
       }
@@ -207,22 +253,4 @@ Level *LevelFactory::CreateLevel(int width, int height)
 #endif
 
   return level;
-}
-
-LevelFactory *LevelFactory::_instance;
-
-bool LevelFactory::create() {
-  assert(!_instance);
-  _instance = new LevelFactory;
-  return true;
-}
-
-void LevelFactory::close() {
-  assert(_instance);
-  delete exch_null(_instance);
-}
-
-LevelFactory &LevelFactory::instance() {
-  assert(_instance);
-  return *_instance;
 }

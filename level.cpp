@@ -11,7 +11,8 @@ Level::Level(int width, int height)
   _tiles.resize(width*height);
 }
 
-Level::~Level() {
+Level::~Level()
+{
   seq_delete(&_monsters);
 }
 
@@ -20,9 +21,9 @@ bool Level::Inside(int x, int y) const
   return x >= 0 && x < _width && y >= 0 && y < _height;
 }
 
-Tile &Level::Get(int row, int col)
+Tile &Level::Get(int x, int y)
 {
-  return _tiles[row*_width+col];
+  return _tiles[y*_width+x];
 }
 
 Tile &Level::Get(const Pos &pos)

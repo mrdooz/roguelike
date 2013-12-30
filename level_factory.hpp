@@ -1,23 +1,12 @@
-#ifndef _LEVEL_FACTORY_HPP_
-#define _LEVEL_FACTORY_HPP_
+#pragma once
 
 #include "level.hpp"
 
 namespace rogue
 {
-  class LevelFactory {
-
+  class LevelFactory
+  {
   public:
-    static bool create();
-    static void close();
-    static LevelFactory &instance();
-
-    Level *CreateLevel(int width, int height);
-  private:
-
-    static LevelFactory *_instance;
+    static Level *CreateLevel(int width, int height);
   };
 }
-
-
-#endif
