@@ -97,6 +97,7 @@ void Game::CreateParty()
 //-----------------------------------------------------------------------------
 bool Game::OnMouseMove(const Event& event)
 {
+  _renderer->OnMouseMove(_gameState, event.mouseMove.x, event.mouseMove.y, true);
   return false;
 }
 
@@ -115,9 +116,10 @@ bool Game::OnResized(const Event& event)
 bool Game::InitMainWindow()
 {
   _window = new sf::RenderWindow(sf::VideoMode(800, 600), "...");
+  _window->setFramerateLimit(60);
   _eventManager = new EventManager(_window);
 
-//  _eventManager->RegisterHandler(Event::MouseMoved, bind(&Game::OnMouseMove, this, _1));
+  _eventManager->RegisterHandler(Event::MouseMoved, bind(&Game::OnMouseMove, this, _1));
   _eventManager->RegisterHandler(Event::Resized, bind(&Game::OnResized, this, _1));
   _eventManager->RegisterHandler(Event::Closed, [this](const Event&) { _window->close(); return true; });
   _eventManager->RegisterHandler(Event::KeyReleased, bind(&GamePlayer::OnKeyPressed, _gamePlayer, std::ref(_gameState), _1));
@@ -147,7 +149,7 @@ bool Game::init()
 
   PlayerFactory::create();
 
-  _gameState._level = LevelFactory::CreateLevel(40, 40);
+  _gameState._level = LevelFactory::CreateLevel(30,30);
   _gameState._level->initMonsters();
 
   _gamePlayer = new GamePlayer();

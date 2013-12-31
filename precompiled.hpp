@@ -29,16 +29,11 @@
 #include <memory>
 #include <ostream>
 #include <sstream>
+#include <unistd.h>
 
 #include <sys/stat.h>
 #include <string>
 #include <stdint.h>
-#include <boost/any.hpp>
-
-#pragma warning(disable: 4180)
-#define BOOST_DISABLE_ASSERTS
-//#include <boost/bind.hpp>
-
 
 typedef int8_t int8;
 typedef uint8_t uint8;

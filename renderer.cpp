@@ -10,9 +10,15 @@ using namespace rogue;
 
 namespace
 {
-  sf::Vertex MakeVertex(float x, float y)
+  sf::Vertex MakeVertex(int x, int y, sf::Color color = sf::Color::White)
   {
-    return sf::Vertex(sf::Vector2f(x, y));
+    return sf::Vertex(sf::Vector2f((float)x, (float)y), color);
+  }
+
+  template <typename To, typename From>
+  sf::Vector2<To> VectorCast(const sf::Vector2<From>& src)
+  {
+    return sf::Vector2<To>((To)src.x, (To)src.y);
   }
 }
 
@@ -40,6 +46,7 @@ enum class Tiles
 Renderer::Renderer(sf::RenderWindow *window) 
   : _window(window)
   , _partyStatsWidth(210)
+  , _prevSelected(-1)
   , _offset(0,0)
   , _leftMargin(0)
   , _rightMargin(210)
@@ -50,82 +57,111 @@ Renderer::Renderer(sf::RenderWindow *window)
 }
 
 //-----------------------------------------------------------------------------
+void Renderer::PlayerInView(const GameState& state)
+{
+  Player* player = state.GetActivePlayer();
+  Pos pos(player->_pos);
+  Pos wsPos(PlayerToWorld(pos));
+
+  // Make sure the current view contains the given player position
+  auto level = state._level;
+  auto& view = _rtMain.getView();
+  auto center = view.getCenter();
+  auto size = view.getSize();
+  Rect rect(center.x - size.x/2, center.y - size.y/2, size.x, size.y);
+
+  // Check that all four corners of the player are inside the window
+  int s = _zoomLevel * 8;
+  bool inside = rect.contains(wsPos + s * Pos(0, 0))
+    && rect.contains(wsPos + s * Pos(1, 0))
+    && rect.contains(wsPos + s * Pos(0, 1))
+    && rect.contains(wsPos + s * Pos(1, 1));
+
+  if (!inside)
+  {
+    auto windowSize = _rtMain.getSize();
+    Vector2f center(VectorCast<float>(wsPos));
+
+    // If the player position is less than half the window away from the corners,
+    // bump it to avoid leaving empty space
+    int w = level->Width();
+    int h = level->Height();
+    int sx = windowSize.x / 2;
+    int sy = windowSize.y / 2;
+    if (center.x < windowSize.x/2)
+    {
+      center.x = sx;
+    }
+    else if ((w - pos.x) * _zoomLevel * 8 < sx)
+    {
+      center.x = w * _zoomLevel * 8 - sx;
+    }
+
+    if (center.y < sy)
+    {
+      center.y = sy;
+    }
+    else if ((h - pos.y) * _zoomLevel * 8 < sy)
+    {
+      center.y = h * _zoomLevel * 8 - sy;
+    }
+
+    _rtMain.setView(View(center, VectorCast<float>(windowSize)));
+  }
+}
+
+//-----------------------------------------------------------------------------
 void Renderer::DrawWorld(const GameState& state)
 {
-  // Check that the active player is inside the currently visible area
-/*
-  int rows, cols;
-  VisibleArea(state._level, &rows, &cols);
-  Rect rect(_offset, Pos(cols, rows));
-  Player* player = state.GetActivePlayer();
-  if (player && !rect.contains(player->_pos))
-  {
-    // Player outside the visible area, so center the view on him
-    _offset.x = player->_pos.x - cols / 2;
-    _offset.y = player->_pos.y - rows / 2;
+  PlayerInView(state);
 
-    // Clamp the new position, so it's fully inside the visible area
-    _offset.x = max(0, _offset.x);
-    _offset.y = max(0, _offset.y);
-    int w = state._level->Width();
-    int h = state._level->Height();
-    
-    if (_offset.x + cols > w)
-      _offset.x = w - cols;
-    if (_offset.y + rows > h)
-      _offset.y = h - rows;
-  }
-*/
+  // Render to render target
+  _rtMain.clear();
+
   DrawLevel(state);
   DrawMonsters(state);
   DrawParty(state);
   drawPartyStats(state);
+
+  // Blit render target to render window
+  _rtMain.display();
+  _window->draw(_sprMain);
 }
 
 //-----------------------------------------------------------------------------
 void Renderer::VisibleArea(const Level* level, int* rows, int* cols) const
 {
   // Determine number of tiles in the visible area (rows x cols)
-  auto size = _window->getSize();
+  auto size = _rtMain.getSize();
   size_t zoom = _zoomLevel * 8;
-  *rows = 1 + (max(0, (int)size.y - _topMargin - _bottomMargin)) / zoom;
-  *cols = 1 + (max(0, (int)size.x - _leftMargin - _rightMargin)) / zoom;
 
-  *rows = min(*rows, level->Height());
-  *cols = min(*cols, level->Width());
+  *cols = min(1 + (int)(size.x / zoom), level->Width());
+  *rows = min(1 + (int)(size.y / zoom), level->Height());
 }
 
 //-----------------------------------------------------------------------------
 void Renderer::Resize(const GameState& state)
 {
-/*
-  int rows, cols;
-  VisibleArea(state._level, &rows, &cols);
+  auto windowSize = _window->getSize();
 
-  _tileSprites.resize(rows*cols);
-  size_t zoom = _zoomLevel * 8;
-  for (int y = 0; y < rows; ++y)
-  {
-    for (int x = 0; x < cols; ++x)
-    {
-      auto &sprite = _tileSprites[y*cols+x];
-      sprite.setPosition((float)x*zoom, (float)y*zoom);
-      sprite.setScale(3.0f, 3.0f);
-      sprite.setTexture(_environmentTexture);
-    }
-  }
-*/
+  _rtMain.create(windowSize.x - _rightMargin, windowSize.y - _topMargin);
+  _rtMain.setSmooth(false);
+  _sprMain.setTexture(_rtMain.getTexture());
 }
 
 //-----------------------------------------------------------------------------
-View Renderer::CreateViewOnActivePlayer(const GameState& state) const
+void Renderer::DrawQuad(const Pos& topLeft, size_t size, sf::Color color)
 {
-  auto size = _window->getSize();
-  auto p = state.GetActivePlayer()->_pos;
-  View view;
-  view.setCenter(p.x, p.y);
-  view.setSize(size.x, size.y);
-  return view;
+  int s = size * _zoomLevel;
+  sf::Vertex verts[] = {
+    MakeVertex(0 + topLeft.x, 0 + topLeft.y, color),
+    MakeVertex(s + topLeft.x, 0 + topLeft.y, color),
+    MakeVertex(s + topLeft.x, s + topLeft.y, color),
+    MakeVertex(0 + topLeft.x, s + topLeft.y, color),
+    MakeVertex(0 + topLeft.x, 0 + topLeft.y, color),
+  };
+
+  _rtMain.draw(verts, 5, sf::LinesStrip);
 }
 
 //-----------------------------------------------------------------------------
@@ -135,57 +171,29 @@ void Renderer::DrawLevel(const GameState& state)
   VisibleArea(state._level, &rows, &cols);
 
   Level* level = state._level;
+  Tile* selectedTile = nullptr;
+  Pos selectedPos;
 
-  // center on the active player
-  _window->setView(CreateViewOnActivePlayer(state));
-
-  for (int y = _offset.y; y < _offset.y+rows; ++y)
+  for (int y = 0; y < level->Height(); ++y)
   {
-    for (int x = _offset.x; x < _offset.x+cols; ++x)
+    for (int x = 0; x < level->Width(); ++x)
     {
       Tile &tile = level->Get(x,y);
-      sf::Sprite &sprite = _tileSprites[y*level->Width()+x];
-
-      // If the tile is a wall, determine if it should be horizontal or vertical
-      if (tile._type == TileType::kWall)
-      {
-        if (level->Inside(x,y+1) && level->Get(x,y+1)._type != TileType::kWall)
-        {
-          sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
-        }
-        else
-        {
-          sprite.setTextureRect(sf::IntRect((int)Tiles::wallV*8, 0, 8, 8));
-        }
-      }
-      else if (tile._type == TileType::kFloor)
-      {
-        sprite.setTextureRect(sf::IntRect((int)Tiles::floorC*8, 0, 8, 8));
-      }
-      else
-      {
-        assert(false);
-      }
+      sf::Sprite& sprite = _tileSprites[y*level->Width()+x];
 
 //      sprite.setColor(sf::Color(tile._visited, tile._visited, tile._visited));
-      _window->draw(sprite);
+      _rtMain.draw(sprite);
 
       if (tile._selected)
       {
-        Pos org(ToLocal(Pos(x,y)));
-
-        sf::Vertex verts[] = {
-          MakeVertex(0 + (float)org.x, 0 + (float)org.y),
-          MakeVertex(8 + (float)org.x, 0 + (float)org.y),
-          MakeVertex(8 + (float)org.x, 8 + (float)org.y),
-          MakeVertex(0 + (float)org.x, 8 + (float)org.y),
-        };
-
-        _window->draw(verts, 4, sf::LinesStrip);
+        selectedTile = &tile;
+        selectedPos = PlayerToWorld(Pos(x,y));
       }
-
     }
   }
+
+  if (selectedTile)
+    DrawQuad(selectedPos, 8, sf::Color::White);
 }
 
 //-----------------------------------------------------------------------------
@@ -196,9 +204,6 @@ void Renderer::DrawParty(const GameState& state)
 
   Party* party = state._party;
 
-  // center on the active player
-  _window->setView(CreateViewOnActivePlayer(state));
-
   int rows, cols;
   VisibleArea(state._level, &rows, &cols);
   Rect rect(_offset, Pos(cols, rows));
@@ -207,16 +212,18 @@ void Renderer::DrawParty(const GameState& state)
   {
     Player *player = party->_players[i];
     Pos pos(player->_pos);
-/*
-    if (!rect.contains(pos))
-      continue;
+    bool isActivePlayer = player == activePlayer;
 
-    Pos p(ToLocal(pos));
-*/
     player->_name = toString("Player %d", i);
-    player->_sprite.setPosition((float)pos.x*_zoomLevel*8, (float)pos.y*_zoomLevel*8);
-    player->_sprite.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
-    _window->draw(player->_sprite);
+    player->_sprite.setPosition(PlayerToWorldF(pos));
+    player->_sprite.setColor(isActivePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
+    _rtMain.draw(player->_sprite);
+
+    if (isActivePlayer)
+    {
+      Pos org(PlayerToWorld(pos));
+      DrawQuad(org, 8, sf::Color::Green);
+    }
 
     //DrawHealthBar(player->_curHealth, player->_maxHeath, Pos(y, x));
   }
@@ -229,7 +236,7 @@ void Renderer::drawPartyStats(const GameState& state)
 
   Party* party = state._party;
 
-  auto size = _window->getSize();
+  auto size = _rtMain.getSize();
   float x = (float)(size.x - _partyStatsWidth);
   float col0 = x;
   float col1 = x + _partyStatsWidth/2;
@@ -247,11 +254,11 @@ void Renderer::drawPartyStats(const GameState& state)
     sf::FloatRect r = heading.getLocalBounds();
     sf::Vector2f tmpPos = pos;
     pos.x += r.width + 10;
-    _window->draw(heading);
+    _rtMain.draw(heading);
     normal.setString(toString("(%s, level %d)", playerClassToString(player->_class).c_str(), player->_level));
     pos.y += (r.height - normal.getLocalBounds().height) / 2;
     normal.setPosition(pos);
-    _window->draw(normal);
+    _rtMain.draw(normal);
     pos = tmpPos;
     pos.y += 25;
   };
@@ -261,7 +268,7 @@ void Renderer::drawPartyStats(const GameState& state)
     normal.setString(str);
     normal.setPosition(pos);
     pos.y += 15;
-    _window->draw(normal);
+    _rtMain.draw(normal);
   };
 
   for (auto *player : party->_players)
@@ -298,12 +305,12 @@ void Renderer::DrawHealthBar(int health, int maxHealth, const Pos &pos)
   rectangle.setSize(sf::Vector2f(zoomF*6, zoomF));
   rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
   rectangle.setFillColor(sf::Color(200, 10, 10));
-  _window->draw(rectangle);
+  _rtMain.draw(rectangle);
   // cur health
   rectangle.setSize(sf::Vector2f((float)health / maxHealth*zoomF*6, zoomF));
   rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
   rectangle.setFillColor(sf::Color(10, 200, 10));
-  _window->draw(rectangle);
+  _rtMain.draw(rectangle);
 
 }
 
@@ -320,6 +327,20 @@ Pos Renderer::ToGlobal(const Pos& pos) const
 }
 
 //-----------------------------------------------------------------------------
+Pos Renderer::PlayerToWorld(const Pos& pos) const
+{
+  size_t zoom = _zoomLevel * 8;
+  return Pos(pos.x * zoom, pos.y * zoom);
+}
+
+//-----------------------------------------------------------------------------
+Vector2f Renderer::PlayerToWorldF(const Pos& pos) const
+{
+  size_t zoom = _zoomLevel * 8;
+  return Vector2f(pos.x * zoom, pos.y * zoom);
+}
+
+//-----------------------------------------------------------------------------
 void Renderer::DrawMonsters(const GameState& state)
 {
   Level* level = state._level;
@@ -327,9 +348,6 @@ void Renderer::DrawMonsters(const GameState& state)
   int rows, cols;
   VisibleArea(state._level, &rows, &cols);
   Rect rect(_offset, Pos(cols, rows));
-
-  int zoom = 3;
-  float zoomF = (float)zoom;
 
   for (auto monster : level->monsters())
   {
@@ -340,22 +358,46 @@ void Renderer::DrawMonsters(const GameState& state)
     if (!rect.contains(pos))
       continue;
 
-    monster->_sprite.setPosition(zoomF*pos.x*8, zoomF*pos.y*8);
-    _window->draw(monster->_sprite);
+    monster->_sprite.setPosition(PlayerToWorldF(monster->_pos));
+    _rtMain.draw(monster->_sprite);
 
     // draw the roam path
     vector<sf::Vertex> path;
     for (auto& p : monster->_roamPath)
     {
-      Pos pp(ToLocal(p));
-      path.push_back(sf::Vertex(sf::Vector2f(pp.x*8*zoomF, pp.y*8*zoomF)));
+      path.push_back(PlayerToWorldF(p));
     }
 
     if (!path.empty())
-      _window->draw(path.data(), path.size(), sf::LinesStrip);
+      _rtMain.draw(path.data(), path.size(), sf::LinesStrip);
 
     DrawHealthBar(monster->_health, monster->_maxHealth, pos);
   }
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::OnMouseMove(const GameState& state, int x, int y, bool hover)
+{
+  auto level = state._level;
+
+  if (_prevSelected != -1)
+    level->_tiles[_prevSelected]._selected = false;
+
+  size_t zoom = _zoomLevel * 8;
+
+  Vector2f wsPos = _rtMain.mapPixelToCoords(Pos(x,y));
+  int tx = wsPos.x / zoom;
+  int ty = wsPos.y / zoom;
+
+  if (tx >= level->Width() || ty >= level->Height())
+  {
+    _prevSelected = -1;
+    return;
+  }
+
+  int idx = ty * level->Width() + tx;
+  _prevSelected = idx;
+  level->_tiles[idx]._selected = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -412,12 +454,37 @@ bool Renderer::Init(const GameState& state)
   {
     for (int x = 0; x < width; ++x)
     {
-      auto &sprite = _tileSprites[y*width+x];
+      auto& sprite = _tileSprites[y*width+x];
       sprite.setPosition((float)x*zoom, (float)y*zoom);
       sprite.setScale(3.0f, 3.0f);
       sprite.setTexture(_environmentTexture);
+
+      auto& tile = level->Get(x, y);
+
+      // If the tile is a wall, determine if it should be horizontal or vertical
+      if (tile._type == TileType::kWall)
+      {
+        if (level->Inside(x,y+1) && level->Get(x,y+1)._type != TileType::kWall)
+        {
+          sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
+        }
+        else
+        {
+          sprite.setTextureRect(sf::IntRect((int)Tiles::wallV*8, 0, 8, 8));
+        }
+      }
+      else if (tile._type == TileType::kFloor)
+      {
+        sprite.setTextureRect(sf::IntRect((int)Tiles::floorC*8, 0, 8, 8));
+      }
+      else
+      {
+        assert(false);
+      }
     }
   }
+
+  Resize(state);
 
   return true;
 }

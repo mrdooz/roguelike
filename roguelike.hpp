@@ -29,6 +29,7 @@ namespace rogue
   using sf::Texture;
   using sf::Sprite;
   using sf::RenderWindow;
+  using sf::RenderTexture;
   using sf::Keyboard;
   using sf::Event;
   using sf::View;

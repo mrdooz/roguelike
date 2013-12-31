@@ -16,13 +16,21 @@ namespace rogue
     void Resize(const GameState& state);
 
     void Update(const GameState& state, const sf::Event* event);
+
+    void OnMouseMove(const GameState& state, int x, int y, bool hover);
+
   private:
 
-    View CreateViewOnActivePlayer(const GameState& state) const;
+    void DrawQuad(const Pos& topLeft, size_t size, sf::Color color);
 
     // Convert a pos in world (global) space to window space
     Pos ToLocal(const Pos& pos) const;
     Pos ToGlobal(const Pos& pos) const;
+
+    Pos PlayerToWorld(const Pos& pos) const;
+    Vector2f PlayerToWorldF(const Pos& pos) const;
+
+    void PlayerInView(const GameState& state);
 
     void DrawParty(const GameState& state);
     void drawPartyStats(const GameState& state);
@@ -34,13 +42,21 @@ namespace rogue
     void VisibleArea(const Level* level, int* rows, int* cols) const;
     RenderWindow *_window;
     int _partyStatsWidth;
-      
-    vector<sf::Sprite> _tileSprites;
+    int _prevSelected;
+
+    vector<Sprite> _tileSprites;
     Pos _offset;
     int _leftMargin, _rightMargin, _topMargin, _bottomMargin;
     int _zoomLevel;
     Font _font;
     Texture _environmentTexture;
     Texture _characterTexture;
+
+    Sprite _sprMain;
+    Sprite _sprCharacter;
+    Sprite _sprCombatLog;
+    RenderTexture _rtMain;
+    RenderTexture _rtCharacterPane;
+    RenderTexture _rtCombatLog;
   };
 }

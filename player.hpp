@@ -2,21 +2,24 @@
 
 namespace rogue
 {
-  enum class PlayerClass : u8 {
+  enum class PlayerClass : u8
+  {
     kWizard,
     kRogue,
     kWarrior,
     kCleric,
   };
 
-  enum class PlayerMode : u8 {
+  enum class PlayerMode : u8
+  {
     kExplore,
     kGuard,
     kFollow,
     kInteractive,
   };
 
-  enum class PlayerAction {
+  enum class PlayerAction
+  {
     kUnknown,
     kMove,
     kMeleeAttack,
@@ -29,9 +32,10 @@ namespace rogue
   string playerModeToString(PlayerMode pm);
 
 
-  class Player {
+  class Player
+  {
   public:
-    Player() : _mode(PlayerMode::kInteractive), _action(PlayerAction::kUnknown), _hasMoved(false) {}
+    Player();
 
     string _name;
 
@@ -40,6 +44,9 @@ namespace rogue
     int _dexterity;
     int _vitality;
     int _armor;
+
+    int _armorBonus;
+    int _weaponBonus;
 
     int _curHealth;
     int _maxHeath;

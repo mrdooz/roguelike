@@ -3,7 +3,8 @@
 
 using namespace rogue;
 
-string rogue::playerClassToString(PlayerClass pc) {
+string rogue::playerClassToString(PlayerClass pc)
+{
   switch (pc) {
   case PlayerClass::kWizard: return "Wizard";
   case PlayerClass::kRogue: return "Rogue";
@@ -13,7 +14,8 @@ string rogue::playerClassToString(PlayerClass pc) {
   }
 }
 
-string rogue::playerModeToString(PlayerMode pm) {
+string rogue::playerModeToString(PlayerMode pm)
+{
   switch (pm) {
   case PlayerMode::kExplore: return "Explore";
   case PlayerMode::kGuard: return "Guard";
@@ -23,3 +25,9 @@ string rogue::playerModeToString(PlayerMode pm) {
   }
 }
 
+Player::Player()
+  : _mode(PlayerMode::kInteractive)
+  , _action(PlayerAction::kUnknown)
+  , _hasMoved(false)
+{
+}
