@@ -7,7 +7,7 @@ string rogue::playerClassToString(PlayerClass pc)
 {
   switch (pc) {
   case PlayerClass::kWizard: return "Wizard";
-  case PlayerClass::kRogue: return "Rogue";
+  case PlayerClass::kRanger: return "Ranger";
   case PlayerClass::kWarrior: return "Warrior";
   case PlayerClass::kCleric: return "Cleric";
   default: assert(false); return "";
@@ -26,8 +26,8 @@ string rogue::playerModeToString(PlayerMode pm)
 }
 
 Player::Player()
-  : _mode(PlayerMode::kInteractive)
-  , _action(PlayerAction::kUnknown)
+  : _chargeRange(3)
+  , _mode(PlayerMode::kInteractive)
   , _hasMoved(false)
 {
 }

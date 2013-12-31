@@ -5,17 +5,29 @@ namespace rogue
   class Monster;
   class Player;
 
-  enum class TileType {
+  enum class TileType
+  {
     kFloor,
     kWall,
     kStairUp,
     kStairDown,
   };
 
+  enum class Object
+  {
+    Gold,
+    ManaPotion,
+    HealthPotion,
+    WeaponUpgrade,
+    ArmourUpgrade,
+  };
+
   struct Tile
   {
-    Tile() : _player(nullptr), _monster(nullptr), _visited(0), _selected(false) {}
-    bool IsEmpty() const { return !_player && !_monster; }
+    Tile();
+    bool IsEmpty() const;
+    
+    deque<Object> _objects;
     TileType _type;
     Player *_player;
     Monster *_monster;

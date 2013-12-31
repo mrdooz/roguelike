@@ -4,6 +4,19 @@
 
 using namespace rogue;
 
+Tile::Tile()
+  : _player(nullptr)
+  , _monster(nullptr)
+  , _visited(0)
+  , _selected(false)
+{
+}
+
+bool Tile::IsEmpty() const
+{
+  return !_player && !_monster;
+}
+
 Level::Level(int width, int height)
   : _width(width)
   , _height(height)

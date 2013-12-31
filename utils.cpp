@@ -49,6 +49,23 @@ string rogue::toString(char const * const format, ... )
 }
 #endif
 
+//-----------------------------------------------------------------------------
+string rogue::ToString(const char* fmt, va_list args)
+{
+  va_list argcopy;
+  va_copy(argcopy, args);
+  int len = vsnprintf(nullptr, 0, fmt, argcopy) + 1;
+  va_end(argcopy);
+
+  char* buf = (char*)alloca(len);
+  vsprintf(buf, fmt, args);
+  va_end(args);
+
+  return string(buf);
+}
+//-----------------------------------------------------------------------------
+
+
 
 float rogue::lerp(float a, float b, float v) {
   return (1-v) * a + v * b;
@@ -69,3 +86,17 @@ float rogue::gaussianRand(float mean, float variance) {
   }
   return (float)(mean + sum / numIters);
 }
+
+//-----------------------------------------------------------------------------
+bool rogue::ArrowKeyToOffset(sf::Keyboard::Key code, Pos *ofs)
+{
+  switch (code)
+  {
+    case sf::Keyboard::Left:  *ofs = Pos(-1,0); return true;
+    case sf::Keyboard::Right: *ofs = Pos(+1,0); return true;
+    case sf::Keyboard::Up:    *ofs = Pos(0,-1); return true;
+    case sf::Keyboard::Down:  *ofs = Pos(0,+1); return true;
+  }
+  return false;
+}
+

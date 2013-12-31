@@ -5,7 +5,7 @@ namespace rogue
   enum class PlayerClass : u8
   {
     kWizard,
-    kRogue,
+    kRanger,
     kWarrior,
     kCleric,
   };
@@ -18,19 +18,8 @@ namespace rogue
     kInteractive,
   };
 
-  enum class PlayerAction
-  {
-    kUnknown,
-    kMove,
-    kMeleeAttack,
-    kRangedAttack,
-    kSpellAttack,
-    kHeal,
-  };
-
   string playerClassToString(PlayerClass pc);
   string playerModeToString(PlayerMode pm);
-
 
   class Player
   {
@@ -56,11 +45,11 @@ namespace rogue
 
     int _level;
     int _xp;
+    int _chargeRange;
 
     sf::Sprite _sprite;
     PlayerMode _mode;
     PlayerClass _class;
-    PlayerAction _action;
     bool _hasMoved;
 
   };

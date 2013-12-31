@@ -12,6 +12,13 @@ namespace rogue
   class GameAI;
   class GamePlayer;
 
+  struct LogMessage
+  {
+    LogMessage(const ptime& expiry, const string& message) : _expiration(expiry), _message(message) {}
+    ptime _expiration;
+    string _message;
+  };
+
   class Game
   {
   public:
@@ -22,6 +29,7 @@ namespace rogue
 
     int run();
 
+    void AddPlayerMessage(const time_duration& duration, const char* fmt, ...);
     void addLogMessage(const char *fmt, ...);
 
   private:
@@ -40,7 +48,11 @@ namespace rogue
     bool init();
 
     void CreateParty();
-    void findAppRoot();
+    void FindAppRoot();
+
+    void ProcessPlayerMessages(const ptime& now);
+
+    Font _playerMessageFont;
 
     GamePlayer* _gamePlayer;
     GameAI* _gameAI;
@@ -53,6 +65,8 @@ namespace rogue
     DebugRenderer* _debugRenderer;
 
     EventManager* _eventManager;
+
+    deque<LogMessage> _playerMessages;
 
     string _appRoot;
 

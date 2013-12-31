@@ -138,6 +138,9 @@ bool Game::InitMainWindow()
   if (!_renderer->Init(_gameState))
     return false;
 
+  if (!_playerMessageFont.loadFromFile("gfx/wscsnrg.ttf"))
+    return false;
+
   return true;
 }
 
@@ -155,7 +158,7 @@ bool Game::InitDebugWindow()
 //-----------------------------------------------------------------------------
 bool Game::init()
 {
-  findAppRoot();
+  FindAppRoot();
 
   PlayerFactory::create();
 
@@ -190,6 +193,10 @@ void Game::ProcessMainWindow()
 
   _window->clear();
   _renderer->DrawWorld(_gameState);
+
+  auto now = microsec_clock::local_time();
+  ProcessPlayerMessages(now);
+
   _window->display();
 }
 
@@ -211,6 +218,34 @@ void Game::ProcessDebugWindow()
 }
 
 //-----------------------------------------------------------------------------
+void Game::ProcessPlayerMessages(const ptime& now)
+{
+  Vector2f pos(10, 40);
+  sf::Text text("", _playerMessageFont, 20);
+
+  for (auto it = _playerMessages.begin(); it != _playerMessages.end(); )
+  {
+    auto& cur = *it;
+    int64 msLeft = (cur._expiration - now).total_milliseconds();
+
+    if (msLeft < 0)
+    {
+      it = _playerMessages.erase(it);
+    }
+    else
+    {
+      float s = min((int64)1000, msLeft) / 1000.0f;
+      text.setString(cur._message);
+      text.setPosition(pos);
+      text.setColor(sf::Color(s*255, s*255, s*255, s*255));
+      _window->draw(text);
+      pos.y += 25;
+      ++it;
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
 int Game::run()
 {
   // Start the game loop
@@ -226,7 +261,8 @@ int Game::run()
   return EXIT_SUCCESS;
 }
 
-void Game::findAppRoot()
+//-----------------------------------------------------------------------------
+void Game::FindAppRoot()
 {
 #ifdef _WIN32
   char startingDir[MAX_PATH];
@@ -280,6 +316,18 @@ void Game::findAppRoot()
   _appRoot = startingDir;
 
 #endif
+}
+
+//-----------------------------------------------------------------------------
+void Game::AddPlayerMessage(const time_duration& duration, const char* fmt, ...)
+{
+  auto now = microsec_clock::local_time();
+  auto expiry = now + duration;
+
+  va_list args;
+  va_start(args, fmt);
+  _playerMessages.emplace_back(expiry, ToString(fmt, args));
+  va_end(args);
 }
 
 void Game::addLogMessage(const char *fmt, ...) {

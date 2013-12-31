@@ -4,7 +4,8 @@ namespace rogue
 {
   class Player;
 
-  enum class MonsterType {
+  enum class MonsterType
+  {
     kGoblin,
     kSkeleton,
     kSkeletonWarrior,
@@ -16,7 +17,8 @@ namespace rogue
     cNumMonsters,
   };
 
-  enum class MonsterAction {
+  enum class MonsterAction
+  {
     kUnknown,
     kRoaming,
     kGuarding,
@@ -24,7 +26,8 @@ namespace rogue
   };
 
 
-  class Monster {
+  class Monster
+  {
   public:
     Monster();
     sf::Sprite _sprite;
@@ -34,6 +37,8 @@ namespace rogue
     int _health;
     int _level;
     vector<Player *> _seenPlayers;
+    int _stunRemaining;
+    int _immobilizeRemaining;
 
     MonsterAction _action;
     vector<Pos> _roamPath;

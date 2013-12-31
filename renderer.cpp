@@ -430,7 +430,7 @@ bool Renderer::Init(const GameState& state)
     switch (p->_class)
     {
       case PlayerClass::kWizard: p->_sprite.setTextureRect(sf::IntRect(0, 2*8, 8, 8)); break;
-      case PlayerClass::kRogue: p->_sprite.setTextureRect(sf::IntRect(3*8, 0, 8, 8)); break;
+      case PlayerClass::kRanger: p->_sprite.setTextureRect(sf::IntRect(3*8, 0, 8, 8)); break;
       case PlayerClass::kWarrior: p->_sprite.setTextureRect(sf::IntRect(15*8, 0, 8, 8)); break;
       case PlayerClass::kCleric: p->_sprite.setTextureRect(sf::IntRect(6*8, 0, 8, 8)); break;
     }

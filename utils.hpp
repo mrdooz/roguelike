@@ -41,6 +41,7 @@ namespace rogue
   }
 
   string toString(char const * const format, ...);
+  string ToString(const char* fmt, va_list args);
 
   float lerp(float a, float b, float v);
   float randf(float a, float b);
@@ -50,4 +51,6 @@ namespace rogue
   bool contains(const T &cont, const typename T::value_type &key) {
     return cont.find(key) != end(cont);
   }
+
+  bool ArrowKeyToOffset(sf::Keyboard::Key code, Pos *ofs);
 }

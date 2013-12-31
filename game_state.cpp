@@ -10,10 +10,11 @@ using namespace rogue;
 
 //-----------------------------------------------------------------------------
 GameState::GameState()
-  : _activePlayer(0)
+  : _elapsedTime(0)
+  , _activePlayer(0)
   , _level(nullptr)
   , _party(nullptr)
-  , _twoPhaseAction(false)
+  , _actionPhase(0)
   , _monsterPhase(false)
 {
 }

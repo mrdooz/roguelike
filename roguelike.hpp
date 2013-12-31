@@ -10,6 +10,7 @@ namespace rogue
   using std::vector;
   using std::string;
   using std::set;
+  using std::deque;
   using std::priority_queue;
   using std::map;
   using std::unordered_multimap;
@@ -24,6 +25,10 @@ namespace rogue
   using std::min;
   using std::max;
 
+  using boost::posix_time::ptime;
+  using boost::posix_time::time_duration;
+  using boost::posix_time::microsec_clock;
+  using boost::posix_time::seconds;
 
   using sf::Font;
   using sf::Texture;

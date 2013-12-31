@@ -21,7 +21,7 @@ Player *PlayerFactory::CreatePlayer(PlayerClass pc)
       player->_curMana = player->_maxMana = (int)gaussianRand(20, 2);
       break;
 
-    case PlayerClass::kRogue: 
+    case PlayerClass::kRanger:
       player->_intelligence = (int)gaussianRand(10, 2); 
       player->_strength = (int)gaussianRand(10, 2); 
       player->_dexterity = (int)gaussianRand(20, 3); 
