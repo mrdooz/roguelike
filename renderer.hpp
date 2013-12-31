@@ -33,7 +33,7 @@ namespace rogue
     void PlayerInView(const GameState& state);
 
     void DrawParty(const GameState& state);
-    void drawPartyStats(const GameState& state);
+    void DrawPartyStats(const GameState& state);
     void DrawLevel(const GameState& state);
     void DrawMonsters(const GameState& state);
 

@@ -33,7 +33,19 @@ string rogue::toString(char const * const format, ... )
 #else
 string rogue::toString(char const * const format, ... ) 
 {
-  return string();
+  va_list arg;
+  va_start(arg, format);
+
+  va_list argcopy;
+  va_copy(argcopy, arg);
+  int len = vsnprintf(nullptr, 0, format, argcopy) + 1;
+  va_end(argcopy);
+
+  char* buf = (char*)alloca(len);
+  vsprintf(buf, format, arg);
+  va_end(arg);
+
+  return string(buf);
 }
 #endif
 

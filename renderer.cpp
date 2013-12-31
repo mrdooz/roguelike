@@ -121,11 +121,17 @@ void Renderer::DrawWorld(const GameState& state)
   DrawLevel(state);
   DrawMonsters(state);
   DrawParty(state);
-  drawPartyStats(state);
 
   // Blit render target to render window
   _rtMain.display();
   _window->draw(_sprMain);
+
+  // Render to char rt
+  _rtCharacterPane.clear();
+  DrawPartyStats(state);
+  _rtCharacterPane.display();
+  _window->draw(_sprCharacter);
+
 }
 
 //-----------------------------------------------------------------------------
@@ -145,8 +151,11 @@ void Renderer::Resize(const GameState& state)
   auto windowSize = _window->getSize();
 
   _rtMain.create(windowSize.x - _rightMargin, windowSize.y - _topMargin);
-  _rtMain.setSmooth(false);
   _sprMain.setTexture(_rtMain.getTexture());
+
+  _rtCharacterPane.create(_rightMargin, windowSize.y - _topMargin);
+  _sprCharacter.setTexture(_rtCharacterPane.getTexture());
+  _sprCharacter.setPosition(windowSize.x - _rightMargin, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -229,15 +238,15 @@ void Renderer::DrawParty(const GameState& state)
   }
 }
 
-void Renderer::drawPartyStats(const GameState& state)
+//-----------------------------------------------------------------------------
+void Renderer::DrawPartyStats(const GameState& state)
 {
   Player* activePlayer = state.GetActivePlayer();
   assert(activePlayer);
 
   Party* party = state._party;
 
-  auto size = _rtMain.getSize();
-  float x = (float)(size.x - _partyStatsWidth);
+  float x = 0;
   float col0 = x;
   float col1 = x + _partyStatsWidth/2;
 
@@ -254,11 +263,11 @@ void Renderer::drawPartyStats(const GameState& state)
     sf::FloatRect r = heading.getLocalBounds();
     sf::Vector2f tmpPos = pos;
     pos.x += r.width + 10;
-    _rtMain.draw(heading);
+    _rtCharacterPane.draw(heading);
     normal.setString(toString("(%s, level %d)", playerClassToString(player->_class).c_str(), player->_level));
     pos.y += (r.height - normal.getLocalBounds().height) / 2;
     normal.setPosition(pos);
-    _rtMain.draw(normal);
+    _rtCharacterPane.draw(normal);
     pos = tmpPos;
     pos.y += 25;
   };
@@ -268,12 +277,11 @@ void Renderer::drawPartyStats(const GameState& state)
     normal.setString(str);
     normal.setPosition(pos);
     pos.y += 15;
-    _rtMain.draw(normal);
+    _rtCharacterPane.draw(normal);
   };
 
   for (auto *player : party->_players)
   {
-
     heading.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
     normal.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
 

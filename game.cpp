@@ -13,7 +13,9 @@
 #include "game_player.hpp"
 #include "game_ai.hpp"
 
-#define USE_DEBUG_WINDOW
+#include <CoreGraphics/CGDirectDisplay.h>
+
+//#define USE_DEBUG_WINDOW
 
 using namespace rogue;
 
@@ -115,7 +117,15 @@ bool Game::OnResized(const Event& event)
 //-----------------------------------------------------------------------------
 bool Game::InitMainWindow()
 {
-  _window = new sf::RenderWindow(sf::VideoMode(800, 600), "...");
+  size_t width, height;
+#ifdef _WIN32
+#else
+  auto displayId = CGMainDisplayID();
+  width = CGDisplayPixelsWide(displayId);
+  height = CGDisplayPixelsHigh(displayId);
+#endif
+
+  _window = new sf::RenderWindow(sf::VideoMode(width, height), "...");
   _window->setFramerateLimit(60);
   _eventManager = new EventManager(_window);
 
