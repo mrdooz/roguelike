@@ -53,4 +53,15 @@ namespace rogue
   }
 
   bool ArrowKeyToOffset(sf::Keyboard::Key code, Pos *ofs);
+
+  sf::Vertex MakeVertex(int x, int y, sf::Color color = sf::Color::White);
+
+  template <typename To, typename From>
+  sf::Vector2<To> VectorCast(const sf::Vector2<From>& src)
+  {
+    return sf::Vector2<To>((To)src.x, (To)src.y);
+  }
+
+  Rect operator+(const Rect& org, const Pos& ofs);
+
 }

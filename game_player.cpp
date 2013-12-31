@@ -11,6 +11,18 @@ using namespace rogue;
 
 namespace
 {
+  //-----------------------------------------------------------------------------
+  bool ArrowKeyToHeading(sf::Keyboard::Key code, Pos *ofs, Heading* heading)
+  {
+    switch (code)
+    {
+      case sf::Keyboard::Left:  *ofs = Pos(-1,0); *heading = Heading::Left; return true;
+      case sf::Keyboard::Right: *ofs = Pos(+1,0); *heading = Heading::Right; return true;
+      case sf::Keyboard::Up:    *ofs = Pos(0,-1); *heading = Heading::Up; return true;
+      case sf::Keyboard::Down:  *ofs = Pos(0,+1); *heading = Heading::Down; return true;
+    }
+    return false;
+  }
 
 #if 0
   static bool isTwoPhaseAction(PlayerAction action)
@@ -75,7 +87,7 @@ bool GamePlayer::ValidMovement(GameState& state, const Event& event)
   // Check if the input is a valid movement key, and the
   // resulting position is valid
   Pos ofs;
-  if (ArrowKeyToOffset(key, &ofs))
+  if (ArrowKeyToHeading(key, &ofs, &player->_heading))
   {
     Pos newPos(player->_pos + ofs);
     if (state._level->validDestination(newPos))

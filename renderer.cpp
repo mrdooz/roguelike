@@ -8,20 +8,6 @@
 
 using namespace rogue;
 
-namespace
-{
-  sf::Vertex MakeVertex(int x, int y, sf::Color color = sf::Color::White)
-  {
-    return sf::Vertex(sf::Vector2f((float)x, (float)y), color);
-  }
-
-  template <typename To, typename From>
-  sf::Vector2<To> VectorCast(const sf::Vector2<From>& src)
-  {
-    return sf::Vector2<To>((To)src.x, (To)src.y);
-  }
-}
-
 //-----------------------------------------------------------------------------
 enum class Tiles
 {
@@ -224,9 +210,8 @@ void Renderer::DrawParty(const GameState& state)
     bool isActivePlayer = player == activePlayer;
 
     player->_name = toString("Player %d", i);
-    player->_sprite.setPosition(PlayerToWorldF(pos));
-    player->_sprite.setColor(isActivePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
-    _rtMain.draw(player->_sprite);
+    Color color(isActivePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
+    player->_sprite.Draw(PlayerToWorld(pos), player->_heading, color, _rtMain);
 
     if (isActivePlayer)
     {
@@ -426,14 +411,18 @@ bool Renderer::Init(const GameState& state)
   // Set the texture coords for the players
   for (auto p : party->_players)
   {
-    p->_sprite.setTexture(_characterTexture);
+    Rect textureRect;
     switch (p->_class)
     {
-      case PlayerClass::kWizard: p->_sprite.setTextureRect(sf::IntRect(0, 2*8, 8, 8)); break;
-      case PlayerClass::kRanger: p->_sprite.setTextureRect(sf::IntRect(3*8, 0, 8, 8)); break;
-      case PlayerClass::kWarrior: p->_sprite.setTextureRect(sf::IntRect(15*8, 0, 8, 8)); break;
-      case PlayerClass::kCleric: p->_sprite.setTextureRect(sf::IntRect(6*8, 0, 8, 8)); break;
+      case PlayerClass::kWizard: textureRect  = Rect(8*8, 29*8, 8, 8); break;
+      case PlayerClass::kRanger: textureRect  = Rect(0,   29*8, 8, 8); break;
+      case PlayerClass::kWarrior: textureRect = Rect(4*8, 29*8, 8, 8); break;
+      case PlayerClass::kCleric: textureRect  = Rect(8*8, 30*8, 8, 8); break;
     }
+
+    p->_sprite.Init(_characterTexture, 3,
+      textureRect, textureRect + Pos(8,0), textureRect + Pos(16, 0), textureRect + Pos(24, 0));
+
   }
 
   // Set the texture coords for the monster

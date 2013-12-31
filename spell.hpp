@@ -2,6 +2,8 @@
 
 namespace rogue
 {
+  class GameState;
+
   struct SpellBase
   {
     virtual ~SpellBase() {}

@@ -1,6 +1,13 @@
 #include "spell.hpp"
+#include "game_state.hpp"
+#include "party.hpp"
+#include "player.hpp"
+#include "level.hpp"
+#include "monster.hpp"
+#include "game.hpp"
+#include "utils.hpp"
 
-namespace rogue;
+using namespace rogue;
 
 //-----------------------------------------------------------------------------
 bool SpellCharge::IsValid(GameState& state, const Event& event)
@@ -42,7 +49,32 @@ bool SpellCharge::IsValid(GameState& state, const Event& event)
   return !!monster;
 }
 
+//-----------------------------------------------------------------------------
 bool SpellMightyBlow::IsValid(GameState& state, const Event& event)
+{
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+bool SpellLightningBolt::IsValid(GameState& state, const Event& event)
+{
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+bool SpellFireball::IsValid(GameState& state, const Event& event)
+{
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+bool SpellArcaneBlast::IsValid(GameState& state, const Event& event)
+{
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+bool SpellPoisonCloud::IsValid(GameState& state, const Event& event)
 {
   return false;
 }

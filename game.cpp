@@ -79,7 +79,6 @@ void Game::CreateParty()
   for (int i = 0; i < 4; ++i)
   {
     auto *p = PlayerFactory::instance().CreatePlayer((PlayerClass)i);
-    p->_sprite.setScale(3, 3);
     while (true)
     {
       int x = rand() % _gameState._level->Width();

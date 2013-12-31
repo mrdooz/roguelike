@@ -27,6 +27,7 @@ string rogue::playerModeToString(PlayerMode pm)
 
 Player::Player()
   : _chargeRange(3)
+  , _heading(Heading::Right)
   , _mode(PlayerMode::kInteractive)
   , _hasMoved(false)
 {

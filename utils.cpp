@@ -100,3 +100,15 @@ bool rogue::ArrowKeyToOffset(sf::Keyboard::Key code, Pos *ofs)
   return false;
 }
 
+//-----------------------------------------------------------------------------
+sf::Vertex rogue::MakeVertex(int x, int y, sf::Color color)
+{
+  return sf::Vertex(sf::Vector2f((float)x, (float)y), color);
+}
+
+//-----------------------------------------------------------------------------
+Rect rogue::operator+(const Rect& org, const Pos& ofs)
+{
+  return Rect(Pos(org.left + ofs.x, org.top + ofs.y), Pos(org.width, org.height));
+}
+

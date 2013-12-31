@@ -1,4 +1,5 @@
 #pragma once
+#include "animated_sprite.hpp"
 
 namespace rogue
 {
@@ -41,13 +42,14 @@ namespace rogue
     int _maxHeath;
     int _curMana;
     int _maxMana;
-    Pos _pos;
 
     int _level;
     int _xp;
     int _chargeRange;
 
-    sf::Sprite _sprite;
+    Heading _heading;
+    Pos _pos;
+    RotatedSprite _sprite;
     PlayerMode _mode;
     PlayerClass _class;
     bool _hasMoved;

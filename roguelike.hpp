@@ -30,9 +30,11 @@ namespace rogue
   using boost::posix_time::microsec_clock;
   using boost::posix_time::seconds;
 
+  using sf::Color;
   using sf::Font;
   using sf::Texture;
   using sf::Sprite;
+  using sf::RenderTarget;
   using sf::RenderWindow;
   using sf::RenderTexture;
   using sf::Keyboard;
