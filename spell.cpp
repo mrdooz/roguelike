@@ -10,6 +10,18 @@
 using namespace rogue;
 
 //-----------------------------------------------------------------------------
+bool SpellBase::OnMonsterSelected(GameState& state, Monster* monster)
+{
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+bool SpellBase::OnPlayerSelected(GameState& state, Player* player)
+{
+  return true;
+}
+
+//-----------------------------------------------------------------------------
 bool SpellCharge::IsValid(GameState& state, const Event& event)
 {
   auto party = state._party;
@@ -68,8 +80,21 @@ bool SpellFireball::IsValid(GameState& state, const Event& event)
 }
 
 //-----------------------------------------------------------------------------
+bool SpellArcaneBlast::OnMonsterSelected(GameState& state, Monster* monster)
+{
+  return true;
+}
+
+
+//-----------------------------------------------------------------------------
 bool SpellArcaneBlast::IsValid(GameState& state, const Event& event)
 {
+  // Check if the current target is a monster within range
+  if (event.type == Event::MouseButtonReleased)
+  {
+
+  }
+
   return false;
 }
 

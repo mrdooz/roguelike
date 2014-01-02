@@ -3,20 +3,49 @@
 
 using namespace rogue;
 
-void RotatedSprite::Init(const Texture& texture, float scale, const Rect& right, const Rect& down, const Rect& left, const Rect& up)
+void RotatedSprite::Init(const Texture& texture, float scale, const Rect& south, const Rect& east, const Rect& north, const Rect& west)
 {
   _sprite.setTexture(texture);
   _sprite.setScale(scale, scale);
-  _textureRects[(int)Heading::Right] = right;
-  _textureRects[(int)Heading::Down] = down;
-  _textureRects[(int)Heading::Left] = left;
-  _textureRects[(int)Heading::Up] = up;
+  _textureRects[(int)Heading::South]  = south;
+  _textureRects[(int)Heading::East]   = east;
+  _textureRects[(int)Heading::North]  = north;
+  _textureRects[(int)Heading::West]   = west;
 }
 
-void RotatedSprite::Draw(const Pos& pos, Heading rot, sf::Color color, RenderTarget& rt)
+void RotatedSprite::Init(
+    const Texture& texture, float scale,
+    const Rect& south, const Rect& southEast, const Rect& east, const Rect& northEast,
+    const Rect& north, const Rect& northWest, const Rect& west, const Rect& southWest)
 {
-  _sprite.setPosition(VectorCast<float>(pos));
+  _sprite.setTexture(texture);
+  _sprite.setScale(scale, scale);
+  _textureRects[(int)Heading::South]      = south;
+  _textureRects[(int)Heading::SouthEast]  = southEast;
+  _textureRects[(int)Heading::East]       = east;
+  _textureRects[(int)Heading::NorthEast]  = northEast;
+  _textureRects[(int)Heading::North]      = north;
+  _textureRects[(int)Heading::NorthWest]  = northWest;
+  _textureRects[(int)Heading::West]       = west;
+  _textureRects[(int)Heading::SouthWest]  = southWest;
+}
+
+void RotatedSprite::SetColor(const Color& color)
+{
   _sprite.setColor(color);
-  _sprite.setTextureRect(_textureRects[(int)rot]);
-  rt.draw(_sprite);
+}
+
+void RotatedSprite::SetHeading(Heading heading)
+{
+  _sprite.setTextureRect(_textureRects[(int)heading]);
+}
+
+void RotatedSprite::SetPosition(const Vector2f& pos)
+{
+  _sprite.setPosition(pos);
+}
+
+void RotatedSprite::draw(RenderTarget& target, sf::RenderStates states) const
+{
+  target.draw(_sprite);
 }

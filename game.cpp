@@ -131,7 +131,6 @@ bool Game::InitMainWindow()
   _eventManager->RegisterHandler(Event::MouseMoved, bind(&Game::OnMouseMove, this, _1));
   _eventManager->RegisterHandler(Event::Resized, bind(&Game::OnResized, this, _1));
   _eventManager->RegisterHandler(Event::Closed, [this](const Event&) { _window->close(); return true; });
-  _eventManager->RegisterHandler(Event::KeyReleased, bind(&GamePlayer::OnKeyPressed, _gamePlayer, std::ref(_gameState), _1));
 
   _renderer = new Renderer(_window);
   if (!_renderer->Init(_gameState))
@@ -164,9 +163,6 @@ bool Game::init()
   _gameState._level = LevelFactory::CreateLevel(30,30);
   _gameState._level->initMonsters();
 
-  _gamePlayer = new GamePlayer();
-  _gameAI = new GameAI();
-
   CreateParty();
 
 #ifdef USE_DEBUG_WINDOW
@@ -176,6 +172,15 @@ bool Game::init()
 
   if (!InitMainWindow())
     return false;
+
+  _gamePlayer = new GamePlayer(bind(&Renderer::TileAtPos, _renderer, _1, _2, _3));
+  _gameAI = new GameAI();
+
+  _eventManager->RegisterHandler(Event::KeyReleased,
+                                 bind(&GamePlayer::OnKeyPressed, _gamePlayer, std::ref(_gameState), _1));
+  _eventManager->RegisterHandler(Event::MouseButtonReleased,
+                                 bind(&GamePlayer::OnMouseButtonReleased, _gamePlayer, std::ref(_gameState), _1));
+
 
   return true;
 }

@@ -16,10 +16,10 @@ namespace
   {
     switch (code)
     {
-      case sf::Keyboard::Left:  *ofs = Pos(-1,0); *heading = Heading::Left; return true;
-      case sf::Keyboard::Right: *ofs = Pos(+1,0); *heading = Heading::Right; return true;
-      case sf::Keyboard::Up:    *ofs = Pos(0,-1); *heading = Heading::Up; return true;
-      case sf::Keyboard::Down:  *ofs = Pos(0,+1); *heading = Heading::Down; return true;
+      case sf::Keyboard::Left:  *ofs = Pos(-1,0); *heading = Heading::West; return true;
+      case sf::Keyboard::Right: *ofs = Pos(+1,0); *heading = Heading::East; return true;
+      case sf::Keyboard::Up:    *ofs = Pos(0,-1); *heading = Heading::North; return true;
+      case sf::Keyboard::Down:  *ofs = Pos(0,+1); *heading = Heading::South; return true;
     }
     return false;
   }
@@ -56,8 +56,11 @@ namespace
 }
 
 //-----------------------------------------------------------------------------
-GamePlayer::GamePlayer()
+GamePlayer::GamePlayer(const fnTileAtPos& fnTileAtPos)
+  : _fnTileAtPos(fnTileAtPos)
 {
+  _actionMap[PlayerAction::ArcaneBlast] = new SpellArcaneBlast();
+
   _actionMap[PlayerAction::MightyBlow] = new SpellMightyBlow();
   _actionMap[PlayerAction::Charge] = new SpellCharge();
 }
@@ -124,27 +127,29 @@ bool GamePlayer::ValidMultiPhaseAction(GameState& state, const Event& event)
     Keyboard::Key _key;
     Keyboard::Key _altKey;
     PlayerAction _action;
+    Selection _selection;
+    const char* _desc;
   }
   keys[] =
   {
-    { PlayerClass::kWarrior, Keyboard::Num0, Keyboard::M, PlayerAction::MightyBlow },
-    { PlayerClass::kWarrior, Keyboard::Num1, Keyboard::C, PlayerAction::Charge },
-    { PlayerClass::kWarrior, Keyboard::Num2, Keyboard::L, PlayerAction::Cleave },
-    { PlayerClass::kWarrior, Keyboard::Num3, Keyboard::T, PlayerAction::Taunt },
+    { PlayerClass::kWarrior, Keyboard::Num0, Keyboard::M, PlayerAction::MightyBlow,       Selection::Monster,   "MightyBlow" },
+    { PlayerClass::kWarrior, Keyboard::Num1, Keyboard::C, PlayerAction::Charge,           Selection::None,      "Charge" },
+    { PlayerClass::kWarrior, Keyboard::Num2, Keyboard::L, PlayerAction::Cleave,           Selection::None,      "Cleave" },
+    { PlayerClass::kWarrior, Keyboard::Num3, Keyboard::T, PlayerAction::Taunt,            Selection::None,      "Taunt" },
 
-    { PlayerClass::kCleric, Keyboard::Num0, Keyboard::S, PlayerAction::Smite },
-    { PlayerClass::kCleric, Keyboard::Num1, Keyboard::M, PlayerAction::MinorHeal },
-    { PlayerClass::kCleric, Keyboard::Num2, Keyboard::A, PlayerAction::MajorHeal },
-    { PlayerClass::kCleric, Keyboard::Num3, Keyboard::R, PlayerAction::Resurrect },
+    { PlayerClass::kCleric, Keyboard::Num0, Keyboard::S, PlayerAction::Smite,             Selection::Monster,   "Smite" },
+    { PlayerClass::kCleric, Keyboard::Num1, Keyboard::M, PlayerAction::MinorHeal,         Selection::Player,    "MinorHeal" },
+    { PlayerClass::kCleric, Keyboard::Num2, Keyboard::A, PlayerAction::MajorHeal,         Selection::Player,    "MajorHeal" },
+    { PlayerClass::kCleric, Keyboard::Num3, Keyboard::R, PlayerAction::Resurrect,         Selection::Player,    "Resurrect" },
 
-    { PlayerClass::kWizard, Keyboard::Num0, Keyboard::A, PlayerAction::ArcaneBlast },
-    { PlayerClass::kWizard, Keyboard::Num1, Keyboard::L, PlayerAction::LightningBolt },
-    { PlayerClass::kWizard, Keyboard::Num2, Keyboard::F, PlayerAction::Fireball },
-    { PlayerClass::kWizard, Keyboard::Num3, Keyboard::P, PlayerAction::PoisonCloud },
+    { PlayerClass::kWizard, Keyboard::Num0, Keyboard::A, PlayerAction::ArcaneBlast,       Selection::Monster,   "ArcaneBlast" },
+    { PlayerClass::kWizard, Keyboard::Num1, Keyboard::L, PlayerAction::LightningBolt,     Selection::None,      "LightningBolt" },
+    { PlayerClass::kWizard, Keyboard::Num2, Keyboard::F, PlayerAction::Fireball,          Selection::Monster,   "Fireball" },
+    { PlayerClass::kWizard, Keyboard::Num3, Keyboard::P, PlayerAction::PoisonCloud,       Selection::Any,       "PoisonCloud" },
 
-    { PlayerClass::kRanger, Keyboard::Num0, Keyboard::S, PlayerAction::SingleShot },
-    { PlayerClass::kRanger, Keyboard::Num1, Keyboard::I, PlayerAction::ImmobilizingShot },
-    { PlayerClass::kRanger, Keyboard::Num2, Keyboard::M, PlayerAction::MultiShot },
+    { PlayerClass::kRanger, Keyboard::Num0, Keyboard::S, PlayerAction::SingleShot,        Selection::Monster,   "SingleShot" },
+    { PlayerClass::kRanger, Keyboard::Num1, Keyboard::I, PlayerAction::ImmobilizingShot,  Selection::Monster,   "ImmobilizingShot" },
+    { PlayerClass::kRanger, Keyboard::Num2, Keyboard::M, PlayerAction::MultiShot,         Selection::Monster,   "MultiShot" },
   };
 
   for (size_t i = 0; i < ELEMS_IN_ARRAY(keys); ++i)
@@ -152,55 +157,70 @@ bool GamePlayer::ValidMultiPhaseAction(GameState& state, const Event& event)
     auto& cur = keys[i];
     if (player->_class == cur._class && (key == cur._key || key == cur._altKey))
     {
+      state._curSpell = _actionMap[cur._action];
       state._playerAction = cur._action;
+      state._description = cur._desc;
+      if (cur._selection != Selection::None)
+      {
+        state._selection = (int)cur._selection;
+        state._selectionRange = 5;
+        state._selectionOrg = player->_pos; 
+      }
+      else
+      {
+        state._selection = 0;
+      }
+
       return true;
     }
   }
   return false;
 }
 
-//-----------------------------------------------------------------------------
-bool GamePlayer::ProcessCharge(GameState& state, const Event& event)
+float Dist(const Pos& a, const Pos& b)
 {
-  auto party = state._party;
-  auto player = party->_players[state._activePlayer];
-  auto level = state._level;
-
-  // for a charge to be valid, there must be a free path to a mob in the given
-  // direction
-  Monster* monster = nullptr;
-  Pos ofs;
-  if (ArrowKeyToOffset(event.key.code, &ofs))
-  {
-    for (size_t i = 0; i < player->_chargeRange; ++i)
-    {
-      Pos newPos(player->_pos + (int)i * ofs);
-      auto& tile = level->Get(newPos);
-      if (tile._type != TileType::kFloor || tile._player)
-        break;
-
-      if (tile._type == TileType::kFloor && tile._monster)
-      {
-        monster = tile._monster;
-        break;
-      }
-    }
-  }
-
-  if (monster)
-  {
-    monster->_stunRemaining += 3;
-  }
-
-  return !!monster;
+  float dx = a.x - b.x;
+  float dy = a.y - b.y;
+  return sqrtf(dx*dx+dy*dy);
 }
 
 //-----------------------------------------------------------------------------
-bool GamePlayer::ProcessMightyBlow(GameState& state, const Event& event)
+bool GamePlayer::OnMouseButtonReleased(GameState& state, const Event& event)
 {
-  Pos ofs;
-  if (ArrowKeyToOffset(event.key.code, &ofs))
+  if (state._selection == 0)
+    return false;
+
+  // Get the tile under the cursor
+  int idx = _fnTileAtPos(state, event.mouseButton.x, event.mouseButton.y);
+  if (idx == -1)
+    return false;
+
+  // Check if the tile under the cursor contains the correct type of entity
+  auto level = state._level;
+  auto& tile = level->_tiles[idx];
+  int flags = state._selection;
+
+  if (tile._monster && (flags & (int)Selection::Monster))
   {
+    Monster* monster = tile._monster;
+    if (Dist(monster->_pos, state._selectionOrg) <= state._selectionRange)
+    {
+      state._curSpell->OnMonsterSelected(state, monster);
+    }
+  }
+  else if (tile._player && (flags & (int)Selection::Player))
+  {
+    Player* player = tile._player;
+    if (Dist(player->_pos, state._selectionOrg) <= state._selectionRange)
+    {
+      state._curSpell->OnPlayerSelected(state, player);
+    }
+
+    state._curSpell->OnPlayerSelected(state, tile._player);
+  }
+  else
+  {
+    // check for empty tiles..
   }
 
   return true;
@@ -230,6 +250,7 @@ bool GamePlayer::OnKeyPressed(GameState& state, const Event& event)
     {
       // reset the action
       state._actionPhase = 0;
+      state._description = "";
       validAction = true;
       break;
     }

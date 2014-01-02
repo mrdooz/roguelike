@@ -9,11 +9,14 @@ namespace rogue
   class GamePlayer
   {
   public:
-    GamePlayer();
+    typedef function<int (const GameState&, int, int)> fnTileAtPos;
+
+    GamePlayer(const fnTileAtPos& fnTileAtPos);
     ~GamePlayer();
 
     void Update(GameState& gameState);
     bool OnKeyPressed(GameState& state, const Event& event);
+    bool OnMouseButtonReleased(GameState& state, const Event& event);
 
   private:
     bool ValidMovement(GameState& state, const Event& event);
@@ -22,9 +25,7 @@ namespace rogue
 
     typedef function<bool(GameState&, const Event&)> fnProcessAction;
 
-    bool ProcessCharge(GameState& state, const Event& event);
-    bool ProcessMightyBlow(GameState& state, const Event& event);
-
+    fnTileAtPos _fnTileAtPos;
     map<PlayerAction, SpellBase*> _actionMap;
   };
 }

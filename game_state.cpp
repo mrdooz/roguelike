@@ -15,6 +15,8 @@ GameState::GameState()
   , _level(nullptr)
   , _party(nullptr)
   , _actionPhase(0)
+  , _selection(0)
+  , _curSpell(nullptr)
   , _monsterPhase(false)
 {
 }

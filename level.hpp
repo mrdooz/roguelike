@@ -39,6 +39,7 @@ namespace rogue
   {
     friend class LevelFactory;
     friend class Renderer;
+    friend class GamePlayer;
   public:
     Level(int width, int height);
     ~Level();

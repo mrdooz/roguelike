@@ -112,6 +112,13 @@ void Renderer::DrawWorld(const GameState& state)
   _rtMain.display();
   _window->draw(_sprMain);
 
+  // display current state
+  sf::Text text("", _font, 10);
+  text.setString(state._description);
+  text.setPosition(20, 200);
+  text.setColor(Color::White);
+  _window->draw(text);
+
   // Render to char rt
   _rtCharacterPane.clear();
   DrawPartyStats(state);
@@ -211,7 +218,11 @@ void Renderer::DrawParty(const GameState& state)
 
     player->_name = toString("Player %d", i);
     Color color(isActivePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
-    player->_sprite.Draw(PlayerToWorld(pos), player->_heading, color, _rtMain);
+    auto sprite = player->_sprite;
+    sprite.SetPosition(PlayerToWorldF(pos));
+    sprite.SetColor(color);
+    sprite.SetHeading(player->_heading);
+    _rtMain.draw(sprite);
 
     if (isActivePlayer)
     {
@@ -369,13 +380,9 @@ void Renderer::DrawMonsters(const GameState& state)
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::OnMouseMove(const GameState& state, int x, int y, bool hover)
+int Renderer::TileAtPos(const GameState& state, int x, int y) const
 {
   auto level = state._level;
-
-  if (_prevSelected != -1)
-    level->_tiles[_prevSelected]._selected = false;
-
   size_t zoom = _zoomLevel * 8;
 
   Vector2f wsPos = _rtMain.mapPixelToCoords(Pos(x,y));
@@ -384,12 +391,25 @@ void Renderer::OnMouseMove(const GameState& state, int x, int y, bool hover)
 
   if (tx >= level->Width() || ty >= level->Height())
   {
-    _prevSelected = -1;
-    return;
+    return -1;
   }
 
-  int idx = ty * level->Width() + tx;
+  return ty * level->Width() + tx;
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::OnMouseMove(const GameState& state, int x, int y, bool hover)
+{
+  auto level = state._level;
+
+  if (_prevSelected != -1)
+    level->_tiles[_prevSelected]._selected = false;
+
+  int idx = TileAtPos(state, x, y);
   _prevSelected = idx;
+  if (idx == -1)
+    return;
+
   level->_tiles[idx]._selected = true;
 }
 
@@ -420,9 +440,11 @@ bool Renderer::Init(const GameState& state)
       case PlayerClass::kCleric: textureRect  = Rect(8*8, 30*8, 8, 8); break;
     }
 
-    p->_sprite.Init(_characterTexture, 3,
-      textureRect, textureRect + Pos(8,0), textureRect + Pos(16, 0), textureRect + Pos(24, 0));
+    void Init(const Texture& texture, float scale, const Rect& south, const Rect& east, const Rect& north, const Rect& west);
 
+    // sprites are stored E, S, W, N
+    p->_sprite.Init(_characterTexture, 3,
+      textureRect + Pos(8,0), textureRect, textureRect + Pos(24, 0), textureRect + Pos(16, 0));
   }
 
   // Set the texture coords for the monster
