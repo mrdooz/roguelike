@@ -19,35 +19,47 @@ bool rogue::fileExists(const char *filename)
 #ifdef _WIN32
 string rogue::toString(char const * const format, ... ) 
 {
-  va_list arg;
-  va_start(arg, format);
+  va_list args;
+  va_start(args, format);
 
-  const int len = _vscprintf(format, arg) + 1;
+  const int len = _vscprintf(format, args) + 1;
 
   char* buf = (char*)_alloca(len);
-  vsprintf_s(buf, len, format, arg);
-  va_end(arg);
+  vsprintf_s(buf, len, format, args);
+  va_end(args);
 
   return string(buf);
 }
+
+//-----------------------------------------------------------------------------
+string rogue::ToString(const char* fmt, va_list args)
+{
+  const int len = _vscprintf(fmt, args) + 1;
+
+  char* buf = (char*)_alloca(len);
+  vsprintf_s(buf, len, fmt, args);
+  va_end(args);
+
+  return string(buf);
+}
+
 #else
 string rogue::toString(char const * const format, ... ) 
 {
-  va_list arg;
-  va_start(arg, format);
+  va_list args;
+  va_start(args, format);
 
   va_list argcopy;
-  va_copy(argcopy, arg);
+  va_copy(argcopy, args);
   int len = vsnprintf(nullptr, 0, format, argcopy) + 1;
   va_end(argcopy);
 
   char* buf = (char*)alloca(len);
-  vsprintf(buf, format, arg);
-  va_end(arg);
+  vsprintf(buf, format, args);
+  va_end(args);
 
   return string(buf);
 }
-#endif
 
 //-----------------------------------------------------------------------------
 string rogue::ToString(const char* fmt, va_list args)
@@ -63,6 +75,9 @@ string rogue::ToString(const char* fmt, va_list args)
 
   return string(buf);
 }
+
+#endif
+
 //-----------------------------------------------------------------------------
 
 

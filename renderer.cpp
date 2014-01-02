@@ -54,7 +54,7 @@ void Renderer::PlayerInView(const GameState& state)
   auto& view = _rtMain.getView();
   auto center = view.getCenter();
   auto size = view.getSize();
-  Rect rect(center.x - size.x/2, center.y - size.y/2, size.x, size.y);
+  Rect rect((int)center.x - (int)size.x/2, (int)center.y - (int)size.y/2, (int)size.x, (int)size.y);
 
   // Check that all four corners of the player are inside the window
   int s = _zoomLevel * 8;
@@ -76,20 +76,20 @@ void Renderer::PlayerInView(const GameState& state)
     int sy = windowSize.y / 2;
     if (center.x < windowSize.x/2)
     {
-      center.x = sx;
+      center.x = (float)sx;
     }
     else if ((w - pos.x) * _zoomLevel * 8 < sx)
     {
-      center.x = w * _zoomLevel * 8 - sx;
+      center.x = (float)(w * _zoomLevel * 8 - sx);
     }
 
     if (center.y < sy)
     {
-      center.y = sy;
+      center.y = (float)sy;
     }
     else if ((h - pos.y) * _zoomLevel * 8 < sy)
     {
-      center.y = h * _zoomLevel * 8 - sy;
+      center.y = (float)(h * _zoomLevel * 8 - sy);
     }
 
     _rtMain.setView(View(center, VectorCast<float>(windowSize)));
@@ -148,7 +148,7 @@ void Renderer::Resize(const GameState& state)
 
   _rtCharacterPane.create(_rightMargin, windowSize.y - _topMargin);
   _sprCharacter.setTexture(_rtCharacterPane.getTexture());
-  _sprCharacter.setPosition(windowSize.x - _rightMargin, 0);
+  _sprCharacter.setPosition((float)(windowSize.x - _rightMargin), 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -340,7 +340,7 @@ Pos Renderer::PlayerToWorld(const Pos& pos) const
 Vector2f Renderer::PlayerToWorldF(const Pos& pos) const
 {
   size_t zoom = _zoomLevel * 8;
-  return Vector2f(pos.x * zoom, pos.y * zoom);
+  return Vector2f((float)(pos.x * zoom), (float)(pos.y * zoom));
 }
 
 //-----------------------------------------------------------------------------
@@ -384,9 +384,10 @@ int Renderer::TileAtPos(const GameState& state, int x, int y) const
   auto level = state._level;
   size_t zoom = _zoomLevel * 8;
 
-  Vector2f wsPos = _rtMain.mapPixelToCoords(Pos(x,y));
-  int tx = wsPos.x / zoom;
-  int ty = wsPos.y / zoom;
+  //Vector2f wsPos = _rtMain.mapPixelToCoords(Pos(x,y));
+  Vector2f wsPos = _rtMain.convertCoords(Pos(x,y));
+  int tx = (int)(wsPos.x / zoom);
+  int ty = (int)(wsPos.y / zoom);
 
   if (tx >= level->Width() || ty >= level->Height())
   {

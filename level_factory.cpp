@@ -20,7 +20,7 @@ struct Room
 //-----------------------------------------------------------------------------
 struct LevelSubdivide
 {
-  const int cMaxDepth = 3;
+  static const int cMaxDepth = 3;
 
   LevelSubdivide(Level* level)
     : _level(level)

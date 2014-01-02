@@ -57,6 +57,7 @@
       <PrecompiledHeaderFile>precompiled.hpp</PrecompiledHeaderFile>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ForcedIncludeFiles>precompiled.hpp;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -85,9 +86,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\animated_sprite.hpp" />
     <ClInclude Include="..\debug_renderer.hpp" />
-    <ClInclude Include="..\event_manager.hpp" />
+    <ClInclude Include="..\entity.hpp" />
+    <ClInclude Include="..\error.hpp" />
     <ClInclude Include="..\game.hpp" />
+    <ClInclude Include="..\game_ai.hpp" />
+    <ClInclude Include="..\game_event_manager.hpp" />
+    <ClInclude Include="..\game_player.hpp" />
     <ClInclude Include="..\game_state.hpp" />
     <ClInclude Include="..\level.hpp" />
     <ClInclude Include="..\level_factory.hpp" />
@@ -98,13 +104,19 @@
     <ClInclude Include="..\precompiled.hpp" />
     <ClInclude Include="..\renderer.hpp" />
     <ClInclude Include="..\roguelike.hpp" />
-    <ClInclude Include="..\types.hpp" />
+    <ClInclude Include="..\spell.hpp" />
     <ClInclude Include="..\utils.hpp" />
+    <ClInclude Include="..\window_event_manager.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\animated_sprite.cpp" />
     <ClCompile Include="..\debug_renderer.cpp" />
-    <ClCompile Include="..\event_manager.cpp" />
+    <ClCompile Include="..\entity.cpp" />
+    <ClCompile Include="..\error.cpp" />
     <ClCompile Include="..\game.cpp" />
+    <ClCompile Include="..\game_ai.cpp" />
+    <ClCompile Include="..\game_event_manager.cpp" />
+    <ClCompile Include="..\game_player.cpp" />
     <ClCompile Include="..\game_state.cpp" />
     <ClCompile Include="..\level.cpp" />
     <ClCompile Include="..\level_factory.cpp" />
@@ -118,8 +130,9 @@
     </ClCompile>
     <ClCompile Include="..\renderer.cpp" />
     <ClCompile Include="..\roguelike.cpp" />
-    <ClCompile Include="..\types.cpp" />
+    <ClCompile Include="..\spell.cpp" />
     <ClCompile Include="..\utils.cpp" />
+    <ClCompile Include="..\window_event_manager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

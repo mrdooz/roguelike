@@ -15,7 +15,11 @@
 #include "game_ai.hpp"
 #include "game_event_manager.hpp"
 
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <CoreGraphics/CGDirectDisplay.h>
+#endif
 
 //#define USE_DEBUG_WINDOW
 
@@ -147,6 +151,8 @@ bool Game::InitMainWindow()
 {
   size_t width, height;
 #ifdef _WIN32
+  width = GetSystemMetrics(SM_CXFULLSCREEN);
+  height = GetSystemMetrics(SM_CYFULLSCREEN);
 #else
   auto displayId = CGMainDisplayID();
   width = CGDisplayPixelsWide(displayId);
@@ -266,7 +272,7 @@ void Game::ProcessPlayerMessages(const ptime& now)
       float s = min((int64)1000, msLeft) / 1000.0f;
       text.setString(cur._message);
       text.setPosition(pos);
-      text.setColor(sf::Color(s*255, s*255, s*255, s*255));
+      text.setColor(sf::Color((u8)(s*255), (u8)(s*255), (u8)(s*255), (u8)(s*255)));
       _window->draw(text);
       pos.y += 25;
       ++it;

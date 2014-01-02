@@ -29,7 +29,11 @@
 #include <memory>
 #include <ostream>
 #include <sstream>
+
+#ifdef _WIN32
+#else
 #include <unistd.h>
+#endif
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
