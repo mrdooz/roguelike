@@ -3,13 +3,12 @@
 
 using namespace rogue;
 
-PlayerFactory *PlayerFactory::_instance;
-
-Player *PlayerFactory::CreatePlayer(PlayerClass pc)
+Player *PlayerFactory::CreatePlayer(PlayerClass pc, const string& name)
 {
 
   Player *player = new Player();
   player->_class = pc;
+  player->_name = name;
 
   switch (pc)
   {
@@ -46,24 +45,8 @@ Player *PlayerFactory::CreatePlayer(PlayerClass pc)
       break;
   }
 
-  player->_curHealth = player->_maxHeath = (int)gaussianRand(10, 2);
+  player->_curHealth = player->_maxHealth = (int)gaussianRand(10, 2);
   player->_level = 1;
 
   return player;
-}
-
-bool PlayerFactory::create() {
-  assert(!_instance);
-  _instance = new PlayerFactory();
-  return true;
-}
-
-PlayerFactory &PlayerFactory::instance() {
-  assert(_instance);
-  return *_instance;
-}
-
-void PlayerFactory::close() {
-  assert(_instance);
-  delete exch_null(_instance);
 }

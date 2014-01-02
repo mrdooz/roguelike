@@ -1,7 +1,6 @@
 #pragma once
 
 #include "game_state.hpp"
-#include "event_manager.hpp"
 
 namespace rogue
 {
@@ -11,6 +10,10 @@ namespace rogue
   class EventManager;
   class GameAI;
   class GamePlayer;
+  class PlayerFactory;
+
+  class GameEventManager;
+  class WindowEventManager;
 
   struct LogMessage
   {
@@ -31,6 +34,12 @@ namespace rogue
 
     void AddPlayerMessage(const time_duration& duration, const char* fmt, ...);
     void addLogMessage(const char *fmt, ...);
+
+    GameState& GetGameState();
+    void SetGameState(const GameState& state);
+
+    WindowEventManager* GetWindowEventManager();
+    GameEventManager* GetGameEventManager();
 
   private:
     Game();
@@ -54,6 +63,7 @@ namespace rogue
 
     Font _playerMessageFont;
 
+    PlayerFactory* _playerFactory;
     GamePlayer* _gamePlayer;
     GameAI* _gameAI;
 
@@ -64,7 +74,8 @@ namespace rogue
     Renderer *_renderer;
     DebugRenderer* _debugRenderer;
 
-    EventManager* _eventManager;
+    WindowEventManager* _windowEventManager;
+    GameEventManager* _gameEventManager;
 
     deque<LogMessage> _playerMessages;
 
@@ -74,5 +85,7 @@ namespace rogue
   };
 
 #define GAME rogue::Game::instance()
+#define WINDOW_EVENT rogue::Game::instance().GetWindowEventManager()
+#define GAME_EVENT rogue::Game::instance().GetGameEventManager()
 
 }

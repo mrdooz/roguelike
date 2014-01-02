@@ -1,16 +1,16 @@
-#include "event_manager.hpp"
+#include "window_event_manager.hpp"
 
 using namespace rogue;
 
 //-----------------------------------------------------------------------------
-EventManager::EventManager(RenderWindow* window)
+WindowEventManager::WindowEventManager(RenderWindow* window)
     : m_nextId(1)
     , _window(window)
 {
 }
 
 //-----------------------------------------------------------------------------
-size_t EventManager::RegisterHandler(Event::EventType event, const fnEventHandler& handler)
+size_t WindowEventManager::RegisterHandler(Event::EventType event, const fnEventHandler& handler)
 {
   m_handlers[event].push_back(make_pair(m_nextId, handler));
 
@@ -20,7 +20,7 @@ size_t EventManager::RegisterHandler(Event::EventType event, const fnEventHandle
 }
 
 //-----------------------------------------------------------------------------
-void EventManager::UnregisterHandler(size_t handle)
+void WindowEventManager::UnregisterHandler(size_t handle)
 {
   auto it = m_IdToEvent.find(handle);
   if (it != m_IdToEvent.end())
@@ -41,7 +41,7 @@ void EventManager::UnregisterHandler(size_t handle)
 }
 
 //-----------------------------------------------------------------------------
-void EventManager::Update()
+void WindowEventManager::Poll()
 {
   _window->setActive(true);
 

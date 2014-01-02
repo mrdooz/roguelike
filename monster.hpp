@@ -1,5 +1,7 @@
 #pragma once
 
+#include "entity.hpp"
+
 namespace rogue
 {
   class Player;
@@ -26,16 +28,15 @@ namespace rogue
   };
 
 
-  class Monster
+  class Monster : public Entity
   {
   public:
     Monster();
+
+    MonsterType GetMonsterType() const { return _monsterType; }
+
     sf::Sprite _sprite;
-    MonsterType _type;
-    Pos _pos;
-    int _maxHealth;
-    int _health;
-    int _level;
+    MonsterType _monsterType;
     vector<Player *> _seenPlayers;
     int _stunRemaining;
     int _immobilizeRemaining;

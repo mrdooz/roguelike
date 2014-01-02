@@ -8,10 +8,12 @@
 #include "renderer.hpp"
 #include "debug_renderer.hpp"
 #include "party.hpp"
-#include "event_manager.hpp"
+#include "window_event_manager.hpp"
+#include "game_event_manager.hpp"
 #include "error.hpp"
 #include "game_player.hpp"
 #include "game_ai.hpp"
+#include "game_event_manager.hpp"
 
 #include <CoreGraphics/CGDirectDisplay.h>
 
@@ -23,20 +25,22 @@ Game *Game::_instance;
 
 //-----------------------------------------------------------------------------
 Game::Game()
-    : _gamePlayer(nullptr)
+    : _playerFactory(nullptr)
+    , _gamePlayer(nullptr)
     , _gameAI(nullptr)
     , _window(nullptr)
     , _debugWindow(nullptr)
     , _renderer(nullptr)
     , _debugRenderer(nullptr)
-    , _eventManager(nullptr)
+    , _windowEventManager(nullptr)
+    , _gameEventManager(nullptr)
 {
 }
 
 //-----------------------------------------------------------------------------
 Game::~Game()
 {
-  PlayerFactory::close();
+  delete exch_null(_playerFactory);
   delete exch_null(_gamePlayer);
   delete exch_null(_gameAI);
   delete exch_null(_renderer);
@@ -45,7 +49,8 @@ Game::~Game()
   delete exch_null(_debugRenderer);
   delete exch_null(_debugWindow);
 #endif
-  delete exch_null(_eventManager);
+  delete exch_null(_windowEventManager);
+  delete exch_null(_gameEventManager);
 }
 
 //-----------------------------------------------------------------------------
@@ -72,13 +77,37 @@ Game &Game::instance()
 }
 
 //-----------------------------------------------------------------------------
+WindowEventManager* Game::GetWindowEventManager()
+{
+  return _windowEventManager;
+}
+
+//-----------------------------------------------------------------------------
+GameEventManager* Game::GetGameEventManager()
+{
+  return _gameEventManager;
+}
+
+//-----------------------------------------------------------------------------
+GameState& Game::GetGameState()
+{
+  return _gameState;
+}
+
+//-----------------------------------------------------------------------------
+void Game::SetGameState(const GameState& state)
+{
+  _gameState = state;
+}
+
+//-----------------------------------------------------------------------------
 void Game::CreateParty()
 {
   _gameState._party = new Party();
 
   for (int i = 0; i < 4; ++i)
   {
-    auto *p = PlayerFactory::instance().CreatePlayer((PlayerClass)i);
+    auto *p = _playerFactory->CreatePlayer((PlayerClass)i, toString("Player %d", i));
     while (true)
     {
       int x = rand() % _gameState._level->Width();
@@ -86,11 +115,11 @@ void Game::CreateParty()
       auto& tile = _gameState._level->Get(x, y);
       if (tile.IsEmpty() && tile._type == TileType::kFloor)
       {
-        p->_pos = Pos(x, y);
+        p->SetPos(Pos(x, y));
         break;
       }
     }
-    _gameState._level->initPlayer(p, p->_pos);
+    _gameState._level->initPlayer(p, p->GetPos());
     _gameState._party->_players.push_back(p);
   }
 }
@@ -126,11 +155,11 @@ bool Game::InitMainWindow()
 
   _window = new sf::RenderWindow(sf::VideoMode(width, height), "...");
   _window->setFramerateLimit(60);
-  _eventManager = new EventManager(_window);
+  _windowEventManager = new WindowEventManager(_window);
 
-  _eventManager->RegisterHandler(Event::MouseMoved, bind(&Game::OnMouseMove, this, _1));
-  _eventManager->RegisterHandler(Event::Resized, bind(&Game::OnResized, this, _1));
-  _eventManager->RegisterHandler(Event::Closed, [this](const Event&) { _window->close(); return true; });
+  _windowEventManager->RegisterHandler(Event::MouseMoved, bind(&Game::OnMouseMove, this, _1));
+  _windowEventManager->RegisterHandler(Event::Resized, bind(&Game::OnResized, this, _1));
+  _windowEventManager->RegisterHandler(Event::Closed, [this](const Event&) { _window->close(); return true; });
 
   _renderer = new Renderer(_window);
   if (!_renderer->Init(_gameState))
@@ -158,10 +187,10 @@ bool Game::init()
 {
   FindAppRoot();
 
-  PlayerFactory::create();
+  _playerFactory = new PlayerFactory();
+  _gameEventManager = new GameEventManager();
 
   _gameState._level = LevelFactory::CreateLevel(30,30);
-  _gameState._level->initMonsters();
 
   CreateParty();
 
@@ -176,11 +205,7 @@ bool Game::init()
   _gamePlayer = new GamePlayer(bind(&Renderer::TileAtPos, _renderer, _1, _2, _3));
   _gameAI = new GameAI();
 
-  _eventManager->RegisterHandler(Event::KeyReleased,
-                                 bind(&GamePlayer::OnKeyPressed, _gamePlayer, std::ref(_gameState), _1));
-  _eventManager->RegisterHandler(Event::MouseButtonReleased,
-                                 bind(&GamePlayer::OnMouseButtonReleased, _gamePlayer, std::ref(_gameState), _1));
-
+  _gamePlayer->Init();
 
   return true;
 }
@@ -191,7 +216,7 @@ void Game::ProcessMainWindow()
 {
   _window->setActive();
 
-  _eventManager->Update();
+  _windowEventManager->Poll();
   _gamePlayer->Update(_gameState);
   _gameAI->Update(_gameState);
 

@@ -1,9 +1,11 @@
 #include "level.hpp"
 #include "monster.hpp"
 #include "utils.hpp"
+#include "game.hpp"
 
 using namespace rogue;
 
+//-----------------------------------------------------------------------------
 Tile::Tile()
   : _player(nullptr)
   , _monster(nullptr)
@@ -12,11 +14,13 @@ Tile::Tile()
 {
 }
 
+//-----------------------------------------------------------------------------
 bool Tile::IsEmpty() const
 {
   return !_player && !_monster;
 }
 
+//-----------------------------------------------------------------------------
 Level::Level(int width, int height)
   : _width(width)
   , _height(height)
@@ -24,11 +28,45 @@ Level::Level(int width, int height)
   _tiles.resize(width*height);
 }
 
+//-----------------------------------------------------------------------------
 Level::~Level()
 {
   seq_delete(&_monsters);
 }
 
+//-----------------------------------------------------------------------------
+void Level::Init()
+{
+  GAME_EVENT->RegisterHandler(GameEvent::Type::Death, bind(&Level::OnDeath, this, _1));
+}
+
+//-----------------------------------------------------------------------------
+void Level::OnDeath(const GameEvent& event)
+{
+  if (event._target->GetType() == Entity::Type::Player)
+  {
+
+  }
+  else
+  {
+    MonsterKilled(static_cast<Monster*>(event._target));
+  }
+}
+
+//-----------------------------------------------------------------------------
+void Level::MonsterKilled(Monster* m)
+{
+  auto it = find(_monsters.begin(), _monsters.end(), m);
+  if (it == _monsters.end())
+    return;
+
+  // Clean up structues referencing the monster
+  Get(m->GetPos())._monster = nullptr;
+  _monsters.erase(it);
+  delete m;
+}
+
+//-----------------------------------------------------------------------------
 bool Level::Inside(int x, int y) const
 {
   return x >= 0 && x < _width && y >= 0 && y < _height;
@@ -68,33 +106,8 @@ void Level::initPlayer(Player *p, const Pos &pos) {
   updateFog(pos);
 }
 
-void Level::initMonsters()
+void Level::moveMonster(Monster *m, const Pos &oldPos, const Pos &newPos)
 {
-  for (int i = 0; i < 10; ++i)
-  {
-    Monster *monster = new Monster();
-    int x, y;
-    while (true) {
-      x = 1 + (rand() % (_width-2));
-      y = 1 + (rand() % (_height-2));
-      auto &tile = Get(x, y);
-      if (tile._type == TileType::kFloor && !tile._monster && !tile._player)
-      {
-        tile._monster = monster;
-        break;
-      }
-    }
-
-    monster->_pos = Pos(x,y);
-    auto &sprite = monster->_sprite;
-    sprite.setScale(3.0f, 3.0f);
-    sprite.setColor(sf::Color(255,255,255));
-    monster->_type = (MonsterType)(rand() % (int)MonsterType::cNumMonsters);
-    _monsters.push_back(monster);
-  }
-}
-
-void Level::moveMonster(Monster *m, const Pos &oldPos, const Pos &newPos) {
 
   assert(Inside(oldPos) && Inside(newPos));
 
@@ -107,7 +120,8 @@ void Level::moveMonster(Monster *m, const Pos &oldPos, const Pos &newPos) {
   newTile._monster = m;
 }
 
-void Level::movePlayer(Player *p, const Pos &oldPos, const Pos &newPos) {
+void Level::movePlayer(Player *p, const Pos &oldPos, const Pos &newPos)
+{
 
   assert(Inside(oldPos) && Inside(newPos));
 
@@ -234,18 +248,6 @@ bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
   return false;
 }
 
-void Level::monsterKilled(Monster *m) {
-  for (auto it = begin(_monsters); it != end(_monsters); ) {
-    if (*it == m) {
-      Get(m->_pos)._monster = nullptr;
-      _monsters.erase(it);
-      delete m;
-      return;
-    } else {
-      ++it;
-    }
-  }
-}
 
 Player *Level::playerAt(const Pos &pos)
 {

@@ -46,7 +46,7 @@ Renderer::Renderer(sf::RenderWindow *window)
 void Renderer::PlayerInView(const GameState& state)
 {
   Player* player = state.GetActivePlayer();
-  Pos pos(player->_pos);
+  Pos pos(player->GetPos());
   Pos wsPos(PlayerToWorld(pos));
 
   // Make sure the current view contains the given player position
@@ -213,10 +213,9 @@ void Renderer::DrawParty(const GameState& state)
   for (size_t i = 0; i < party->_players.size(); ++i)
   {
     Player *player = party->_players[i];
-    Pos pos(player->_pos);
+    Pos pos(player->GetPos());
     bool isActivePlayer = player == activePlayer;
 
-    player->_name = toString("Player %d", i);
     Color color(isActivePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
     auto sprite = player->_sprite;
     sprite.SetPosition(PlayerToWorldF(pos));
@@ -254,13 +253,13 @@ void Renderer::DrawPartyStats(const GameState& state)
 
   auto drawHeading = [&](Player *player)
   {
-    heading.setString(player->_name);
+    heading.setString(player->Name());
     heading.setPosition(pos);
     sf::FloatRect r = heading.getLocalBounds();
     sf::Vector2f tmpPos = pos;
     pos.x += r.width + 10;
     _rtCharacterPane.draw(heading);
-    normal.setString(toString("(%s, level %d)", playerClassToString(player->_class).c_str(), player->_level));
+    normal.setString(toString("(%s, level %d)", playerClassToString(player->_class).c_str(), player->Level()));
     pos.y += (r.height - normal.getLocalBounds().height) / 2;
     normal.setPosition(pos);
     _rtCharacterPane.draw(normal);
@@ -284,9 +283,9 @@ void Renderer::DrawPartyStats(const GameState& state)
     pos.x = col0;
     drawHeading(player);
     float y = pos.y;
-    drawNormal(toString("HP: %d/%d", player->_curHealth, player->_maxHeath));
-    if (player->_maxMana > 0)
-      drawNormal(toString("MANA: %d/%d", player->_curMana, player->_maxMana));
+    drawNormal(toString("HP: %d/%d", player->CurHealth(), player->MaxHealth()));
+    if (player->MaxMana() > 0)
+      drawNormal(toString("MANA: %d/%d", player->CurMana(), player->MaxMana()));
 
     pos.x = col1;
     pos.y = y;
@@ -355,14 +354,14 @@ void Renderer::DrawMonsters(const GameState& state)
 
   for (auto monster : level->monsters())
   {
-    if (!monster->_health)
+    if (!monster->CurHealth())
       continue;
 
-    Pos pos(ToLocal(monster->_pos));
+    Pos pos(ToLocal(monster->GetPos()));
     if (!rect.contains(pos))
       continue;
 
-    monster->_sprite.setPosition(PlayerToWorldF(monster->_pos));
+    monster->_sprite.setPosition(PlayerToWorldF(monster->GetPos()));
     _rtMain.draw(monster->_sprite);
 
     // draw the roam path
@@ -375,7 +374,7 @@ void Renderer::DrawMonsters(const GameState& state)
     if (!path.empty())
       _rtMain.draw(path.data(), path.size(), sf::LinesStrip);
 
-    DrawHealthBar(monster->_health, monster->_maxHealth, pos);
+    DrawHealthBar(monster->CurHealth(), monster->MaxHealth(), pos);
   }
 }
 
@@ -411,6 +410,33 @@ void Renderer::OnMouseMove(const GameState& state, int x, int y, bool hover)
     return;
 
   level->_tiles[idx]._selected = true;
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::OnAttack(const GameEvent& event)
+{
+  // Add to combat log
+  AddToCombatLog(toString("%s attacks %s for %d", event._agent->Name().c_str(), event._target->Name().c_str(), event._damage));
+
+  // todo: start animation!
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::OnHeal(const GameEvent& event)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::OnDeath(const GameEvent& event)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::AddToCombatLog(const string& msg)
+{
+  _combatLog.push_back(msg);
 }
 
 //-----------------------------------------------------------------------------
@@ -451,7 +477,7 @@ bool Renderer::Init(const GameState& state)
   for (auto m : level->_monsters)
   {
     m->_sprite.setTexture(_characterTexture);
-    switch (m->_type)
+    switch (m->GetMonsterType())
     {
       case MonsterType::kGoblin: m->_sprite.setTextureRect(sf::IntRect(0, 5*8, 8, 8)); break;
       case MonsterType::kSkeleton: m->_sprite.setTextureRect(sf::IntRect(0, 6*8, 8, 8)); break;

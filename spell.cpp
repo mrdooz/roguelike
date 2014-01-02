@@ -6,6 +6,7 @@
 #include "monster.hpp"
 #include "game.hpp"
 #include "utils.hpp"
+#include "game_event_manager.hpp"
 
 using namespace rogue;
 
@@ -17,6 +18,12 @@ bool SpellBase::OnMonsterSelected(GameState& state, Monster* monster)
 
 //-----------------------------------------------------------------------------
 bool SpellBase::OnPlayerSelected(GameState& state, Player* player)
+{
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+bool SpellBase::Finished(const GameState& state)
 {
   return true;
 }
@@ -36,7 +43,7 @@ bool SpellCharge::IsValid(GameState& state, const Event& event)
   {
     for (size_t i = 0; i < player->_chargeRange; ++i)
     {
-      Pos newPos(player->_pos + (int)i * ofs);
+      Pos newPos(player->GetPos() + (int)i * ofs);
       auto& tile = level->Get(newPos);
       if (tile._type != TileType::kFloor || tile._player)
         break;
@@ -80,11 +87,26 @@ bool SpellFireball::IsValid(GameState& state, const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-bool SpellArcaneBlast::OnMonsterSelected(GameState& state, Monster* monster)
+bool SpellArcaneBlast::Finished(const GameState& state)
 {
-  return true;
+  return state._actionPhase >= 2;
 }
 
+//-----------------------------------------------------------------------------
+bool SpellArcaneBlast::OnMonsterSelected(GameState& state, Monster* monster)
+{
+  GameEvent event;
+  Player* player = state.GetActivePlayer();
+
+  event._type = GameEvent::Type::Attack;
+  event._agent = player;
+  event._target = monster;
+
+  event._damage = (5 * player->Level() + player->WeaponBonus());
+
+  GAME_EVENT->SendEvent(event);
+  return true;
+}
 
 //-----------------------------------------------------------------------------
 bool SpellArcaneBlast::IsValid(GameState& state, const Event& event)

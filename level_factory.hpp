@@ -8,5 +8,8 @@ namespace rogue
   {
   public:
     static Level *CreateLevel(int width, int height);
+
+  private:
+    static void CreateMonsters(Level* level);
   };
 }

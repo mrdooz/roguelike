@@ -2,17 +2,17 @@
 
 namespace rogue
 {
-  class EventManager
+  class WindowEventManager
   {
   public:
     typedef function<bool(const Event&)> fnEventHandler;
 
-    EventManager(RenderWindow* window);
+    WindowEventManager(RenderWindow* window);
 
     size_t RegisterHandler(Event::EventType event, const fnEventHandler& handler);
     void UnregisterHandler(size_t handle);
 
-    void Update();
+    void Poll();
 
   private:
     typedef pair<size_t, fnEventHandler> HandlerPair;
@@ -23,4 +23,3 @@ namespace rogue
     RenderWindow* _window;
   };
 }
-

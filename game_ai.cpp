@@ -28,9 +28,9 @@ void GameAI::Update(GameState& state)
       if (monster->_action == MonsterAction::kUnknown)
       {
         // move towards the active player
-        Pos dest(state.GetActivePlayer()->_pos);
+        Pos dest(state.GetActivePlayer()->GetPos());
         //Pos rnd(monsters[rand() % cnt]->_pos);
-        if (level->calcPath(monster->_pos, dest, &monster->_roamPath))
+        if (level->calcPath(monster->GetPos(), dest, &monster->_roamPath))
         {
           monster->_action = MonsterAction::kRoaming;
           monster->_roamStep = 1;
@@ -45,8 +45,8 @@ void GameAI::Update(GameState& state)
           Pos nextPos = monster->_roamPath[monster->_roamStep];
           if (level->tileFree(nextPos)) {
             monster->_retryCount = 0;
-            level->moveMonster(monster, monster->_pos, nextPos);
-            monster->_pos = nextPos;
+            level->moveMonster(monster, monster->GetPos(), nextPos);
+            monster->SetPos(nextPos);
             monster->_roamStep++;
           } else {
             if (++monster->_retryCount > 3) {
@@ -57,7 +57,7 @@ void GameAI::Update(GameState& state)
 
         if (calcNewPath)
         {
-          if (level->calcPath(monster->_pos, monsters[rand() % cnt]->_pos, &monster->_roamPath))
+          if (level->calcPath(monster->GetPos(), monsters[rand() % cnt]->GetPos(), &monster->_roamPath))
           {
             monster->_action = MonsterAction::kRoaming;
             monster->_roamStep = 1;

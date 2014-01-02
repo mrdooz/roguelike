@@ -252,5 +252,38 @@ Level *LevelFactory::CreateLevel(int width, int height)
   fclose(f);
 #endif
 
+  CreateMonsters(level);
+
   return level;
+}
+
+//-----------------------------------------------------------------------------
+void LevelFactory::CreateMonsters(Level* level)
+{
+  int w = level->Width();
+  int h = level->Height();
+  for (int i = 0; i < 10; ++i)
+  {
+    Monster *monster = new Monster();
+    int x, y;
+    while (true) {
+      x = 1 + (rand() % (w-2));
+      y = 1 + (rand() % (h-2));
+      auto &tile = level->Get(x, y);
+      if (tile._type == TileType::kFloor && !tile._monster && !tile._player)
+      {
+        tile._monster = monster;
+        break;
+      }
+    }
+    monster->_curHealth = 10;
+    monster->_maxHealth = 10;
+
+    monster->SetPos(Pos(x,y));
+    auto &sprite = monster->_sprite;
+    sprite.setScale(3.0f, 3.0f);
+    sprite.setColor(sf::Color(255,255,255));
+    monster->_monsterType = (MonsterType)(rand() % (int)MonsterType::cNumMonsters);
+    level->_monsters.push_back(monster);
+  }
 }

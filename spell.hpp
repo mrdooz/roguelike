@@ -12,6 +12,7 @@ namespace rogue
     virtual bool IsValid(GameState& state, const Event& event) = 0;
     virtual bool OnMonsterSelected(GameState& state, Monster* monster);
     virtual bool OnPlayerSelected(GameState& state, Player* player);
+    virtual bool Finished(const GameState& state);
   };
 
   struct SpellCharge : public SpellBase
@@ -28,6 +29,7 @@ namespace rogue
   {
     virtual bool IsValid(GameState& state, const Event& event);
     virtual bool OnMonsterSelected(GameState& state, Monster* monster);
+    virtual bool Finished(const GameState& state);
   };
 
   struct SpellLightningBolt : public SpellBase

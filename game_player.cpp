@@ -6,6 +6,7 @@
 #include "utils.hpp"
 #include "game.hpp"
 #include "spell.hpp"
+#include "window_event_manager.hpp"
 
 using namespace rogue;
 
@@ -42,7 +43,6 @@ namespace
     }
     return false;
   }
-#endif
   //-----------------------------------------------------------------------------
   void HandleAttack(GameState& state, Player *player, Monster *monster)
   {
@@ -52,6 +52,7 @@ namespace
 //      GAME.addLogMessage("Player %s killed monster!\n", player->_name.c_str());
     }
   }
+#endif
 
 }
 
@@ -76,8 +77,50 @@ GamePlayer::~GamePlayer()
 }
 
 //-----------------------------------------------------------------------------
+bool GamePlayer::Init()
+{
+  WINDOW_EVENT->RegisterHandler(Event::KeyReleased, bind(&GamePlayer::OnKeyPressed, this, _1));
+  WINDOW_EVENT->RegisterHandler(Event::MouseButtonReleased, bind(&GamePlayer::OnMouseButtonReleased, this, _1));
+
+  GAME_EVENT->RegisterHandler(GameEvent::Type::Attack, bind(&GamePlayer::OnAttack, this, _1));
+  GAME_EVENT->RegisterHandler(GameEvent::Type::Heal, bind(&GamePlayer::OnHeal, this, _1));
+  GAME_EVENT->RegisterHandler(GameEvent::Type::Death, bind(&GamePlayer::OnDeath, this, _1));
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
 void GamePlayer::Update(GameState& gameState)
 {
+}
+
+//-----------------------------------------------------------------------------
+void GamePlayer::OnAttack(const GameEvent& event)
+{
+  auto target = event._target;
+  target->SetHealth(target->CurHealth() - event._damage);
+
+  // Check if the attack is fatal
+  if (target->CurHealth() == 0)
+  {
+    GameEvent deathEvent;
+    deathEvent._agent = event._agent;
+    deathEvent._target = event._target;
+    deathEvent._type = GameEvent::Type::Death;
+    GAME_EVENT->SendEvent(deathEvent);
+  }
+}
+
+//-----------------------------------------------------------------------------
+void GamePlayer::OnHeal(const GameEvent& event)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+void GamePlayer::OnDeath(const GameEvent& event)
+{
+
 }
 
 //-----------------------------------------------------------------------------
@@ -92,12 +135,12 @@ bool GamePlayer::ValidMovement(GameState& state, const Event& event)
   Pos ofs;
   if (ArrowKeyToHeading(key, &ofs, &player->_heading))
   {
-    Pos newPos(player->_pos + ofs);
+    Pos newPos(player->GetPos() + ofs);
     if (state._level->validDestination(newPos))
     {
       player->_hasMoved = true;
-      state._level->movePlayer(player, player->_pos, newPos);
-      player->_pos = newPos;
+      state._level->movePlayer(player, player->GetPos(), newPos);
+      player->SetPos(newPos);
       return true;
     }
   }
@@ -164,7 +207,7 @@ bool GamePlayer::ValidMultiPhaseAction(GameState& state, const Event& event)
       {
         state._selection = (int)cur._selection;
         state._selectionRange = 5;
-        state._selectionOrg = player->_pos; 
+        state._selectionOrg = player->GetPos();
       }
       else
       {
@@ -185,8 +228,9 @@ float Dist(const Pos& a, const Pos& b)
 }
 
 //-----------------------------------------------------------------------------
-bool GamePlayer::OnMouseButtonReleased(GameState& state, const Event& event)
+bool GamePlayer::OnMouseButtonReleased(const Event& event)
 {
+  GameState& state = GAME.GetGameState();
   if (state._selection == 0)
     return false;
 
@@ -203,15 +247,24 @@ bool GamePlayer::OnMouseButtonReleased(GameState& state, const Event& event)
   if (tile._monster && (flags & (int)Selection::Monster))
   {
     Monster* monster = tile._monster;
-    if (Dist(monster->_pos, state._selectionOrg) <= state._selectionRange)
+    if (Dist(monster->GetPos(), state._selectionOrg) <= state._selectionRange)
     {
-      state._curSpell->OnMonsterSelected(state, monster);
+      if (state._curSpell->OnMonsterSelected(state, monster))
+      {
+        // Check if the current spell is finished, in which case update
+        // the active player
+        state._actionPhase++;
+        if (state._curSpell->Finished(state))
+        {
+          NextPlayer(state);
+        }
+      }
     }
   }
   else if (tile._player && (flags & (int)Selection::Player))
   {
     Player* player = tile._player;
-    if (Dist(player->_pos, state._selectionOrg) <= state._selectionRange)
+    if (Dist(player->GetPos(), state._selectionOrg) <= state._selectionRange)
     {
       state._curSpell->OnPlayerSelected(state, player);
     }
@@ -227,14 +280,28 @@ bool GamePlayer::OnMouseButtonReleased(GameState& state, const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-bool GamePlayer::OnKeyPressed(GameState& state, const Event& event)
+void GamePlayer::NextPlayer(GameState& state)
 {
+  int activePlayer = state._activePlayer;
+  activePlayer++;
+  if (activePlayer == state._party->GetNumPlayers())
+  {
+    state._activePlayer = 0;
+    state._monsterPhase = true;
+  }
+  else
+  {
+    state._activePlayer = activePlayer;
+    state._actionPhase = 0;
+  }
+}
+
+//-----------------------------------------------------------------------------
+bool GamePlayer::OnKeyPressed(const Event& event)
+{
+  GameState& state = GAME.GetGameState();
   if (state._monsterPhase)
     return false;
-
-  size_t activePlayer = state._activePlayer;
-  auto level = state._level;
-  auto party = state._party;
 
   bool validAction = false;
   bool nextPlayer = false;
@@ -242,7 +309,7 @@ bool GamePlayer::OnKeyPressed(GameState& state, const Event& event)
   Keyboard::Key key = event.key.code;
 
   // Tick the active player
-  auto player = party->_players[state._activePlayer];
+//  auto player = party->_players[state._activePlayer];
 
   do
   {
@@ -293,18 +360,19 @@ bool GamePlayer::OnKeyPressed(GameState& state, const Event& event)
         }
       }
       // for the current action, determine if the current key is legal
-
+/*
       Pos ofs;
       if (ArrowKeyToOffset(key, &ofs))
       {
         if (Monster *monster = level->monsterAt(player->_pos + ofs))
         {
-          HandleAttack(state, player, monster);
+          //HandleAttack(state, player, monster);
           player->_hasMoved = true;
           validAction = true;
           break;
         }
       }
+ */
     }
   }
   while (false);
@@ -313,17 +381,7 @@ bool GamePlayer::OnKeyPressed(GameState& state, const Event& event)
   {
     if (nextPlayer)
     {
-      activePlayer++;
-      if (activePlayer == state._party->GetNumPlayers())
-      {
-        state._activePlayer = 0;
-        state._monsterPhase = true;
-      }
-      else
-      {
-        state._activePlayer = activePlayer;
-        state._actionPhase = 0;
-      }
+      NextPlayer(state);
     }
   }
 

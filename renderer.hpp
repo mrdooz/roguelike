@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game_event_manager.hpp"
+
 namespace rogue
 {
   class Level;
@@ -24,6 +26,10 @@ namespace rogue
 
   private:
 
+    void OnAttack(const GameEvent& event);
+    void OnHeal(const GameEvent& event);
+    void OnDeath(const GameEvent& event);
+
     void DrawQuad(const Pos& topLeft, size_t size, sf::Color color);
 
     // Convert a pos in world (global) space to window space
@@ -43,9 +49,14 @@ namespace rogue
     void DrawHealthBar(int health, int maxHealth, const Pos &pos);
 
     void VisibleArea(const Level* level, int* rows, int* cols) const;
+
+    void AddToCombatLog(const string& msg);
+
     RenderWindow *_window;
     int _partyStatsWidth;
     int _prevSelected;
+
+    vector<string> _combatLog;
 
     vector<Sprite> _tileSprites;
     Pos _offset;

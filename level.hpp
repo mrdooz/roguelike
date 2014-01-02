@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game_event_manager.hpp"
+
 namespace rogue
 {
   class Monster;
@@ -44,13 +46,13 @@ namespace rogue
     Level(int width, int height);
     ~Level();
 
+    void Init();
+
     bool validDestination(const Pos &pos);
     void movePlayer(Player *p, const Pos &oldPos, const Pos &newPos);
     void moveMonster(Monster *m, const Pos &oldPos, const Pos &newPos);
 
     void initPlayer(Player *p, const Pos &pos);
-
-    void initMonsters();
 
     bool Inside(int x, int y) const;
     bool Inside(const Pos &pos) const { return Inside(pos.x, pos.y); }
@@ -67,12 +69,13 @@ namespace rogue
 
     bool calcPath(const Pos &start, const Pos &end, vector<Pos> *path);
 
-    void monsterKilled(Monster *m);
 
     Player *playerAt(const Pos &pos);
     Monster *monsterAt(const Pos &pos);
 
   private:
+    void OnDeath(const GameEvent& event);
+    void MonsterKilled(Monster *m);
 
     Pos IndexToPos(size_t idx) const;
     size_t PosToIndex(const Pos& pos) const;
