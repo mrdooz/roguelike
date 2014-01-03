@@ -68,7 +68,7 @@ LootItem Level::GenerateLoot(int level)
 void Level::OnDeath(const GameEvent& event)
 {
   Entity* target = event._target;
-  if (target->GetType() == Entity::Type::Player)
+  if (target->IsHuman())
   {
 
   }

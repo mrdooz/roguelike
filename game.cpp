@@ -159,7 +159,7 @@ bool Game::InitMainWindow()
   height = CGDisplayPixelsHigh(displayId);
 #endif
 
-  _window = new sf::RenderWindow(sf::VideoMode(width, height), "...");
+  _window = new sf::RenderWindow(sf::VideoMode(8 * width / 10, 8 * height / 10), "...");
   _window->setFramerateLimit(60);
   _windowEventManager = new WindowEventManager(_window);
 

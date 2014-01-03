@@ -28,8 +28,7 @@ string rogue::playerModeToString(PlayerMode pm)
 }
 
 Player::Player()
-  : Entity(Entity::Type::Player)
-  , _chargeRange(3)
+  : _chargeRange(3)
   , _heading(Heading::East)
   , _mode(PlayerMode::kInteractive)
   , _gold(0)

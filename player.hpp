@@ -29,6 +29,7 @@ namespace rogue
     Player();
 
     void DebugDump(vector<string>& dump);
+    virtual bool IsHuman() const { return true; }
 
     int _intelligence;
     int _strength;

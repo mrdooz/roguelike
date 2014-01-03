@@ -13,6 +13,8 @@ namespace rogue
       ArmorUpgrade,
     };
 
+    string ToString() const;
+
     Type _type;
     union
     {

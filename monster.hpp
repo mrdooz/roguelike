@@ -6,39 +6,43 @@ namespace rogue
 {
   class Player;
 
-  enum class MonsterType
-  {
-    kGoblin,
-    kSkeleton,
-    kSkeletonWarrior,
-    kSkeletonMage,
-    kFireElemental,
-    kWaterElemental,
-    kOgre,
-    kDemon,
-    cNumMonsters,
-  };
-
   class Monster : public Entity
   {
   public:
-    enum class Action
+    enum class Type
     {
-      kUnknown,
-      kRoaming,
-      kHunting,
-      kGuarding,
-      kFighting,
+      Goblin,
+      Skeleton,
+      SkeletonWarrior,
+      SkeletonMage,
+      FireElemental,
+      WaterElemental,
+      Ogre,
+      Demon,
+      NumMonsters,
     };
 
-    Monster();
-    MonsterType GetMonsterType() const { return _monsterType; }
+    enum class Action
+    {
+      Unknown,
+      Roaming,
+      Hunting,
+      Guarding,
+      Fighting,
+    };
+
+    static const char* TypeToString(Type type);
+
+    Monster(Type monsterType);
+    Type GetType() const { return _type; }
+
+    virtual bool IsHuman() const { return false; }
 
     virtual void DebugDump(vector<string>& dump);
     virtual void DebugDraw(RenderTarget& rt);
 
     sf::Sprite _sprite;
-    MonsterType _monsterType;
+    Type _type;
 
     Player* _aggroPlayer;
     Player* _tauntPlayer;

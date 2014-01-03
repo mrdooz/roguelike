@@ -12,7 +12,7 @@ namespace rogue
 
   enum class PlayerAction : u8
   {
-    kUnknown,
+    Unknown,
 
     // Warrior
     MightyBlow,

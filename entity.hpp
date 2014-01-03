@@ -9,13 +9,8 @@ namespace rogue
     
     public:
 
-    enum class Type
-    {
-      Player,
-      Monster,
-    };
+    virtual bool IsHuman() const = 0;
 
-    Type GetType() const { return _type; }
     int Level() const { return _level; }
     void SetLevel(int level) { _level = level; }
     int Armor() const { return _armor; }
@@ -37,7 +32,7 @@ namespace rogue
     virtual void DebugDraw(RenderTarget& rt) {}
 
   protected:
-    Entity(Type type);
+    Entity();
     
     Pos _pos;
     string _name;
@@ -53,8 +48,5 @@ namespace rogue
     int _maxMana;
 
     int _level;
-
-  private:
-    Type _type;
   };
 }

@@ -3,12 +3,11 @@
 using namespace rogue;
 
 //-----------------------------------------------------------------------------
-Entity::Entity(Type type)
+Entity::Entity()
     : _armor(0)
     , _armorBonus(0)
     , _weaponBonus(0)
     , _level(1)
-    , _type(type)
 {
 }
 

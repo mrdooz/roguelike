@@ -39,7 +39,7 @@ Renderer::Renderer(sf::RenderWindow *window)
   , _leftMargin(0)
   , _rightMargin(210)
   , _topMargin(0)
-  , _bottomMargin(0)
+  , _bottomMargin(150)
   , _zoomLevel(3)
   , _debugDump(nullptr)
 {
@@ -131,6 +131,11 @@ void Renderer::DrawWorld(const GameState& state)
   _rtCharacterPane.display();
   _window->draw(_sprCharacter);
 
+  // Render combat log
+  _rtCombatLog.clear();
+  DrawCombatLog();
+  _rtCombatLog.display();
+  _window->draw(_sprCombatLog);
 }
 
 //-----------------------------------------------------------------------------
@@ -149,12 +154,16 @@ void Renderer::Resize(const GameState& state)
 {
   auto windowSize = _window->getSize();
 
-  _rtMain.create(windowSize.x - _rightMargin, windowSize.y - _topMargin);
+  _rtMain.create(windowSize.x - _rightMargin, windowSize.y - _topMargin - _bottomMargin);
   _sprMain.setTexture(_rtMain.getTexture());
 
-  _rtCharacterPane.create(_rightMargin, windowSize.y - _topMargin);
+  _rtCharacterPane.create(_rightMargin, windowSize.y - _topMargin - _bottomMargin);
   _sprCharacter.setTexture(_rtCharacterPane.getTexture());
   _sprCharacter.setPosition((float)(windowSize.x - _rightMargin), 0);
+
+  _rtCombatLog.create(windowSize.x - _rightMargin, _bottomMargin);
+  _sprCombatLog.setTexture(_rtCombatLog.getTexture());
+  _sprCombatLog.setPosition(0, (float)(windowSize.y - _bottomMargin));
 }
 
 //-----------------------------------------------------------------------------
@@ -466,7 +475,8 @@ bool Renderer::OnKeyPressed(const Event& event)
 void Renderer::OnAttack(const GameEvent& event)
 {
   // Add to combat log
-  AddToCombatLog(toString("%s attacks %s for %d", event._agent->Name().c_str(), event._target->Name().c_str(), event._damage));
+  AddToCombatLog(toString("%s attacks %s for %d",
+    event._agent->Name().c_str(), event._target->Name().c_str(), event._damage));
 
   // todo: start animation!
 }
@@ -474,13 +484,29 @@ void Renderer::OnAttack(const GameEvent& event)
 //-----------------------------------------------------------------------------
 void Renderer::OnHeal(const GameEvent& event)
 {
-
+  AddToCombatLog(toString("%s heals %s for %d",
+    event._agent->Name().c_str(), event._target->Name().c_str(), event._healing));
 }
 
 //-----------------------------------------------------------------------------
 void Renderer::OnDeath(const GameEvent& event)
 {
+  if (event._agent)
+    AddToCombatLog(toString("%s is killed by %s!", event._target->Name().c_str(), event._agent->Name().c_str()));
+  else
+    AddToCombatLog(toString("%s dies!", event._target->Name().c_str()));
+}
 
+//-----------------------------------------------------------------------------
+void Renderer::OnItemGained(const GameEvent& event)
+{
+  AddToCombatLog(toString("%s gains %s!", event._target->Name().c_str(), event._item.ToString().c_str()));
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::OnLevelGained(const GameEvent& event)
+{
+  AddToCombatLog(toString("%s gains a level!", event._target->Name().c_str()));
 }
 
 //-----------------------------------------------------------------------------
@@ -490,13 +516,38 @@ void Renderer::AddToCombatLog(const string& msg)
 }
 
 //-----------------------------------------------------------------------------
+void Renderer::DrawCombatLog()
+{
+  RectangleShape background(Vector2f((float)_window->getSize().x, (float)_bottomMargin));
+  background.setFillColor(Color(40,40,40));
+  _rtCombatLog.draw(background);
+
+  int spacing = 15;
+  sf::Text normal("", _font, 10);
+  sf::Vector2f pos(0, 0);
+
+  int rows = min((int)_combatLog.size(), _bottomMargin / spacing);
+  for (int i = 0; i < rows; ++i)
+  {
+    const string& cur = _combatLog[_combatLog.size() - rows + i];
+    normal.setString(cur);
+    normal.setPosition(pos);
+    _rtCombatLog.draw(normal);
+    pos.y += spacing;
+  }
+}
+
+//-----------------------------------------------------------------------------
 bool Renderer::Init(const GameState& state)
 {
-  WINDOW_EVENT->RegisterHandler(Event::MouseButtonReleased,
-      bind(&Renderer::OnMouseButtonReleased, this, _1));
+  WINDOW_EVENT->RegisterHandler(Event::MouseButtonReleased, bind(&Renderer::OnMouseButtonReleased, this, _1));
+  WINDOW_EVENT->RegisterHandler(Event::KeyReleased, bind(&Renderer::OnKeyPressed, this, _1));
 
-  WINDOW_EVENT->RegisterHandler(Event::KeyReleased,
-    bind(&Renderer::OnKeyPressed, this, _1));
+  GAME_EVENT->RegisterHandler(GameEvent::Type::Attack, bind(&Renderer::OnAttack, this, _1));
+  GAME_EVENT->RegisterHandler(GameEvent::Type::Heal, bind(&Renderer::OnHeal, this, _1));
+  GAME_EVENT->RegisterHandler(GameEvent::Type::Death, bind(&Renderer::OnDeath, this, _1));
+  GAME_EVENT->RegisterHandler(GameEvent::Type::ItemGained, bind(&Renderer::OnItemGained, this, _1));
+  GAME_EVENT->RegisterHandler(GameEvent::Type::LevelGained, bind(&Renderer::OnLevelGained, this, _1));
 
   Level* level = state._level;
   Party* party = state._party;
@@ -543,16 +594,16 @@ bool Renderer::Init(const GameState& state)
   for (auto m : level->_monsters)
   {
     m->_sprite.setTexture(_characterTexture);
-    switch (m->GetMonsterType())
+    switch (m->GetType())
     {
-      case MonsterType::kGoblin: m->_sprite.setTextureRect(sf::IntRect(0, 5*8, 8, 8)); break;
-      case MonsterType::kSkeleton: m->_sprite.setTextureRect(sf::IntRect(0, 6*8, 8, 8)); break;
-      case MonsterType::kSkeletonWarrior: m->_sprite.setTextureRect(sf::IntRect(2*8, 6*8, 8, 8)); break;
-      case MonsterType::kSkeletonMage: m->_sprite.setTextureRect(sf::IntRect(3*8, 6*8, 8, 8)); break;
-      case MonsterType::kFireElemental: m->_sprite.setTextureRect(sf::IntRect(0, 7*8, 8, 8)); break;
-      case MonsterType::kWaterElemental: m->_sprite.setTextureRect(sf::IntRect(1*8, 7*8, 8, 8)); break;
-      case MonsterType::kOgre: m->_sprite.setTextureRect(sf::IntRect(0, 8*8, 8, 8)); break;
-      case MonsterType::kDemon: m->_sprite.setTextureRect(sf::IntRect(0, 9*8, 8, 8)); break;
+      case Monster::Type::Goblin: m->_sprite.setTextureRect(sf::IntRect(0, 5*8, 8, 8)); break;
+      case Monster::Type::Skeleton: m->_sprite.setTextureRect(sf::IntRect(0, 6*8, 8, 8)); break;
+      case Monster::Type::SkeletonWarrior: m->_sprite.setTextureRect(sf::IntRect(2*8, 6*8, 8, 8)); break;
+      case Monster::Type::SkeletonMage: m->_sprite.setTextureRect(sf::IntRect(3*8, 6*8, 8, 8)); break;
+      case Monster::Type::FireElemental: m->_sprite.setTextureRect(sf::IntRect(0, 7*8, 8, 8)); break;
+      case Monster::Type::WaterElemental: m->_sprite.setTextureRect(sf::IntRect(1*8, 7*8, 8, 8)); break;
+      case Monster::Type::Ogre: m->_sprite.setTextureRect(sf::IntRect(0, 8*8, 8, 8)); break;
+      case Monster::Type::Demon: m->_sprite.setTextureRect(sf::IntRect(0, 9*8, 8, 8)); break;
     }
   }
 

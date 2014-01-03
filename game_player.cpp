@@ -123,7 +123,7 @@ void GamePlayer::OnDeath(const GameEvent& event)
 {
   // If a monster is killed, calc xp, and give it to all the players
   Entity* target = event._target;
-  if (target->GetType() == Entity::Type::Monster)
+  if (!target->IsHuman())
   {
     auto& state = GAME.GetGameState();
     int xp = target->Level();
@@ -136,6 +136,7 @@ void GamePlayer::OnDeath(const GameEvent& event)
         {
           GameEvent levelEvent(GameEvent::Type::LevelGained);
           levelEvent._agent = p;
+          levelEvent._target = p;
           GAME_EVENT->SendEvent(levelEvent);
         }
       }
@@ -193,6 +194,7 @@ bool GamePlayer::ValidMovement(GameState& state, const Event& event)
       {
         GameEvent event(GameEvent::Type::ItemGained);
         event._agent = player;
+        event._target = player;
         event._item = tile._items.back();
         tile._items.pop_back();
         GAME_EVENT->SendEvent(event);

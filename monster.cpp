@@ -4,21 +4,24 @@
 
 using namespace rogue;
 
-Monster::Monster()
-    : Entity(Type::Monster)
+//-----------------------------------------------------------------------------
+Monster::Monster(Type type)
+    : _type(type)
     , _aggroPlayer(nullptr)
     , _tauntPlayer(nullptr)
     , _tauntRemaining(0)
     , _stunRemaining(0)
     , _immobilizeRemaining(0)
-    , _action(Action::kUnknown)
+    , _action(Action::Unknown)
     , _visibilityRange(5)
     , _aggroDecay(0)
     , _playerVisible(false)
     , _attackRange(0)
 {
+  _name = TypeToString(type);
 }
 
+//-----------------------------------------------------------------------------
 void Monster::DebugDump(vector<string>& dump)
 {
   dump.push_back(toString("Aggro: 0x%.8x", _aggroPlayer));
@@ -26,6 +29,7 @@ void Monster::DebugDump(vector<string>& dump)
   dump.push_back(toString("PlayerVisible: %s", _playerVisible ? "Y" : "N"));
 }
 
+//-----------------------------------------------------------------------------
 void Monster::DebugDraw(RenderTarget& rt)
 {
   if (_aggroPlayer)
@@ -40,4 +44,22 @@ void Monster::DebugDraw(RenderTarget& rt)
 
     rt.draw(verts, 2, sf::Lines);
   }
+}
+
+//-----------------------------------------------------------------------------
+const char* Monster::TypeToString(Type type)
+{
+  switch (type)
+  {
+    case Monster::Type::Goblin: return "Goblin";
+    case Monster::Type::Skeleton: return "Skeleton";
+    case Monster::Type::SkeletonWarrior: "Skeleton Warrior";
+    case Monster::Type::SkeletonMage: return "Skeleton Mage";
+    case Monster::Type::FireElemental: return "Fire Elemental";
+    case Monster::Type::WaterElemental: return "Water Elemental";
+    case Monster::Type::Ogre: return "Ogre";
+    case Monster::Type::Demon: return "Demon";
+  }
+
+  return "Unknown";
 }

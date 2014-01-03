@@ -32,6 +32,8 @@ namespace rogue
     void OnAttack(const GameEvent& event);
     void OnHeal(const GameEvent& event);
     void OnDeath(const GameEvent& event);
+    void OnItemGained(const GameEvent& event);
+    void OnLevelGained(const GameEvent& event);
 
     void DrawQuad(const Pos& topLeft, size_t size, sf::Color color);
 
@@ -54,6 +56,7 @@ namespace rogue
     void VisibleArea(const Level* level, int* rows, int* cols) const;
 
     void AddToCombatLog(const string& msg);
+    void DrawCombatLog();
 
     RenderWindow *_window;
     int _partyStatsWidth;

@@ -34,6 +34,7 @@ namespace rogue
   using sf::Font;
   using sf::Texture;
   using sf::Sprite;
+  using sf::RectangleShape;
   using sf::RenderTarget;
   using sf::RenderWindow;
   using sf::RenderTexture;

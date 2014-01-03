@@ -312,7 +312,7 @@ void LevelFactory::CreateMonsters(Level* level)
     Pos pos;
     if (FindEmptyTile(level, pos))
     {
-      Monster *monster = new Monster();
+      Monster *monster = new Monster((Monster::Type)(rand() % (int)Monster::Type::NumMonsters));
       auto &tile = level->Get(pos);
       tile._monster = monster;
       monster->SetPos(pos);
@@ -324,9 +324,7 @@ void LevelFactory::CreateMonsters(Level* level)
       auto &sprite = monster->_sprite;
       sprite.setScale(3.0f, 3.0f);
       sprite.setColor(sf::Color(255,255,255));
-      monster->_monsterType = (MonsterType)(rand() % (int)MonsterType::cNumMonsters);
       level->_monsters.push_back(monster);
     }
-
   }
 }
