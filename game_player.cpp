@@ -183,7 +183,7 @@ bool GamePlayer::ValidMovement(GameState& state, const Event& event)
     Pos newPos(player->GetPos() + ofs);
     if (level->ValidDestination(newPos))
     {
-      level->MovePlayer(player, player->GetPos(), newPos);
+      level->MovePlayer(player, newPos);
       player->_hasMoved = true;
       player->SetPos(newPos);
 
@@ -277,12 +277,6 @@ bool GamePlayer::ValidMultiPhaseAction(GameState& state, const Event& event)
   return false;
 }
 
-float Dist(const Pos& a, const Pos& b)
-{
-  float dx = (float)(a.x - b.x);
-  float dy = (float)(a.y - b.y);
-  return sqrtf(dx*dx+dy*dy);
-}
 
 //-----------------------------------------------------------------------------
 bool GamePlayer::OnMouseButtonReleased(const Event& event)

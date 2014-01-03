@@ -64,4 +64,11 @@ namespace rogue
 
   Rect operator+(const Rect& org, const Pos& ofs);
 
+  inline int IntAbs(int a)
+  {
+    return a > 0 ? a : -a;
+  }
+
+  float Dist(const Pos& a, const Pos& b);
+
 }

@@ -5,6 +5,8 @@
 #include "level.hpp"
 #include "monster.hpp"
 #include "game_state.hpp"
+#include "game.hpp"
+#include "window_event_manager.hpp"
 
 using namespace rogue;
 
@@ -39,6 +41,7 @@ Renderer::Renderer(sf::RenderWindow *window)
   , _topMargin(0)
   , _bottomMargin(0)
   , _zoomLevel(3)
+  , _debugDump(nullptr)
 {
 }
 
@@ -309,6 +312,18 @@ void Renderer::DrawPartyStats(const GameState& state)
 
     pos.y += 10;
   }
+
+  // print debug info
+  if (_debugDump)
+  {
+    pos.x = col0;
+    vector<string> dump;
+    _debugDump->DebugDump(dump);
+    for (const auto& s : dump)
+    {
+      drawNormal(s.c_str());
+    }
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -377,16 +392,6 @@ void Renderer::DrawMonsters(const GameState& state)
     monster->_sprite.setPosition(PlayerToWorldF(monster->GetPos()));
     _rtMain.draw(monster->_sprite);
 
-    // draw the roam path
-    vector<sf::Vertex> path;
-    for (auto& p : monster->_roamPath)
-    {
-      path.push_back(PlayerToWorldF(p));
-    }
-
-    if (!path.empty())
-      _rtMain.draw(path.data(), path.size(), sf::LinesStrip);
-
     DrawHealthBar(monster->CurHealth(), monster->MaxHealth(), pos);
   }
 }
@@ -427,6 +432,34 @@ void Renderer::OnMouseMove(const GameState& state, int x, int y, bool hover)
 }
 
 //-----------------------------------------------------------------------------
+bool Renderer::OnMouseButtonReleased(const Event& event)
+{
+  auto& state = GAME.GetGameState();
+  int idx = TileAtPos(state, event.mouseButton.x, event.mouseButton.y);
+  if (idx == -1)
+    return false;
+
+  auto& tile = state._level->_tiles[idx];
+
+  if (tile._monster)
+    _debugDump = tile._monster;
+
+  if (tile._player)
+    _debugDump = tile._player;
+
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+bool Renderer::OnKeyPressed(const Event& event)
+{
+  if (event.key.code == Keyboard::Escape)
+    _debugDump = nullptr;
+
+  return false;
+}
+
+//-----------------------------------------------------------------------------
 void Renderer::OnAttack(const GameEvent& event)
 {
   // Add to combat log
@@ -456,6 +489,12 @@ void Renderer::AddToCombatLog(const string& msg)
 //-----------------------------------------------------------------------------
 bool Renderer::Init(const GameState& state)
 {
+  WINDOW_EVENT->RegisterHandler(Event::MouseButtonReleased,
+      bind(&Renderer::OnMouseButtonReleased, this, _1));
+
+  WINDOW_EVENT->RegisterHandler(Event::KeyReleased,
+    bind(&Renderer::OnKeyPressed, this, _1));
+
   Level* level = state._level;
   Party* party = state._party;
 
@@ -531,9 +570,9 @@ bool Renderer::Init(const GameState& state)
       auto& tile = level->Get(x, y);
 
       // If the tile is a wall, determine if it should be horizontal or vertical
-      if (tile._type == TileType::kWall)
+      if (tile._type == Tile::Type::kWall)
       {
-        if (level->Inside(x,y+1) && level->Get(x,y+1)._type != TileType::kWall)
+        if (level->Inside(x,y+1) && level->Get(x,y+1)._type != Tile::Type::kWall)
         {
           sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
         }
@@ -542,7 +581,7 @@ bool Renderer::Init(const GameState& state)
           sprite.setTextureRect(sf::IntRect((int)Tiles::wallV*8, 0, 8, 8));
         }
       }
-      else if (tile._type == TileType::kFloor)
+      else if (tile._type == Tile::Type::kFloor)
       {
         sprite.setTextureRect(sf::IntRect((int)Tiles::floorC*8, 0, 8, 8));
       }

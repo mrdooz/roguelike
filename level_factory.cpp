@@ -58,7 +58,7 @@ struct LevelSubdivide
       // TODO: What is the extreme point of the gaussian distribution? should this be clamped?
       int splitPos = (int)gaussianRand(height/2.0f, height/4.0f);
       for (int i = 0; i < width; ++i)
-        _level->Get(left+i, top+splitPos)._type = TileType::kWall;
+        _level->Get(left+i, top+splitPos)._type = Tile::Type::kWall;
 
       if (depth <= cMaxDepth && width > 5 && height > 5)
       {
@@ -84,7 +84,7 @@ struct LevelSubdivide
     {
       int split = (int)gaussianRand(width/2.0f, width/4.0f);
       for (int i = 0; i < height; ++i)
-        _level->Get(left+split, top+i)._type = TileType::kWall;
+        _level->Get(left+split, top+i)._type = Tile::Type::kWall;
 
       if (depth <= cMaxDepth && width > 5 && height > 5)
       {
@@ -143,21 +143,21 @@ Level *LevelFactory::CreateLevel(int difficulty, int width, int height)
   {
     for (int x = 0; x < width; ++x)
     {
-      level->Get(x,y)._type = TileType::kFloor;
+      level->Get(x,y)._type = Tile::Type::kFloor;
     }
   }
 
   // outer walls
   for (int i = 0; i < width; ++i)
   {
-    level->Get(i,0)._type = TileType::kWall;
-    level->Get(i,height-1)._type = TileType::kWall;
+    level->Get(i,0)._type = Tile::Type::kWall;
+    level->Get(i,height-1)._type = Tile::Type::kWall;
   }
 
   for (int i = 0; i < height; ++i)
   {
-    level->Get(0,i)._type = TileType::kWall;
-    level->Get(width-1,i)._type = TileType::kWall;
+    level->Get(0,i)._type = Tile::Type::kWall;
+    level->Get(width-1,i)._type = Tile::Type::kWall;
   }
 
   LevelSubdivide sub(level);
@@ -213,18 +213,18 @@ Level *LevelFactory::CreateLevel(int difficulty, int width, int height)
       if (wall.orientation == Wall::Orientation::Horizontal)
       {
         // Check that each side of the candidate door isn't a wall (avoid T junctions etc)
-        if (level->Get(door, p-1)._type != TileType::kWall && level->Get(door, p+1)._type != TileType::kWall)
+        if (level->Get(door, p-1)._type != Tile::Type::kWall && level->Get(door, p+1)._type != Tile::Type::kWall)
         {
-          level->Get(door, p)._type = TileType::kFloor;
+          level->Get(door, p)._type = Tile::Type::kFloor;
           break;
         }
       }
       else
       {
         // Vertical wall..
-        if (level->Get(p-1, door)._type != TileType::kWall && level->Get(p+1, door)._type != TileType::kWall)
+        if (level->Get(p-1, door)._type != Tile::Type::kWall && level->Get(p+1, door)._type != Tile::Type::kWall)
         {
-          level->Get(p, door)._type = TileType::kFloor;
+          level->Get(p, door)._type = Tile::Type::kFloor;
           break;
         }
       }
@@ -254,9 +254,9 @@ void LevelFactory::DebugDump(Level* level, vector<int>& roomIds, int width, int 
   for (int i = 0; i < height; ++i) {
     for (int j = 0; j < width; ++j) {
       int id = roomIds[i*width+j];
-      //fprintf(f, "%c", level->get(i,j)._type == TileType::kWall ? 'X' : ('a' + roomIds[i*width+j]));
-      fprintf(f, "%c", id == -2 ? '.' : level->Get(i,j)._type == TileType::kWall ? 'X' : ' ');
-      //fprintf(f, "%c", id == 0 ? 'X' : 'A' + id);// level->get(i,j)._type == TileType::kWall ? 'X' : ('A' + roomIds[i*width+j]));
+      //fprintf(f, "%c", level->get(i,j)._type == Tile::Type::kWall ? 'X' : ('a' + roomIds[i*width+j]));
+      fprintf(f, "%c", id == -2 ? '.' : level->Get(i,j)._type == Tile::Type::kWall ? 'X' : ' ');
+      //fprintf(f, "%c", id == 0 ? 'X' : 'A' + id);// level->get(i,j)._type == Tile::Type::kWall ? 'X' : ('A' + roomIds[i*width+j]));
     }
     fprintf(f, "\n");
   }
@@ -276,7 +276,7 @@ static bool FindEmptyTile(Level* level, Pos& pos)
     int x = 1 + (rand() % (w-2));
     int y = 1 + (rand() % (h-2));
     auto &tile = level->Get(x, y);
-    if (tile._type == TileType::kFloor && tile.IsEmpty(false))
+    if (tile._type == Tile::Type::kFloor && tile.IsEmpty(false))
     {
       pos = Pos(x,y);
       return true;
@@ -316,6 +316,8 @@ void LevelFactory::CreateMonsters(Level* level)
       monster->SetPos(pos);
       monster->_curHealth = 10;
       monster->_maxHealth = 10;
+      monster->_visited.resize(level->Width() * level->Height(), 0);
+      monster->_visited[level->PosToIndex(pos)] = 1;
 
       auto &sprite = monster->_sprite;
       sprite.setScale(3.0f, 3.0f);

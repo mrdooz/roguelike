@@ -40,3 +40,8 @@ Player::Player()
   , _hasMoved(false)
 {
 }
+
+void Player::DebugDump(vector<string>& dump)
+{
+  dump.push_back(toString("this: 0x%.8x", this));
+}

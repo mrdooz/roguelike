@@ -33,6 +33,8 @@ namespace rogue
     void SetPos(const Pos& pos) { _pos = pos ;}
     const string& Name() const { return _name; }
 
+    virtual void DebugDump(vector<string>& dump) {}
+
   protected:
     Entity(Type type);
     

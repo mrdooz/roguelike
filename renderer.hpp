@@ -26,6 +26,8 @@ namespace rogue
     int TileAtPos(const GameState& state, int x, int y) const;
 
   private:
+    bool OnMouseButtonReleased(const Event& event);
+    bool OnKeyPressed(const Event& event);
 
     void OnAttack(const GameEvent& event);
     void OnHeal(const GameEvent& event);
@@ -77,5 +79,7 @@ namespace rogue
     RenderTexture _rtMain;
     RenderTexture _rtCharacterPane;
     RenderTexture _rtCombatLog;
+
+    Entity* _debugDump;
   };
 }

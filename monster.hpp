@@ -19,32 +19,36 @@ namespace rogue
     cNumMonsters,
   };
 
-  enum class MonsterAction
-  {
-    kUnknown,
-    kRoaming,
-    kGuarding,
-    kFighting,
-  };
-
-
   class Monster : public Entity
   {
   public:
-    Monster();
+    enum class Action
+    {
+      kUnknown,
+      kRoaming,
+      kHunting,
+      kGuarding,
+      kFighting,
+    };
 
+    Monster();
     MonsterType GetMonsterType() const { return _monsterType; }
+
+    virtual void DebugDump(vector<string>& dump);
 
     sf::Sprite _sprite;
     MonsterType _monsterType;
-    vector<Player *> _seenPlayers;
+
+    Player* _aggroPlayer;
+    Pos _lastPlayerPos;
+    int _aggroDecay;
+
     int _stunRemaining;
     int _immobilizeRemaining;
     int _courage;
+    int _visibilityRange;
 
-    MonsterAction _action;
-    vector<Pos> _roamPath;
-    size_t _roamStep;
-    int _retryCount;
+    Action _action;
+    vector<u8> _visited;
   };
 }

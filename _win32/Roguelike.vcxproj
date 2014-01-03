@@ -106,6 +106,7 @@
     <ClInclude Include="..\renderer.hpp" />
     <ClInclude Include="..\roguelike.hpp" />
     <ClInclude Include="..\spell.hpp" />
+    <ClInclude Include="..\tile.hpp" />
     <ClInclude Include="..\utils.hpp" />
     <ClInclude Include="..\window_event_manager.hpp" />
   </ItemGroup>
@@ -133,6 +134,7 @@
     <ClCompile Include="..\renderer.cpp" />
     <ClCompile Include="..\roguelike.cpp" />
     <ClCompile Include="..\spell.cpp" />
+    <ClCompile Include="..\tile.cpp" />
     <ClCompile Include="..\utils.cpp" />
     <ClCompile Include="..\window_event_manager.cpp" />
   </ItemGroup>

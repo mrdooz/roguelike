@@ -45,10 +45,10 @@ bool SpellCharge::IsValid(GameState& state, const Event& event)
     {
       Pos newPos(player->GetPos() + (int)i * ofs);
       auto& tile = level->Get(newPos);
-      if (tile._type != TileType::kFloor || tile._player)
+      if (tile._type != Tile::Type::kFloor || tile._player)
         break;
 
-      if (tile._type == TileType::kFloor && tile._monster)
+      if (tile._type == Tile::Type::kFloor && tile._monster)
       {
         monster = tile._monster;
         break;

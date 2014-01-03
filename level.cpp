@@ -2,23 +2,9 @@
 #include "monster.hpp"
 #include "utils.hpp"
 #include "game.hpp"
+#include "player.hpp"
 
 using namespace rogue;
-
-//-----------------------------------------------------------------------------
-Tile::Tile()
-  : _player(nullptr)
-  , _monster(nullptr)
-  , _visited(0)
-  , _selected(false)
-{
-}
-
-//-----------------------------------------------------------------------------
-bool Tile::IsEmpty(bool ignoreItems) const
-{
-  return !_player && !_monster && (ignoreItems || _items.empty());
-}
 
 //-----------------------------------------------------------------------------
 Level::Level(int difficulty, int width, int height)
@@ -135,7 +121,7 @@ bool Level::ValidDestination(const Pos &pos)
   if (!Inside(pos))
     return false;
   auto &tile = Get(pos);
-  return tile._type != TileType::kWall && tile.IsEmpty(true);
+  return tile._type != Tile::Type::kWall && tile.IsEmpty(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -150,8 +136,10 @@ void Level::initPlayer(Player *p, const Pos &pos) {
   updateFog(pos);
 }
 
-void Level::moveMonster(Monster *m, const Pos &oldPos, const Pos &newPos)
+//-----------------------------------------------------------------------------
+void Level::MoveMonster(Monster *m, const Pos &newPos)
 {
+  Pos oldPos(m->GetPos());
 
   assert(Inside(oldPos) && Inside(newPos));
 
@@ -165,8 +153,9 @@ void Level::moveMonster(Monster *m, const Pos &oldPos, const Pos &newPos)
 }
 
 //-----------------------------------------------------------------------------
-void Level::MovePlayer(Player* p, const Pos& oldPos, const Pos& newPos)
+void Level::MovePlayer(Player* p, const Pos& newPos)
 {
+  Pos oldPos(p->GetPos());
   assert(Inside(oldPos) && Inside(newPos));
 
   Tile& oldTile = Get(oldPos);
@@ -278,7 +267,7 @@ bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
     Pos offsets[] = { Pos(1,0), Pos(-1,0), Pos(0, 1), Pos(0, -1) };
     for (auto &ofs : offsets) {
       Pos cand(IndexToPos(cur.idx) + ofs);
-      if (Inside(cand) && Get(cand)._type != TileType::kWall && !IsVisited(cand))
+      if (Inside(cand) && Get(cand)._type != Tile::Type::kWall && !IsVisited(cand))
       {
         PosLink x(PosToIndex(cand), links.size(), cur.linkIdx);
         links.push_back(x);
@@ -314,4 +303,59 @@ Pos Level::IndexToPos(size_t idx) const
 size_t Level::PosToIndex(const Pos& pos) const
 {
   return pos.y * _width + pos.x;
+}
+
+//-----------------------------------------------------------------------------
+bool Level::IsVisible(const Pos& a, const Pos& b)
+{
+  // Step between 'a' and 'b', and return false is there is a wall between
+  int dx = b.x - a.x;
+  int dy = b.y - a.y;
+
+  if (dx == 0 && dy == 0)
+    return true;
+
+  int steps = IntAbs(dx) + IntAbs(dy);
+
+  int stepx = (dx << 16) / steps;
+  int stepy = (dx << 16) / steps;
+
+  int curx = a.x << 16;
+  int cury = a.y << 16;
+
+  for (int i = 0; i < steps; ++i)
+  {
+    curx += stepx;
+    cury += stepy;
+
+    auto& tile = Get(curx >> 16, cury >> 16);
+    if (tile._type == Tile::Type::kWall)
+      return false;
+  }
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+Pos Level::StepTowards(const Pos& a, const Pos& b)
+{
+  Pos ofs[4] = { Pos(-1, 0), Pos(1, 0), Pos(0, -1), Pos(0, 1) };
+  Pos best(a);
+  float dst = Dist(b, a);
+
+  for (const auto& p : ofs)
+  {
+    Pos cand = a + p;
+    if (Get(cand).IsEmpty(true))
+    {
+      float tmp = Dist(cand, b);
+      if (tmp < dst)
+      {
+        best = cand;
+        dst = tmp;
+      }
+    }
+  }
+
+  return best;
 }

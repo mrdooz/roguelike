@@ -2,32 +2,12 @@
 
 #include "game_event_manager.hpp"
 #include "loot_item.hpp"
+#include "tile.hpp"
 
 namespace rogue
 {
   class Monster;
   class Player;
-
-  enum class TileType
-  {
-    kFloor,
-    kWall,
-    kStairUp,
-    kStairDown,
-  };
-
-  struct Tile
-  {
-    Tile();
-    bool IsEmpty(bool ignoreItems) const;
-    
-    deque<LootItem> _items;
-    TileType _type;
-    Player *_player;
-    Monster *_monster;
-    int _visited;
-    bool _selected;
-  };
 
   class Level
   {
@@ -41,9 +21,8 @@ namespace rogue
     void Init();
 
     bool ValidDestination(const Pos &pos);
-    void MovePlayer(Player *p, const Pos &oldPos, const Pos &newPos);
-
-    void moveMonster(Monster *m, const Pos &oldPos, const Pos &newPos);
+    void MovePlayer(Player *p, const Pos &newPos);
+    void MoveMonster(Monster *m, const Pos &newPos);
 
     void initPlayer(Player *p, const Pos &pos);
 
@@ -62,18 +41,21 @@ namespace rogue
 
     bool calcPath(const Pos &start, const Pos &end, vector<Pos> *path);
 
+    bool IsVisible(const Pos& a, const Pos& b);
+    Pos StepTowards(const Pos& a, const Pos& b);
 
     Player *playerAt(const Pos &pos);
     Monster *monsterAt(const Pos &pos);
 
     LootItem GenerateLoot(int level);
 
+    Pos IndexToPos(size_t idx) const;
+    size_t PosToIndex(const Pos& pos) const;
+
   private:
     void OnDeath(const GameEvent& event);
     void MonsterKilled(Monster *m);
 
-    Pos IndexToPos(size_t idx) const;
-    size_t PosToIndex(const Pos& pos) const;
     void updateFog(const Pos &pos);
 
     vector<Tile> _tiles;

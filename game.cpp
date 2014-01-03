@@ -117,7 +117,7 @@ void Game::CreateParty()
       int x = rand() % _gameState._level->Width();
       int y = rand() % _gameState._level->Height();
       auto& tile = _gameState._level->Get(x, y);
-      if (tile.IsEmpty(false) && tile._type == TileType::kFloor)
+      if (tile.IsEmpty(false) && tile._type == Tile::Type::kFloor)
       {
         p->SetPos(Pos(x, y));
         break;

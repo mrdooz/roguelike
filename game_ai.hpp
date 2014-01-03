@@ -7,5 +7,8 @@ namespace rogue
   {
   public:
     void Update(GameState& state);
+
+  private:
+    void MoveMonster(Level* level, Monster* monster, const Pos& newPos);
   };
 }

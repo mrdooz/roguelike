@@ -28,6 +28,8 @@ namespace rogue
   public:
     Player();
 
+    void DebugDump(vector<string>& dump);
+
     int _intelligence;
     int _strength;
     int _dexterity;

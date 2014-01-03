@@ -7,82 +7,112 @@
 
 using namespace rogue;
 
+//-----------------------------------------------------------------------------
 void GameAI::Update(GameState& state)
 {
+  if (!state._monsterPhase)
+    return;
+
   size_t activePlayer = state._activePlayer;
   auto level = state._level;
-  bool validMove = false;
 
-  if (state._monsterPhase)
+  for (const auto& m : level->monsters())
   {
-    validMove = true;
+    bool done = false;
 
-    // Monster AI
-    state._monsterPhase = false;
-
-    auto& monsters = level->monsters();
-    size_t cnt = monsters.size();
-    for (size_t i = 0; i < cnt; ++i)
+    // Check if the monster already has seen a player
+    if (m->_aggroPlayer)
     {
-      auto *monster = monsters[i];
-      if (monster->_action == MonsterAction::kUnknown)
+      // Is the player visible?
+      if (level->IsVisible(m->GetPos(), m->_aggroPlayer->GetPos()))
       {
-        // move towards the active player
-        Pos dest(state.GetActivePlayer()->GetPos());
-        //Pos rnd(monsters[rand() % cnt]->_pos);
-        if (level->calcPath(monster->GetPos(), dest, &monster->_roamPath))
-        {
-          monster->_action = MonsterAction::kRoaming;
-          monster->_roamStep = 1;
-        }
+        m->_lastPlayerPos = m->_aggroPlayer->GetPos();
+        m->_aggroDecay = 5;
       }
 
-      if (monster->_action == MonsterAction::kRoaming)
+      // Move towards the last known player position
+      if (m->_aggroDecay)
       {
-        bool calcNewPath = monster->_roamStep >= monster->_roamPath.size();
-        if (!calcNewPath)
-        {
-          Pos nextPos = monster->_roamPath[monster->_roamStep];
-          if (level->tileFree(nextPos)) {
-            monster->_retryCount = 0;
-            level->moveMonster(monster, monster->GetPos(), nextPos);
-            monster->SetPos(nextPos);
-            monster->_roamStep++;
-          } else {
-            if (++monster->_retryCount > 3) {
-              calcNewPath = true;
-            }
-          }
-        }
-
-        if (calcNewPath)
-        {
-          if (level->calcPath(monster->GetPos(), monsters[rand() % cnt]->GetPos(), &monster->_roamPath))
-          {
-            monster->_action = MonsterAction::kRoaming;
-            monster->_roamStep = 1;
-            monster->_retryCount = 0;
-          }
-          else
-          {
-            monster->_action = MonsterAction::kUnknown;
-          }
-        }
+        MoveMonster(level, m, level->StepTowards(m->GetPos(), m->_lastPlayerPos));
+        m->_aggroDecay--;
       }
-    }
-  }
-
-  if (validMove)
-  {
-    if (activePlayer == state._party->GetNumPlayers())
-    {
-      state._activePlayer = 0;
-      state._monsterPhase = true;
+      else
+      {
+        m->_aggroPlayer = nullptr;
+      }
     }
     else
     {
-      state._activePlayer = activePlayer;
+      Pos org(m->GetPos());
+      Player* player = nullptr;
+      // Search in a spiral for nearby players
+      for (int r = 1; r < m->_visibilityRange; ++r)
+      {
+        // top
+        for (int i = -r; i <= r; ++i)
+        {
+          Pos p = org + Pos(i, r);
+          if (level->Inside(p) && level->IsVisible(org, p) && level->Get(p)._player)
+          {
+            player = level->Get(p)._player;
+            goto FOUND_PLAYER;
+          }
+        }
+
+        // right
+        for (int i = -r+1; i <= r-1; ++i)
+        {
+          Pos p = org + Pos(r, i);
+          if (level->Inside(p) && level->IsVisible(org, p) && level->Get(p)._player)
+          {
+            player = level->Get(p)._player;
+            goto FOUND_PLAYER;
+          }
+        }
+
+        // bottom
+        for (int i = -r; i <= r; ++i)
+        {
+          Pos p = org + Pos(i, -r);
+          if (level->Inside(p) && level->IsVisible(org, p) && level->Get(p)._player)
+          {
+            player = level->Get(p)._player;
+            goto FOUND_PLAYER;
+          }
+        }
+
+        // left
+        for (int i = -r+1; i <= r-1; ++i)
+        {
+          Pos p = org + Pos(-r, i);
+          if (level->Inside(p) && level->IsVisible(org, p) && level->Get(p)._player)
+          {
+            player = level->Get(p)._player;
+            goto FOUND_PLAYER;
+          }
+        }
+      }
+FOUND_PLAYER:
+      if (player)
+      {
+        m->_aggroPlayer = player;
+        m->_aggroDecay = 5;
+        Pos newPos(level->StepTowards(m->GetPos(), player->GetPos()));
+        MoveMonster(level, m, newPos);
+      }
+      else
+      {
+
+      }
     }
   }
 
+  state._monsterPhase = false;
+}
+
+//-----------------------------------------------------------------------------
+void GameAI::MoveMonster(Level* level, Monster* monster, const Pos& newPos)
+{
+  level->MoveMonster(monster, newPos);
+  monster->SetPos(newPos);
 }
