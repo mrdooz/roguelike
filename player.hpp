@@ -33,7 +33,11 @@ namespace rogue
     int _dexterity;
     int _vitality;
     int _xp;
+    int _xpForNextLevel;
     int _chargeRange;
+    int _gold;
+    int _manaPotions;
+    int _healthPotions;
 
     Heading _heading;
     RotatedSprite _sprite;

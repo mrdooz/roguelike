@@ -191,6 +191,13 @@ void Renderer::DrawLevel(const GameState& state)
         selectedTile = &tile;
         selectedPos = PlayerToWorld(Pos(x,y));
       }
+
+      if (!tile._items.empty())
+      {
+        _objectSprite.setTextureRect(_objectToTextureRect[tile._items.back()._type]);
+        _objectSprite.setPosition(PlayerToWorldF(Pos(x,y)));
+        _rtMain.draw(_objectSprite);
+      }
     }
   }
 
@@ -229,7 +236,7 @@ void Renderer::DrawParty(const GameState& state)
       DrawQuad(org, 8, sf::Color::Green);
     }
 
-    //DrawHealthBar(player->_curHealth, player->_maxHeath, Pos(y, x));
+    DrawHealthBar(player->CurHealth(), player->MaxHealth(), pos);
   }
 }
 
@@ -287,12 +294,18 @@ void Renderer::DrawPartyStats(const GameState& state)
     if (player->MaxMana() > 0)
       drawNormal(toString("MANA: %d/%d", player->CurMana(), player->MaxMana()));
 
+    drawNormal(toString("XP: %d/%d", player->_xp, player->_xpForNextLevel));
+    drawNormal(toString("Gold: %d", player->_gold));
+
     pos.x = col1;
     pos.y = y;
     drawNormal(toString("STR: %d", player->_strength));
     drawNormal(toString("INT: %d", player->_intelligence));
     drawNormal(toString("DEX: %d", player->_dexterity));
     drawNormal(toString("VIT: %d", player->_vitality));
+    drawNormal(toString("ARM: %d", player->Armor()));
+    drawNormal(toString("+WEP: %d", player->WeaponBonus()));
+    drawNormal(toString("+ARM: %d", player->ArmorBonus()));
 
     pos.y += 10;
   }
@@ -309,12 +322,12 @@ void Renderer::DrawHealthBar(int health, int maxHealth, const Pos &pos)
   rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
   rectangle.setFillColor(sf::Color(200, 10, 10));
   _rtMain.draw(rectangle);
+
   // cur health
   rectangle.setSize(sf::Vector2f((float)health / maxHealth*zoomF*6, zoomF));
   rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
   rectangle.setFillColor(sf::Color(10, 200, 10));
   _rtMain.draw(rectangle);
-
 }
 
 //-----------------------------------------------------------------------------
@@ -455,6 +468,18 @@ bool Renderer::Init(const GameState& state)
   if (!_characterTexture.loadFromFile("oryx_lofi/lofi_char.png"))
     return false;
 
+  if (!_objectTexture.loadFromFile("oryx_lofi/lofi_obj.png"))
+    return false;
+
+  _objectToTextureRect[LootItem::Type::Gold]          = Rect(0,0,8,8);
+  _objectToTextureRect[LootItem::Type::ManaPotion]    = Rect(13*8,0,8,8);
+  _objectToTextureRect[LootItem::Type::HealthPotion]  = Rect(12*8,0,8,8);
+  _objectToTextureRect[LootItem::Type::WeaponUpgrade] = Rect(5*8,3*8,8,8);
+  _objectToTextureRect[LootItem::Type::ArmorUpgrade]  = Rect(4*8,4*8,8,8);
+
+  _objectSprite.setTexture(_objectTexture);
+  _objectSprite.setScale(3,3);
+
   // Set the texture coords for the players
   for (auto p : party->_players)
   {
@@ -466,8 +491,6 @@ bool Renderer::Init(const GameState& state)
       case PlayerClass::kWarrior: textureRect = Rect(4*8, 29*8, 8, 8); break;
       case PlayerClass::kCleric: textureRect  = Rect(8*8, 30*8, 8, 8); break;
     }
-
-    void Init(const Texture& texture, float scale, const Rect& south, const Rect& east, const Rect& north, const Rect& west);
 
     // sprites are stored E, S, W, N
     p->_sprite.Init(_characterTexture, 3,

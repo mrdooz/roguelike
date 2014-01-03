@@ -85,6 +85,8 @@ bool GamePlayer::Init()
   GAME_EVENT->RegisterHandler(GameEvent::Type::Attack, bind(&GamePlayer::OnAttack, this, _1));
   GAME_EVENT->RegisterHandler(GameEvent::Type::Heal, bind(&GamePlayer::OnHeal, this, _1));
   GAME_EVENT->RegisterHandler(GameEvent::Type::Death, bind(&GamePlayer::OnDeath, this, _1));
+  GAME_EVENT->RegisterHandler(GameEvent::Type::LevelGained, bind(&GamePlayer::OnLevelGained, this, _1));
+  GAME_EVENT->RegisterHandler(GameEvent::Type::ItemGained, bind(&GamePlayer::OnItemGained, this, _1));
 
   return true;
 }
@@ -103,10 +105,9 @@ void GamePlayer::OnAttack(const GameEvent& event)
   // Check if the attack is fatal
   if (target->CurHealth() == 0)
   {
-    GameEvent deathEvent;
+    GameEvent deathEvent(GameEvent::Type::Death);
     deathEvent._agent = event._agent;
     deathEvent._target = event._target;
-    deathEvent._type = GameEvent::Type::Death;
     GAME_EVENT->SendEvent(deathEvent);
   }
 }
@@ -120,13 +121,57 @@ void GamePlayer::OnHeal(const GameEvent& event)
 //-----------------------------------------------------------------------------
 void GamePlayer::OnDeath(const GameEvent& event)
 {
+  // If a monster is killed, calc xp, and give it to all the players
+  Entity* target = event._target;
+  if (target->GetType() == Entity::Type::Monster)
+  {
+    auto& state = GAME.GetGameState();
+    int xp = target->Level();
+    for (auto p : state._party->_players)
+    {
+      if (p->CurHealth() > 0)
+      {
+        p->_xp += xp;
+        if (p->_xp >= p->_xpForNextLevel)
+        {
+          GameEvent levelEvent(GameEvent::Type::LevelGained);
+          levelEvent._agent = p;
+          GAME_EVENT->SendEvent(levelEvent);
+        }
+      }
+    }
+  }
+}
 
+//-----------------------------------------------------------------------------
+void GamePlayer::OnLevelGained(const GameEvent& event)
+{
+  Player* player = (Player*)event._agent;
+  player->SetLevel(player->Level()+1);
+  player->_xp = player->_xpForNextLevel;
+  player->_xpForNextLevel *= 2;
+}
+
+//-----------------------------------------------------------------------------
+void GamePlayer::OnItemGained(const GameEvent& event)
+{
+  Player* agent = static_cast<Player*>(event._agent);
+  auto item = event._item;
+  switch (item._type)
+  {
+    case LootItem::Type::Gold: agent->_gold += item._numGold; break;
+    case LootItem::Type::ManaPotion: agent->_manaPotions += item._numPots; break;
+    case LootItem::Type::HealthPotion: agent->_healthPotions += item._numPots; break;
+    case LootItem::Type::ArmorUpgrade: agent->SetArmorBonus(agent->ArmorBonus() + item._numUpgrades); break;
+    case LootItem::Type::WeaponUpgrade: agent->SetWeaponBonus(agent->WeaponBonus() + item._numUpgrades); break;
+  }
 }
 
 //-----------------------------------------------------------------------------
 bool GamePlayer::ValidMovement(GameState& state, const Event& event)
 {
   auto party = state._party;
+  auto level = state._level;
   auto player = party->_players[state._activePlayer];
   Keyboard::Key key = event.key.code;
 
@@ -136,11 +181,23 @@ bool GamePlayer::ValidMovement(GameState& state, const Event& event)
   if (ArrowKeyToHeading(key, &ofs, &player->_heading))
   {
     Pos newPos(player->GetPos() + ofs);
-    if (state._level->validDestination(newPos))
+    if (level->ValidDestination(newPos))
     {
+      level->MovePlayer(player, player->GetPos(), newPos);
       player->_hasMoved = true;
-      state._level->movePlayer(player, player->GetPos(), newPos);
       player->SetPos(newPos);
+
+      // If the new tile has any items, pick up the top one
+      auto& tile = level->Get(newPos);
+      if (!tile._items.empty())
+      {
+        GameEvent event(GameEvent::Type::ItemGained);
+        event._agent = player;
+        event._item = tile._items.back();
+        tile._items.pop_back();
+        GAME_EVENT->SendEvent(event);
+      }
+
       return true;
     }
   }
@@ -222,8 +279,8 @@ bool GamePlayer::ValidMultiPhaseAction(GameState& state, const Event& event)
 
 float Dist(const Pos& a, const Pos& b)
 {
-  float dx = a.x - b.x;
-  float dy = a.y - b.y;
+  float dx = (float)(a.x - b.x);
+  float dy = (float)(a.y - b.y);
   return sqrtf(dx*dx+dy*dy);
 }
 
@@ -308,9 +365,6 @@ bool GamePlayer::OnKeyPressed(const Event& event)
 
   Keyboard::Key key = event.key.code;
 
-  // Tick the active player
-//  auto player = party->_players[state._activePlayer];
-
   do
   {
     if (key == Keyboard::Escape)
@@ -359,20 +413,6 @@ bool GamePlayer::OnKeyPressed(const Event& event)
 
         }
       }
-      // for the current action, determine if the current key is legal
-/*
-      Pos ofs;
-      if (ArrowKeyToOffset(key, &ofs))
-      {
-        if (Monster *monster = level->monsterAt(player->_pos + ofs))
-        {
-          //HandleAttack(state, player, monster);
-          player->_hasMoved = true;
-          validAction = true;
-          break;
-        }
-      }
- */
     }
   }
   while (false);
@@ -387,4 +427,3 @@ bool GamePlayer::OnKeyPressed(const Event& event)
 
   return true;
 }
-

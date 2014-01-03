@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game_event_manager.hpp"
+#include "level.hpp"
 
 namespace rogue
 {
@@ -58,6 +59,8 @@ namespace rogue
 
     vector<string> _combatLog;
 
+    map<LootItem::Type, Rect> _objectToTextureRect;
+
     vector<Sprite> _tileSprites;
     Pos _offset;
     int _leftMargin, _rightMargin, _topMargin, _bottomMargin;
@@ -65,7 +68,9 @@ namespace rogue
     Font _font;
     Texture _environmentTexture;
     Texture _characterTexture;
+    Texture _objectTexture;
 
+    Sprite _objectSprite;
     Sprite _sprMain;
     Sprite _sprCharacter;
     Sprite _sprCombatLog;

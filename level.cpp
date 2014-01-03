@@ -15,14 +15,15 @@ Tile::Tile()
 }
 
 //-----------------------------------------------------------------------------
-bool Tile::IsEmpty() const
+bool Tile::IsEmpty(bool ignoreItems) const
 {
-  return !_player && !_monster;
+  return !_player && !_monster && (ignoreItems || _items.empty());
 }
 
 //-----------------------------------------------------------------------------
-Level::Level(int width, int height)
-  : _width(width)
+Level::Level(int difficulty, int width, int height)
+  : _difficulty(difficulty)
+  , _width(width)
   , _height(height)
 {
   _tiles.resize(width*height);
@@ -41,14 +42,55 @@ void Level::Init()
 }
 
 //-----------------------------------------------------------------------------
+LootItem Level::GenerateLoot(int level)
+{
+  // Spawn loot!
+  int rnd = rand() % 20;
+  if (rnd < 10)
+  {
+    LootItemEx obj(LootItem::Type::Gold);
+    obj._numGold = (10 + (rand() % level) ) * 100;
+    return obj;
+  }
+  else if (rnd < 12)
+  {
+    LootItemEx obj(LootItem::Type::HealthPotion);
+    obj._numPots = 1;
+    return obj;
+  }
+  else if (rnd < 15)
+  {
+    LootItemEx obj(LootItem::Type::ManaPotion);
+    obj._numPots = 1;
+    return obj;
+  }
+  else if (rnd < 17)
+  {
+    LootItemEx obj(LootItem::Type::ArmorUpgrade);
+    obj._numUpgrades = 1;
+    return obj;
+  }
+  else
+  {
+    LootItemEx obj(LootItem::Type::WeaponUpgrade);
+    obj._numUpgrades = 1;
+    return obj;
+  }
+}
+
+//-----------------------------------------------------------------------------
 void Level::OnDeath(const GameEvent& event)
 {
-  if (event._target->GetType() == Entity::Type::Player)
+  Entity* target = event._target;
+  if (target->GetType() == Entity::Type::Player)
   {
 
   }
   else
   {
+    // Spawn loot!
+    LootItem item(GenerateLoot(target->Level()));
+    Get(target->GetPos())._items.push_back(item);
     MonsterKilled(static_cast<Monster*>(event._target));
   }
 }
@@ -87,14 +129,16 @@ const Tile &Level::Get(const Pos &pos) const
   return _tiles[pos.y*_width+pos.x];
 }
 
-bool Level::validDestination(const Pos &pos) {
+//-----------------------------------------------------------------------------
+bool Level::ValidDestination(const Pos &pos)
+{
   if (!Inside(pos))
     return false;
   auto &tile = Get(pos);
-  return tile._type != TileType::kWall && !tile._player && !tile._monster;
-
+  return tile._type != TileType::kWall && tile.IsEmpty(true);
 }
 
+//-----------------------------------------------------------------------------
 void Level::initPlayer(Player *p, const Pos &pos) {
 
   assert(Inside(pos));
@@ -120,16 +164,16 @@ void Level::moveMonster(Monster *m, const Pos &oldPos, const Pos &newPos)
   newTile._monster = m;
 }
 
-void Level::movePlayer(Player *p, const Pos &oldPos, const Pos &newPos)
+//-----------------------------------------------------------------------------
+void Level::MovePlayer(Player* p, const Pos& oldPos, const Pos& newPos)
 {
-
   assert(Inside(oldPos) && Inside(newPos));
 
-  Tile &oldTile = Get(oldPos);
+  Tile& oldTile = Get(oldPos);
   assert(oldTile._player == p);
   oldTile._player = nullptr;
 
-  Tile &newTile = Get(newPos);
+  Tile& newTile = Get(newPos);
   assert(!newTile._player);
   newTile._player = p;
 

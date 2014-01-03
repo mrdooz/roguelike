@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game_event_manager.hpp"
+#include "loot_item.hpp"
 
 namespace rogue
 {
@@ -15,21 +16,12 @@ namespace rogue
     kStairDown,
   };
 
-  enum class Object
-  {
-    Gold,
-    ManaPotion,
-    HealthPotion,
-    WeaponUpgrade,
-    ArmourUpgrade,
-  };
-
   struct Tile
   {
     Tile();
-    bool IsEmpty() const;
+    bool IsEmpty(bool ignoreItems) const;
     
-    deque<Object> _objects;
+    deque<LootItem> _items;
     TileType _type;
     Player *_player;
     Monster *_monster;
@@ -43,13 +35,14 @@ namespace rogue
     friend class Renderer;
     friend class GamePlayer;
   public:
-    Level(int width, int height);
+    Level(int difficulty, int width, int height);
     ~Level();
 
     void Init();
 
-    bool validDestination(const Pos &pos);
-    void movePlayer(Player *p, const Pos &oldPos, const Pos &newPos);
+    bool ValidDestination(const Pos &pos);
+    void MovePlayer(Player *p, const Pos &oldPos, const Pos &newPos);
+
     void moveMonster(Monster *m, const Pos &oldPos, const Pos &newPos);
 
     void initPlayer(Player *p, const Pos &pos);
@@ -73,6 +66,8 @@ namespace rogue
     Player *playerAt(const Pos &pos);
     Monster *monsterAt(const Pos &pos);
 
+    LootItem GenerateLoot(int level);
+
   private:
     void OnDeath(const GameEvent& event);
     void MonsterKilled(Monster *m);
@@ -83,6 +78,7 @@ namespace rogue
 
     vector<Tile> _tiles;
     vector<Monster* > _monsters;
+    int _difficulty;
     int _width;
     int _height;
   };

@@ -1,4 +1,5 @@
 #pragma once
+#include "loot_item.hpp"
 
 namespace rogue
 {
@@ -12,12 +13,17 @@ namespace rogue
       Attack,
       Heal,
       Death,
+      LevelGained,
+      ItemGained,
     };
+
+    GameEvent(Type type) : _type(type) {}
 
     union
     {
       int _damage;
       int _healing;
+      LootItem _item;
     };
 
     Entity* _agent;

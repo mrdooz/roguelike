@@ -97,6 +97,7 @@
     <ClInclude Include="..\game_state.hpp" />
     <ClInclude Include="..\level.hpp" />
     <ClInclude Include="..\level_factory.hpp" />
+    <ClInclude Include="..\loot_item.hpp" />
     <ClInclude Include="..\monster.hpp" />
     <ClInclude Include="..\party.hpp" />
     <ClInclude Include="..\player.hpp" />
@@ -120,6 +121,7 @@
     <ClCompile Include="..\game_state.cpp" />
     <ClCompile Include="..\level.cpp" />
     <ClCompile Include="..\level_factory.cpp" />
+    <ClCompile Include="..\loot_item.cpp" />
     <ClCompile Include="..\monster.cpp" />
     <ClCompile Include="..\party.cpp" />
     <ClCompile Include="..\player.cpp" />

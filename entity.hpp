@@ -17,7 +17,12 @@ namespace rogue
 
     Type GetType() const { return _type; }
     int Level() const { return _level; }
+    void SetLevel(int level) { _level = level; }
+    int Armor() const { return _armor; }
+    int ArmorBonus() const { return _armorBonus; }
+    void SetArmorBonus(int bonus);
     int WeaponBonus() const { return _weaponBonus; }
+    void SetWeaponBonus(int bonus);
     int CurHealth() const { return _curHealth; }
     void SetHealth(int health); 
     int MaxHealth() const { return _maxHealth; }

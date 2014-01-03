@@ -40,6 +40,7 @@ namespace rogue
     vector<Player *> _seenPlayers;
     int _stunRemaining;
     int _immobilizeRemaining;
+    int _courage;
 
     MonsterAction _action;
     vector<Pos> _roamPath;

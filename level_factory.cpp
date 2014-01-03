@@ -134,9 +134,9 @@ struct Wall
 };
 
 //-----------------------------------------------------------------------------
-Level *LevelFactory::CreateLevel(int width, int height)
+Level *LevelFactory::CreateLevel(int difficulty, int width, int height)
 {
-  Level *level = new Level(width, height);
+  Level* level = new Level(difficulty, width, height);
 
   // fill floor
   for (int y = 0; y < height; ++y)
@@ -231,8 +231,19 @@ Level *LevelFactory::CreateLevel(int width, int height)
     }
   }
 
-#if DEBUG_MAP
+  DebugDump(level, roomIds, width, height);
 
+  CreateMonsters(level);
+  CreateDrops(level);
+  level->Init();
+
+  return level;
+}
+
+//-----------------------------------------------------------------------------
+void LevelFactory::DebugDump(Level* level, vector<int>& roomIds, int width, int height)
+{
+#if DEBUG_MAP
   vector<Pos> p;
   level->calcPath(Pos(1,1), Pos(2, level->_height-2), &p);
   for (auto &pp : p) {
@@ -251,39 +262,67 @@ Level *LevelFactory::CreateLevel(int width, int height)
   }
   fclose(f);
 #endif
+}
 
-  CreateMonsters(level);
+//-----------------------------------------------------------------------------
+static bool FindEmptyTile(Level* level, Pos& pos)
+{
+  int w = level->Width();
+  int h = level->Height();
 
-  return level;
+  int numAttemps = 100;
+  while (numAttemps--)
+  {
+    int x = 1 + (rand() % (w-2));
+    int y = 1 + (rand() % (h-2));
+    auto &tile = level->Get(x, y);
+    if (tile._type == TileType::kFloor && tile.IsEmpty(false))
+    {
+      pos = Pos(x,y);
+      return true;
+    }
+  }
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+void LevelFactory::CreateDrops(Level* level)
+{
+  int numDrops = 20;
+  while (numDrops--)
+  {
+    Pos pos;
+    if (FindEmptyTile(level, pos))
+    {
+      auto& tile = level->Get(pos);
+      LootItem item(level->GenerateLoot(level->_difficulty));
+      tile._items.push_back(item);
+    }
+
+  }
 }
 
 //-----------------------------------------------------------------------------
 void LevelFactory::CreateMonsters(Level* level)
 {
-  int w = level->Width();
-  int h = level->Height();
   for (int i = 0; i < 10; ++i)
   {
-    Monster *monster = new Monster();
-    int x, y;
-    while (true) {
-      x = 1 + (rand() % (w-2));
-      y = 1 + (rand() % (h-2));
-      auto &tile = level->Get(x, y);
-      if (tile._type == TileType::kFloor && !tile._monster && !tile._player)
-      {
-        tile._monster = monster;
-        break;
-      }
-    }
-    monster->_curHealth = 10;
-    monster->_maxHealth = 10;
+    Pos pos;
+    if (FindEmptyTile(level, pos))
+    {
+      Monster *monster = new Monster();
+      auto &tile = level->Get(pos);
+      tile._monster = monster;
+      monster->SetPos(pos);
+      monster->_curHealth = 10;
+      monster->_maxHealth = 10;
 
-    monster->SetPos(Pos(x,y));
-    auto &sprite = monster->_sprite;
-    sprite.setScale(3.0f, 3.0f);
-    sprite.setColor(sf::Color(255,255,255));
-    monster->_monsterType = (MonsterType)(rand() % (int)MonsterType::cNumMonsters);
-    level->_monsters.push_back(monster);
+      auto &sprite = monster->_sprite;
+      sprite.setScale(3.0f, 3.0f);
+      sprite.setColor(sf::Color(255,255,255));
+      monster->_monsterType = (MonsterType)(rand() % (int)MonsterType::cNumMonsters);
+      level->_monsters.push_back(monster);
+    }
+
   }
 }

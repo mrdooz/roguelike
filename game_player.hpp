@@ -26,6 +26,8 @@ namespace rogue
     void OnAttack(const GameEvent& event);
     void OnHeal(const GameEvent& event);
     void OnDeath(const GameEvent& event);
+    void OnLevelGained(const GameEvent& event);
+    void OnItemGained(const GameEvent& event);
 
     bool ValidMovement(GameState& state, const Event& event);
     bool ValidMultiPhaseAction(GameState& state, const Event& event);

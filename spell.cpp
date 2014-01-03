@@ -41,7 +41,7 @@ bool SpellCharge::IsValid(GameState& state, const Event& event)
   Pos ofs;
   if (ArrowKeyToOffset(event.key.code, &ofs))
   {
-    for (size_t i = 0; i < player->_chargeRange; ++i)
+    for (int i = 0; i < player->_chargeRange; ++i)
     {
       Pos newPos(player->GetPos() + (int)i * ofs);
       auto& tile = level->Get(newPos);
@@ -95,10 +95,8 @@ bool SpellArcaneBlast::Finished(const GameState& state)
 //-----------------------------------------------------------------------------
 bool SpellArcaneBlast::OnMonsterSelected(GameState& state, Monster* monster)
 {
-  GameEvent event;
+  GameEvent event(GameEvent::Type::Attack);
   Player* player = state.GetActivePlayer();
-
-  event._type = GameEvent::Type::Attack;
   event._agent = player;
   event._target = monster;
 
