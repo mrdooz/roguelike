@@ -4,8 +4,21 @@
 #include "player.hpp"
 #include "monster.hpp"
 #include "party.hpp"
+#include "game.hpp"
+#include "game_event_manager.hpp"
+#include "utils.hpp"
 
 using namespace rogue;
+
+//-----------------------------------------------------------------------------
+void GameAI::AttackPlayer(Monster* monster, Player* player)
+{
+  GameEvent event(GameEvent::Type::Attack);
+  event._agent = monster;
+  event._target = player;
+  event._damage = monster->Level() + (rand() % monster->Level());
+  GAME_EVENT->SendEvent(event);
+}
 
 //-----------------------------------------------------------------------------
 void GameAI::Update(GameState& state)
@@ -13,41 +26,53 @@ void GameAI::Update(GameState& state)
   if (!state._monsterPhase)
     return;
 
-  size_t activePlayer = state._activePlayer;
   auto level = state._level;
 
-  for (const auto& m : level->monsters())
+  for (const auto& monster : level->monsters())
   {
-    bool done = false;
-
+    Player* player = monster->_aggroPlayer;
     // Check if the monster already has seen a player
-    if (m->_aggroPlayer)
+    if (player)
     {
-      // Is the player visible?
-      m->_playerVisible = level->IsVisible(m->GetPos(), m->_aggroPlayer->GetPos());
-      if (m->_playerVisible)
+      // Check if the player is adjacent
+      if (MDist(player->GetPos(), monster->GetPos()) == 1)
       {
-        m->_lastPlayerPos = m->_aggroPlayer->GetPos();
-        m->_aggroDecay = 5;
-      }
-
-      // Move towards the last known player position
-      if (m->_aggroDecay)
-      {
-        MoveMonster(level, m, level->StepTowards(m->GetPos(), m->_lastPlayerPos));
-        m->_aggroDecay--;
+        AttackPlayer(monster, player);
       }
       else
       {
-        m->_aggroPlayer = nullptr;
+        // Is the player visible?
+        monster->_playerVisible = level->IsVisible(monster->GetPos(), monster->_aggroPlayer->GetPos());
+        if (monster->_playerVisible)
+        {
+          monster->_lastPlayerPos = monster->_aggroPlayer->GetPos();
+          monster->_aggroDecay = 5;
+        }
+
+        // Move towards the last known player position
+        if (monster->_aggroDecay)
+        {
+          MoveMonster(level, monster, level->StepTowards(monster->GetPos(), monster->_lastPlayerPos));
+          monster->_aggroDecay--;
+          monster->_playerVisible = level->IsVisible(monster->GetPos(), monster->_aggroPlayer->GetPos());
+          if (monster->_playerVisible)
+          {
+            monster->_lastPlayerPos = monster->_aggroPlayer->GetPos();
+            monster->_aggroDecay = 5;
+          }
+        }
+        else
+        {
+          monster->_aggroPlayer = nullptr;
+        }
       }
     }
     else
     {
-      Pos org(m->GetPos());
+      Pos org(monster->GetPos());
       Player* player = nullptr;
       // Search in a spiral for nearby players
-      for (int r = 1; r < m->_visibilityRange; ++r)
+      for (int r = 1; r < monster->_visibilityRange; ++r)
       {
         // top
         for (int i = -r; i <= r; ++i)
@@ -96,13 +121,15 @@ void GameAI::Update(GameState& state)
 FOUND_PLAYER:
       if (player)
       {
-        m->_aggroPlayer = player;
-        m->_aggroDecay = 5;
-        Pos newPos(level->StepTowards(m->GetPos(), player->GetPos()));
-        MoveMonster(level, m, newPos);
+        monster->_aggroPlayer = player;
+        monster->_aggroDecay = 5;
+        monster->_playerVisible = true;
+        Pos newPos(level->StepTowards(monster->GetPos(), player->GetPos()));
+        MoveMonster(level, monster, newPos);
       }
       else
       {
+        // if no player is close, roam towards the nearest unexplored part
 
       }
     }

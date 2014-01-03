@@ -17,3 +17,9 @@ bool Tile::IsEmpty(bool ignoreItems) const
   return !_player && !_monster && (ignoreItems || _items.empty());
 }
 
+//-----------------------------------------------------------------------------
+bool Tile::ValidMoveLocation() const
+{
+  return !_player && !_monster && _type != Type::Wall;
+
+}

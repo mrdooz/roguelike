@@ -8,17 +8,17 @@ namespace rogue
 
   struct Tile
   {
-
     enum class Type
     {
-      kFloor,
-      kWall,
-      kStairUp,
-      kStairDown,
+      Floor,
+      Wall,
+      StairUp,
+      StairDown,
     };
 
     Tile();
     bool IsEmpty(bool ignoreItems) const;
+    bool ValidMoveLocation() const;
 
     deque<LootItem> _items;
     Tile::Type _type;

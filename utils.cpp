@@ -134,5 +134,16 @@ namespace rogue
     float dy = (float)(a.y - b.y);
     return sqrtf(dx*dx+dy*dy);
   }
-}
 
+  //-----------------------------------------------------------------------------
+  int MDist(const Pos& a, const Pos& b)
+  {
+    int dx = b.x - a.x;
+    int dy = b.y - a.y;
+
+    if (dx == 0 && dy == 0)
+      return 0;
+
+    return IntAbs(dx) + IntAbs(dy);
+  }
+}

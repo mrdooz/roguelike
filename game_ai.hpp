@@ -10,5 +10,6 @@ namespace rogue
 
   private:
     void MoveMonster(Level* level, Monster* monster, const Pos& newPos);
+    void AttackPlayer(Monster* monster, Player* player);
   };
 }

@@ -573,9 +573,9 @@ bool Renderer::Init(const GameState& state)
       auto& tile = level->Get(x, y);
 
       // If the tile is a wall, determine if it should be horizontal or vertical
-      if (tile._type == Tile::Type::kWall)
+      if (tile._type == Tile::Type::Wall)
       {
-        if (level->Inside(x,y+1) && level->Get(x,y+1)._type != Tile::Type::kWall)
+        if (level->Inside(x,y+1) && level->Get(x,y+1)._type != Tile::Type::Wall)
         {
           sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
         }
@@ -584,7 +584,7 @@ bool Renderer::Init(const GameState& state)
           sprite.setTextureRect(sf::IntRect((int)Tiles::wallV*8, 0, 8, 8));
         }
       }
-      else if (tile._type == Tile::Type::kFloor)
+      else if (tile._type == Tile::Type::Floor)
       {
         sprite.setTextureRect(sf::IntRect((int)Tiles::floorC*8, 0, 8, 8));
       }

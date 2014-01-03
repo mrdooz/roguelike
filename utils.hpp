@@ -71,4 +71,7 @@ namespace rogue
 
   float Dist(const Pos& a, const Pos& b);
 
+  // Manhattan distance
+  int MDist(const Pos& a, const Pos& b);
+
 }

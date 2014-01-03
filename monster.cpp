@@ -7,12 +7,15 @@ using namespace rogue;
 Monster::Monster()
     : Entity(Type::Monster)
     , _aggroPlayer(nullptr)
+    , _tauntPlayer(nullptr)
+    , _tauntRemaining(0)
     , _stunRemaining(0)
     , _immobilizeRemaining(0)
     , _action(Action::kUnknown)
     , _visibilityRange(5)
     , _aggroDecay(0)
     , _playerVisible(false)
+    , _attackRange(0)
 {
 }
 
@@ -29,9 +32,10 @@ void Monster::DebugDraw(RenderTarget& rt)
   {
     int s = 3 * 8;
     int o = 3 * 4;
+    Color col = _playerVisible ? Color::White : Color::Red;
     sf::Vertex verts[] = {
-      MakeVertex(s * _pos.x + o, s * _pos.y + o),
-      MakeVertex(s * _aggroPlayer->GetPos().x + o, s * _aggroPlayer->GetPos().y + o)
+      MakeVertex(s * _pos.x + o, s * _pos.y + o, col),
+      MakeVertex(s * _aggroPlayer->GetPos().x + o, s * _aggroPlayer->GetPos().y + o, col)
     };
 
     rt.draw(verts, 2, sf::Lines);

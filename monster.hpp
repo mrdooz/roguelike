@@ -41,9 +41,13 @@ namespace rogue
     MonsterType _monsterType;
 
     Player* _aggroPlayer;
+    Player* _tauntPlayer;
+    int _tauntRemaining;
     Pos _lastPlayerPos;
     int _aggroDecay;
     bool _playerVisible;
+
+    int _attackRange;
 
     int _stunRemaining;
     int _immobilizeRemaining;

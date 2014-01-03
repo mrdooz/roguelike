@@ -121,7 +121,7 @@ bool Level::ValidDestination(const Pos &pos)
   if (!Inside(pos))
     return false;
   auto &tile = Get(pos);
-  return tile._type != Tile::Type::kWall && tile.IsEmpty(true);
+  return tile._type != Tile::Type::Wall && tile.IsEmpty(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -267,7 +267,7 @@ bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
     Pos offsets[] = { Pos(1,0), Pos(-1,0), Pos(0, 1), Pos(0, -1) };
     for (auto &ofs : offsets) {
       Pos cand(IndexToPos(cur.idx) + ofs);
-      if (Inside(cand) && Get(cand)._type != Tile::Type::kWall && !IsVisited(cand))
+      if (Inside(cand) && Get(cand)._type != Tile::Type::Wall && !IsVisited(cand))
       {
         PosLink x(PosToIndex(cand), links.size(), cur.linkIdx);
         links.push_back(x);
@@ -318,7 +318,7 @@ bool Level::IsVisible(const Pos& a, const Pos& b)
   int steps = IntAbs(dx) + IntAbs(dy);
 
   int stepx = (dx << 16) / steps;
-  int stepy = (dx << 16) / steps;
+  int stepy = (dy << 16) / steps;
 
   int curx = a.x << 16;
   int cury = a.y << 16;
@@ -329,7 +329,7 @@ bool Level::IsVisible(const Pos& a, const Pos& b)
     cury += stepy;
 
     auto& tile = Get(curx >> 16, cury >> 16);
-    if (tile._type == Tile::Type::kWall)
+    if (tile._type == Tile::Type::Wall)
       return false;
   }
 
@@ -346,7 +346,7 @@ Pos Level::StepTowards(const Pos& a, const Pos& b)
   for (const auto& p : ofs)
   {
     Pos cand = a + p;
-    if (Get(cand).IsEmpty(true))
+    if (Get(cand).ValidMoveLocation())
     {
       float tmp = Dist(cand, b);
       if (tmp < dst)
