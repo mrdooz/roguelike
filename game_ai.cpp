@@ -24,7 +24,8 @@ void GameAI::Update(GameState& state)
     if (m->_aggroPlayer)
     {
       // Is the player visible?
-      if (level->IsVisible(m->GetPos(), m->_aggroPlayer->GetPos()))
+      m->_playerVisible = level->IsVisible(m->GetPos(), m->_aggroPlayer->GetPos());
+      if (m->_playerVisible)
       {
         m->_lastPlayerPos = m->_aggroPlayer->GetPos();
         m->_aggroDecay = 5;

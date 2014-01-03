@@ -34,6 +34,7 @@ namespace rogue
     const string& Name() const { return _name; }
 
     virtual void DebugDump(vector<string>& dump) {}
+    virtual void DebugDraw(RenderTarget& rt) {}
 
   protected:
     Entity(Type type);

@@ -111,6 +111,9 @@ void Renderer::DrawWorld(const GameState& state)
   DrawMonsters(state);
   DrawParty(state);
 
+  if (_debugDump)
+    _debugDump->DebugDraw(_rtMain);
+
   // Blit render target to render window
   _rtMain.display();
   _window->draw(_sprMain);

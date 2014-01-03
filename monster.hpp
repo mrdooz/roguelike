@@ -35,6 +35,7 @@ namespace rogue
     MonsterType GetMonsterType() const { return _monsterType; }
 
     virtual void DebugDump(vector<string>& dump);
+    virtual void DebugDraw(RenderTarget& rt);
 
     sf::Sprite _sprite;
     MonsterType _monsterType;
@@ -42,6 +43,7 @@ namespace rogue
     Player* _aggroPlayer;
     Pos _lastPlayerPos;
     int _aggroDecay;
+    bool _playerVisible;
 
     int _stunRemaining;
     int _immobilizeRemaining;

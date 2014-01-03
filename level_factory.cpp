@@ -5,7 +5,9 @@
 using namespace rogue;
 
 #ifdef _WIN32
+#ifdef _DEBUG
 #define DEBUG_MAP 1
+#endif
 #endif
 
 struct Room
