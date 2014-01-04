@@ -3,6 +3,7 @@
 #include "game_event_manager.hpp"
 #include "level.hpp"
 #include "animated_sprite.hpp"
+#include "texture_cache.hpp"
 
 namespace rogue
 {
@@ -66,7 +67,7 @@ namespace rogue
         const Pos& startPos,
         const Pos& endPos,
         const time_duration& duration);
-    void InitAnimations();
+    bool InitAnimations();
 
     Pos HalfOffset() const;
 
@@ -82,10 +83,12 @@ namespace rogue
     Pos _offset;
     int _leftMargin, _rightMargin, _topMargin, _bottomMargin;
     int _zoomLevel;
-    Font _font;
-    Texture _environmentTexture;
-    Texture _characterTexture;
-    Texture _objectTexture;
+    TextureCache _textureCache;
+
+    Font* _font;
+    Texture* _environmentTexture;
+    Texture* _characterTexture;
+    Texture* _objectTexture;
 
     Sprite _objectSprite;
     Sprite _sprMain;

@@ -8,6 +8,7 @@
 #include "game.hpp"
 #include "window_event_manager.hpp"
 #include "spell.hpp"
+#include "protocol/animation_config.pb.h"
 
 using namespace rogue;
 
@@ -129,7 +130,7 @@ void Renderer::DrawWorld(const GameState& state)
   _window->draw(_sprMain);
 
   // display current state
-  sf::Text text("", _font, 10);
+  sf::Text text("", *_font, 10);
   text.setString(state._description);
   text.setPosition(20, 200);
   text.setColor(Color::White);
@@ -278,8 +279,8 @@ void Renderer::DrawPartyStats(const GameState& state)
   float col1 = x + _partyStatsWidth/2;
 
   float y = 10;
-  sf::Text heading("", _font, 20);
-  sf::Text normal("", _font, 10);
+  sf::Text heading("", *_font, 20);
+  sf::Text normal("", *_font, 10);
 
   sf::Vector2f pos(x, y);
 
@@ -556,7 +557,7 @@ void Renderer::DrawCombatLog()
   _rtCombatLog.draw(background);
 
   int spacing = 15;
-  sf::Text normal("", _font, 10);
+  sf::Text normal("", *_font, 10);
   sf::Vector2f pos(0, 0);
 
   int rows = min((int)_combatLog.size(), _bottomMargin / spacing);
@@ -585,16 +586,16 @@ bool Renderer::Init(const GameState& state)
   Level* level = state._level;
   Party* party = state._party;
 
-  if (!_font.loadFromFile("gfx/wscsnrg.ttf"))
+  if (!(_font = _textureCache.LoadFont("gfx/wscsnrg.ttf")))
     return false;
 
-  if (!_environmentTexture.loadFromFile("oryx_lofi/lofi_environment.png"))
+  if (!(_environmentTexture = _textureCache.LoadTexture("oryx_lofi/lofi_environment.png")))
     return false;
 
-  if (!_characterTexture.loadFromFile("oryx_lofi/lofi_char.png"))
+  if (!(_characterTexture = _textureCache.LoadTexture("oryx_lofi/lofi_char.png")))
     return false;
 
-  if (!_objectTexture.loadFromFile("oryx_lofi/lofi_obj.png"))
+  if (!(_objectTexture = _textureCache.LoadTexture("oryx_lofi/lofi_obj.png")))
     return false;
 
   _objectToTextureRect[LootItem::Type::Gold]          = Rect(0,0,8,8);
@@ -603,7 +604,7 @@ bool Renderer::Init(const GameState& state)
   _objectToTextureRect[LootItem::Type::WeaponUpgrade] = Rect(5*8,3*8,8,8);
   _objectToTextureRect[LootItem::Type::ArmorUpgrade]  = Rect(4*8,4*8,8,8);
 
-  _objectSprite.setTexture(_objectTexture);
+  _objectSprite.setTexture(*_objectTexture);
   _objectSprite.setScale(3,3);
 
   // Set the texture coords for the players
@@ -619,14 +620,14 @@ bool Renderer::Init(const GameState& state)
     }
 
     // sprites are stored E, S, W, N
-    p->_sprite.Init(_characterTexture, 3,
+    p->_sprite.Init(*_characterTexture, 3,
       textureRect + Pos(8,0), textureRect, textureRect + Pos(24, 0), textureRect + Pos(16, 0));
   }
 
   // Set the texture coords for the monster
   for (auto m : level->_monsters)
   {
-    m->_sprite.setTexture(_characterTexture);
+    m->_sprite.setTexture(*_characterTexture);
     switch (m->GetType())
     {
       case Monster::Type::Goblin: m->_sprite.setTextureRect(sf::IntRect(0, 5*8, 8, 8)); break;
@@ -652,7 +653,7 @@ bool Renderer::Init(const GameState& state)
       auto& sprite = _tileSprites[y*width+x];
       sprite.setPosition((float)x*zoom, (float)y*zoom);
       sprite.setScale(3.0f, 3.0f);
-      sprite.setTexture(_environmentTexture);
+      sprite.setTexture(*_environmentTexture);
 
       auto& tile = level->Get(x, y);
 
@@ -742,19 +743,37 @@ void Renderer::AddAnimation(
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::InitAnimations()
+bool Renderer::InitAnimations()
 {
-  Animation* anim;
+  rogue::animation_config::Animations animations;
+  
+  string str;
+  if (!LoadFile("config/animation_config.pb", &str))
+    return false;
 
-  // Yes, this should be data driven :)
-  anim = new Animation(Animation::Id::Blood, _objectTexture, seconds(1));
-  for (int i = 0; i < 6; ++i)
-    anim->_textureRects.push_back(IntRect(i*8, 5*8, 8, 8));
-  _animationMap[anim->_id] = anim;
+  if (!TextFormat::ParseFromString(str, &animations))
+    return false;
 
-  anim = new Animation(Animation::Id::ArcaneBlast, _objectTexture, seconds(1));
-  for (int i = 0; i < 6; ++i)
-    anim->_textureRects.push_back(IntRect((3+i)*8, 8*8, 8, 8));
-  _animationMap[anim->_id] = anim;
+  for (int i = 0; i < animations.animation_size(); ++i)
+  {
+    auto& cur = animations.animation(i);
+    Texture* texture = _textureCache.LoadTexture(cur.texture());
+    if (!texture)
+    {
+      //LOG_WARN("unable to find texture")..
+      return false;
+    }
+    Animation* anim = new Animation((Animation::Id)cur.id(), *texture, milliseconds(cur.duration()));
+    anim->_looping = cur.looping();
 
+    // Load the animation frames
+    for (int j = 0; j < cur.frame_size(); ++j)
+    {
+      auto& curFrame = cur.frame(j);
+      anim->_textureRects.push_back(IntRect(curFrame.x(), curFrame.y(), curFrame.w(), curFrame.h()));
+    }
+    _animationMap[anim->_id] = anim;
+  }
+
+  return true;
 }

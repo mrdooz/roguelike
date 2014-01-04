@@ -79,4 +79,7 @@ namespace rogue
 
   // Manhattan distance
   int MDist(const Pos& a, const Pos& b);
+
+  bool LoadFile(const char* filename, vector<char>* buf);
+  bool LoadFile(const char* filename, string* str);
 }

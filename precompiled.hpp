@@ -37,6 +37,9 @@
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
+#include <google/protobuf/text_format.h>
+
+
 #include <sys/stat.h>
 #include <string>
 #include <stdint.h>

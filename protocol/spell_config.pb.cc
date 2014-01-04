@@ -78,9 +78,10 @@ void protobuf_AddDesc_spell_5fconfig_2eproto() {
   already_here = true;
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
+  ::rogue::sprite::protobuf_AddDesc_sprite_2eproto();
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\022spell_config.proto\022\014rogue.spells\"\025\n\005Sp"
-    "ell\022\014\n\004name\030\001 \001(\t", 57);
+    "\n\022spell_config.proto\022\014rogue.spells\032\014spri"
+    "te.proto\"\025\n\005Spell\022\014\n\004name\030\001 \001(\t", 71);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "spell_config.proto", &protobuf_RegisterTypes);
   Spell::default_instance_ = new Spell();

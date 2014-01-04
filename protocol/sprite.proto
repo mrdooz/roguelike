@@ -1,0 +1,9 @@
+package rogue.sprite;
+
+message TextureRect
+{
+	optional int32 x = 1;
+	optional int32 y = 2;
+	optional int32 w = 3;
+	optional int32 h = 4;
+};

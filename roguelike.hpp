@@ -28,7 +28,10 @@ namespace rogue
   using boost::posix_time::ptime;
   using boost::posix_time::time_duration;
   using boost::posix_time::microsec_clock;
+  using boost::posix_time::milliseconds;
   using boost::posix_time::seconds;
+
+  using google::protobuf::TextFormat;
 
   using sf::Color;
   using sf::Font;

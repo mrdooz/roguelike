@@ -1,0 +1,25 @@
+package rogue.animation_config;
+import "sprite.proto";
+
+enum AnimationId
+{
+	None 		= 0;
+	Blood 		= 1;
+	ArcaneBlast = 2;
+};
+
+message Animation
+{
+	optional string name = 1;
+	optional AnimationId id = 2;
+	optional string texture = 3;
+	// duration in ms
+	optional int32 duration = 4 [default=1000];
+	repeated sprite.TextureRect frame = 5;
+	optional bool looping = 6 [default=false];
+};
+
+message Animations
+{
+	repeated Animation animation = 1;
+}

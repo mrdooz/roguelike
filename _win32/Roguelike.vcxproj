@@ -111,10 +111,13 @@
     <ClInclude Include="..\player.hpp" />
     <ClInclude Include="..\player_factory.hpp" />
     <ClInclude Include="..\precompiled.hpp" />
+    <ClInclude Include="..\protocol\animation_config.pb.h" />
     <ClInclude Include="..\protocol\spell_config.pb.h" />
+    <ClInclude Include="..\protocol\sprite.pb.h" />
     <ClInclude Include="..\renderer.hpp" />
     <ClInclude Include="..\roguelike.hpp" />
     <ClInclude Include="..\spell.hpp" />
+    <ClInclude Include="..\texture_cache.hpp" />
     <ClInclude Include="..\tile.hpp" />
     <ClInclude Include="..\utils.hpp" />
     <ClInclude Include="..\window_event_manager.hpp" />
@@ -140,13 +143,21 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\protocol\animation_config.pb.cc" />
     <ClCompile Include="..\protocol\spell_config.pb.cc" />
+    <ClCompile Include="..\protocol\sprite.pb.cc" />
     <ClCompile Include="..\renderer.cpp" />
     <ClCompile Include="..\roguelike.cpp" />
     <ClCompile Include="..\spell.cpp" />
+    <ClCompile Include="..\texture_cache.cpp" />
     <ClCompile Include="..\tile.cpp" />
     <ClCompile Include="..\utils.cpp" />
     <ClCompile Include="..\window_event_manager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\protocol\animation_config.proto" />
+    <None Include="..\protocol\spell_config.proto" />
+    <None Include="..\protocol\sprite.proto" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

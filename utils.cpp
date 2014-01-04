@@ -146,4 +146,38 @@ namespace rogue
 
     return IntAbs(dx) + IntAbs(dy);
   }
+
+  //-----------------------------------------------------------------------------
+  bool LoadFile(const char* filename, vector<char>* buf)
+  {
+    FILE* f = fopen(filename, "rb");
+    if (!f)
+      return false;
+
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    buf->resize(size);
+    size_t bytesRead = fread(buf->data(), 1, size, f);
+    if (bytesRead != size)
+    {
+      fclose(f);
+      return false;
+    }
+
+    return true;
+  }
+
+  //-----------------------------------------------------------------------------
+  bool LoadFile(const char* filename, string* str)
+  {
+    vector<char> buf;
+    if (!LoadFile(filename, &buf))
+      return false;
+
+    str->assign(buf.data(), buf.size());
+    return true;
+  }
+
 }
+
