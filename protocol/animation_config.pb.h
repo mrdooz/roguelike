@@ -42,11 +42,12 @@ class Animations;
 enum AnimationId {
   None = 0,
   Blood = 1,
-  ArcaneBlast = 2
+  ArcaneBlast = 2,
+  LightningBolt = 3
 };
 bool AnimationId_IsValid(int value);
 const AnimationId AnimationId_MIN = None;
-const AnimationId AnimationId_MAX = ArcaneBlast;
+const AnimationId AnimationId_MAX = LightningBolt;
 const int AnimationId_ARRAYSIZE = AnimationId_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* AnimationId_descriptor();
@@ -115,29 +116,17 @@ class Animation : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional string name = 1;
-  inline bool has_name() const;
-  inline void clear_name();
-  static const int kNameFieldNumber = 1;
-  inline const ::std::string& name() const;
-  inline void set_name(const ::std::string& value);
-  inline void set_name(const char* value);
-  inline void set_name(const char* value, size_t size);
-  inline ::std::string* mutable_name();
-  inline ::std::string* release_name();
-  inline void set_allocated_name(::std::string* name);
-
-  // optional .rogue.animation_config.AnimationId id = 2;
+  // optional .rogue.animation_config.AnimationId id = 1;
   inline bool has_id() const;
   inline void clear_id();
-  static const int kIdFieldNumber = 2;
+  static const int kIdFieldNumber = 1;
   inline ::rogue::animation_config::AnimationId id() const;
   inline void set_id(::rogue::animation_config::AnimationId value);
 
-  // optional string texture = 3;
+  // optional string texture = 2;
   inline bool has_texture() const;
   inline void clear_texture();
-  static const int kTextureFieldNumber = 3;
+  static const int kTextureFieldNumber = 2;
   inline const ::std::string& texture() const;
   inline void set_texture(const ::std::string& value);
   inline void set_texture(const char* value);
@@ -146,17 +135,17 @@ class Animation : public ::google::protobuf::Message {
   inline ::std::string* release_texture();
   inline void set_allocated_texture(::std::string* texture);
 
-  // optional int32 duration = 4;
-  inline bool has_duration() const;
-  inline void clear_duration();
-  static const int kDurationFieldNumber = 4;
-  inline ::google::protobuf::int32 duration() const;
-  inline void set_duration(::google::protobuf::int32 value);
+  // optional int32 duration_ms = 3 [default = 1000];
+  inline bool has_duration_ms() const;
+  inline void clear_duration_ms();
+  static const int kDurationMsFieldNumber = 3;
+  inline ::google::protobuf::int32 duration_ms() const;
+  inline void set_duration_ms(::google::protobuf::int32 value);
 
-  // repeated .rogue.sprite.TextureRect frame = 5;
+  // repeated .rogue.sprite.TextureRect frame = 4;
   inline int frame_size() const;
   inline void clear_frame();
-  static const int kFrameFieldNumber = 5;
+  static const int kFrameFieldNumber = 4;
   inline const ::rogue::sprite::TextureRect& frame(int index) const;
   inline ::rogue::sprite::TextureRect* mutable_frame(int index);
   inline ::rogue::sprite::TextureRect* add_frame();
@@ -165,37 +154,34 @@ class Animation : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::rogue::sprite::TextureRect >*
       mutable_frame();
 
-  // optional bool looping = 6 [default = false];
+  // optional bool looping = 5 [default = false];
   inline bool has_looping() const;
   inline void clear_looping();
-  static const int kLoopingFieldNumber = 6;
+  static const int kLoopingFieldNumber = 5;
   inline bool looping() const;
   inline void set_looping(bool value);
 
   // @@protoc_insertion_point(class_scope:rogue.animation_config.Animation)
  private:
-  inline void set_has_name();
-  inline void clear_has_name();
   inline void set_has_id();
   inline void clear_has_id();
   inline void set_has_texture();
   inline void clear_has_texture();
-  inline void set_has_duration();
-  inline void clear_has_duration();
+  inline void set_has_duration_ms();
+  inline void clear_has_duration_ms();
   inline void set_has_looping();
   inline void clear_has_looping();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::std::string* name_;
   ::std::string* texture_;
   int id_;
-  ::google::protobuf::int32 duration_;
+  ::google::protobuf::int32 duration_ms_;
   ::google::protobuf::RepeatedPtrField< ::rogue::sprite::TextureRect > frame_;
   bool looping_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_animation_5fconfig_2eproto();
   friend void protobuf_AssignDesc_animation_5fconfig_2eproto();
@@ -296,85 +282,15 @@ class Animations : public ::google::protobuf::Message {
 
 // Animation
 
-// optional string name = 1;
-inline bool Animation::has_name() const {
+// optional .rogue.animation_config.AnimationId id = 1;
+inline bool Animation::has_id() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void Animation::set_has_name() {
+inline void Animation::set_has_id() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void Animation::clear_has_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Animation::clear_name() {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    name_->clear();
-  }
-  clear_has_name();
-}
-inline const ::std::string& Animation::name() const {
-  return *name_;
-}
-inline void Animation::set_name(const ::std::string& value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void Animation::set_name(const char* value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void Animation::set_name(const char* value, size_t size) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Animation::mutable_name() {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  return name_;
-}
-inline ::std::string* Animation::release_name() {
-  clear_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = name_;
-    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Animation::set_allocated_name(::std::string* name) {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    delete name_;
-  }
-  if (name) {
-    set_has_name();
-    name_ = name;
-  } else {
-    clear_has_name();
-    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// optional .rogue.animation_config.AnimationId id = 2;
-inline bool Animation::has_id() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Animation::set_has_id() {
-  _has_bits_[0] |= 0x00000002u;
-}
 inline void Animation::clear_has_id() {
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000001u;
 }
 inline void Animation::clear_id() {
   id_ = 0;
@@ -389,15 +305,15 @@ inline void Animation::set_id(::rogue::animation_config::AnimationId value) {
   id_ = value;
 }
 
-// optional string texture = 3;
+// optional string texture = 2;
 inline bool Animation::has_texture() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
 inline void Animation::set_has_texture() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000002u;
 }
 inline void Animation::clear_has_texture() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void Animation::clear_texture() {
   if (texture_ != &::google::protobuf::internal::kEmptyString) {
@@ -459,29 +375,29 @@ inline void Animation::set_allocated_texture(::std::string* texture) {
   }
 }
 
-// optional int32 duration = 4;
-inline bool Animation::has_duration() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+// optional int32 duration_ms = 3 [default = 1000];
+inline bool Animation::has_duration_ms() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void Animation::set_has_duration() {
-  _has_bits_[0] |= 0x00000008u;
+inline void Animation::set_has_duration_ms() {
+  _has_bits_[0] |= 0x00000004u;
 }
-inline void Animation::clear_has_duration() {
-  _has_bits_[0] &= ~0x00000008u;
+inline void Animation::clear_has_duration_ms() {
+  _has_bits_[0] &= ~0x00000004u;
 }
-inline void Animation::clear_duration() {
-  duration_ = 0;
-  clear_has_duration();
+inline void Animation::clear_duration_ms() {
+  duration_ms_ = 1000;
+  clear_has_duration_ms();
 }
-inline ::google::protobuf::int32 Animation::duration() const {
-  return duration_;
+inline ::google::protobuf::int32 Animation::duration_ms() const {
+  return duration_ms_;
 }
-inline void Animation::set_duration(::google::protobuf::int32 value) {
-  set_has_duration();
-  duration_ = value;
+inline void Animation::set_duration_ms(::google::protobuf::int32 value) {
+  set_has_duration_ms();
+  duration_ms_ = value;
 }
 
-// repeated .rogue.sprite.TextureRect frame = 5;
+// repeated .rogue.sprite.TextureRect frame = 4;
 inline int Animation::frame_size() const {
   return frame_.size();
 }
@@ -506,15 +422,15 @@ Animation::mutable_frame() {
   return &frame_;
 }
 
-// optional bool looping = 6 [default = false];
+// optional bool looping = 5 [default = false];
 inline bool Animation::has_looping() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void Animation::set_has_looping() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void Animation::clear_has_looping() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void Animation::clear_looping() {
   looping_ = false;

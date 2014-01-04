@@ -103,6 +103,7 @@
     <ClInclude Include="..\game_event_manager.hpp" />
     <ClInclude Include="..\game_player.hpp" />
     <ClInclude Include="..\game_state.hpp" />
+    <ClInclude Include="..\hotload_sprite.hpp" />
     <ClInclude Include="..\level.hpp" />
     <ClInclude Include="..\level_factory.hpp" />
     <ClInclude Include="..\loot_item.hpp" />
@@ -118,6 +119,7 @@
     <ClInclude Include="..\roguelike.hpp" />
     <ClInclude Include="..\spell.hpp" />
     <ClInclude Include="..\texture_cache.hpp" />
+    <ClInclude Include="..\texture_handle.hpp" />
     <ClInclude Include="..\tile.hpp" />
     <ClInclude Include="..\utils.hpp" />
     <ClInclude Include="..\window_event_manager.hpp" />
@@ -132,6 +134,7 @@
     <ClCompile Include="..\game_event_manager.cpp" />
     <ClCompile Include="..\game_player.cpp" />
     <ClCompile Include="..\game_state.cpp" />
+    <ClCompile Include="..\hotload_sprite.cpp" />
     <ClCompile Include="..\level.cpp" />
     <ClCompile Include="..\level_factory.cpp" />
     <ClCompile Include="..\loot_item.cpp" />
@@ -150,6 +153,7 @@
     <ClCompile Include="..\roguelike.cpp" />
     <ClCompile Include="..\spell.cpp" />
     <ClCompile Include="..\texture_cache.cpp" />
+    <ClCompile Include="..\texture_handle.cpp" />
     <ClCompile Include="..\tile.cpp" />
     <ClCompile Include="..\utils.cpp" />
     <ClCompile Include="..\window_event_manager.cpp" />

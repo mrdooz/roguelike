@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game_state.hpp"
+#include "texture_cache.hpp"
 
 namespace rogue
 {
@@ -41,6 +42,8 @@ namespace rogue
     WindowEventManager* GetWindowEventManager();
     GameEventManager* GetGameEventManager();
 
+    TextureCache* GetTextureCache();
+
   private:
     Game();
     ~Game();
@@ -77,6 +80,8 @@ namespace rogue
     WindowEventManager* _windowEventManager;
     GameEventManager* _gameEventManager;
 
+    TextureCache* _textureCache;
+
     deque<LogMessage> _playerMessages;
 
     string _appRoot;
@@ -87,5 +92,6 @@ namespace rogue
 #define GAME rogue::Game::instance()
 #define WINDOW_EVENT rogue::Game::instance().GetWindowEventManager()
 #define GAME_EVENT rogue::Game::instance().GetGameEventManager()
+#define TEXTURE_CACHE rogue::Game::instance().GetTextureCache()
 
 }

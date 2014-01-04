@@ -11,15 +11,21 @@
 using namespace rogue;
 
 //-----------------------------------------------------------------------------
-bool SpellBase::OnMonsterSelected(GameState& state, Monster* monster)
+bool SpellBase::IsValid(GameState& state, const Event& event)
 {
   return true;
 }
 
 //-----------------------------------------------------------------------------
+bool SpellBase::OnMonsterSelected(GameState& state, Monster* monster)
+{
+  return false;
+}
+
+//-----------------------------------------------------------------------------
 bool SpellBase::OnPlayerSelected(GameState& state, Player* player)
 {
-  return true;
+  return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -75,24 +81,6 @@ bool SpellCharge::IsValid(GameState& state, const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-bool SpellMightyBlow::IsValid(GameState& state, const Event& event)
-{
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-bool SpellLightningBolt::IsValid(GameState& state, const Event& event)
-{
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-bool SpellFireball::IsValid(GameState& state, const Event& event)
-{
-  return false;
-}
-
-//-----------------------------------------------------------------------------
 bool SpellArcaneBlast::Finished(const GameState& state)
 {
   return state._actionPhase >= 2;
@@ -107,8 +95,11 @@ Animation::Id SpellArcaneBlast::AnimationId()
 //-----------------------------------------------------------------------------
 bool SpellArcaneBlast::OnMonsterSelected(GameState& state, Monster* monster)
 {
-  GameEvent event(GameEvent::Type::Attack);
   Player* player = state.GetActivePlayer();
+  if (!state._level->IsVisible(player->GetPos(), monster->GetPos()))
+    return false;
+
+  GameEvent event(GameEvent::Type::Attack);
   event._agent = player;
   event._target = monster;
   event._spell = this;
@@ -120,19 +111,33 @@ bool SpellArcaneBlast::OnMonsterSelected(GameState& state, Monster* monster)
 }
 
 //-----------------------------------------------------------------------------
-bool SpellArcaneBlast::IsValid(GameState& state, const Event& event)
+bool SpellLightningBolt::OnMonsterSelected(GameState& state, Monster* monster)
 {
-  // Check if the current target is a monster within range
-  if (event.type == Event::MouseButtonReleased)
-  {
+  Player* player = state.GetActivePlayer();
+  if (!state._level->IsVisible(player->GetPos(), monster->GetPos()))
+    return false;
 
+  // Zap all mobs in the LOS
+  vector<Entity*> mobs;
+  state._level->EntitiesInPath(player->GetPos(), monster->GetPos(), &mobs);
+
+  for (auto& m : mobs)
+  {
+    GameEvent event(GameEvent::Type::Attack);
+    event._agent = player;
+    event._target = m;
+    event._spell = this;
+
+    event._damage = (5 * player->Level() + player->WeaponBonus());
+
+    GAME_EVENT->SendEvent(event);
   }
 
-  return false;
+  return true;
 }
 
 //-----------------------------------------------------------------------------
-bool SpellPoisonCloud::IsValid(GameState& state, const Event& event)
+Animation::Id SpellLightningBolt::AnimationId()
 {
-  return false;
+  return Animation::Id::LightningBolt;
 }

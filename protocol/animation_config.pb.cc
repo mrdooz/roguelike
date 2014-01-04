@@ -39,11 +39,10 @@ void protobuf_AssignDesc_animation_5fconfig_2eproto() {
       "animation_config.proto");
   GOOGLE_CHECK(file != NULL);
   Animation_descriptor_ = file->message_type(0);
-  static const int Animation_offsets_[6] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, name_),
+  static const int Animation_offsets_[5] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, texture_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, duration_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, duration_ms_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, frame_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, looping_),
   };
@@ -110,15 +109,15 @@ void protobuf_AddDesc_animation_5fconfig_2eproto() {
   ::rogue::sprite::protobuf_AddDesc_sprite_2eproto();
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\026animation_config.proto\022\026rogue.animatio"
-    "n_config\032\014sprite.proto\"\257\001\n\tAnimation\022\014\n\004"
-    "name\030\001 \001(\t\022/\n\002id\030\002 \001(\0162#.rogue.animation"
-    "_config.AnimationId\022\017\n\007texture\030\003 \001(\t\022\020\n\010"
-    "duration\030\004 \001(\005\022(\n\005frame\030\005 \003(\0132\031.rogue.sp"
-    "rite.TextureRect\022\026\n\007looping\030\006 \001(\010:\005false"
-    "\"B\n\nAnimations\0224\n\tanimation\030\001 \003(\0132!.rogu"
-    "e.animation_config.Animation*3\n\013Animatio"
-    "nId\022\010\n\004None\020\000\022\t\n\005Blood\020\001\022\017\n\013ArcaneBlast\020"
-    "\002", 361);
+    "n_config\032\014sprite.proto\"\252\001\n\tAnimation\022/\n\002"
+    "id\030\001 \001(\0162#.rogue.animation_config.Animat"
+    "ionId\022\017\n\007texture\030\002 \001(\t\022\031\n\013duration_ms\030\003 "
+    "\001(\005:\0041000\022(\n\005frame\030\004 \003(\0132\031.rogue.sprite."
+    "TextureRect\022\026\n\007looping\030\005 \001(\010:\005false\"B\n\nA"
+    "nimations\0224\n\tanimation\030\001 \003(\0132!.rogue.ani"
+    "mation_config.Animation*F\n\013AnimationId\022\010"
+    "\n\004None\020\000\022\t\n\005Blood\020\001\022\017\n\013ArcaneBlast\020\002\022\021\n\r"
+    "LightningBolt\020\003", 375);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "animation_config.proto", &protobuf_RegisterTypes);
   Animation::default_instance_ = new Animation();
@@ -143,6 +142,7 @@ bool AnimationId_IsValid(int value) {
     case 0:
     case 1:
     case 2:
+    case 3:
       return true;
     default:
       return false;
@@ -153,10 +153,9 @@ bool AnimationId_IsValid(int value) {
 // ===================================================================
 
 #ifndef _MSC_VER
-const int Animation::kNameFieldNumber;
 const int Animation::kIdFieldNumber;
 const int Animation::kTextureFieldNumber;
-const int Animation::kDurationFieldNumber;
+const int Animation::kDurationMsFieldNumber;
 const int Animation::kFrameFieldNumber;
 const int Animation::kLoopingFieldNumber;
 #endif  // !_MSC_VER
@@ -177,10 +176,9 @@ Animation::Animation(const Animation& from)
 
 void Animation::SharedCtor() {
   _cached_size_ = 0;
-  name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   id_ = 0;
   texture_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  duration_ = 0;
+  duration_ms_ = 1000;
   looping_ = false;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
@@ -190,9 +188,6 @@ Animation::~Animation() {
 }
 
 void Animation::SharedDtor() {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    delete name_;
-  }
   if (texture_ != &::google::protobuf::internal::kEmptyString) {
     delete texture_;
   }
@@ -223,18 +218,13 @@ Animation* Animation::New() const {
 
 void Animation::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (has_name()) {
-      if (name_ != &::google::protobuf::internal::kEmptyString) {
-        name_->clear();
-      }
-    }
     id_ = 0;
     if (has_texture()) {
       if (texture_ != &::google::protobuf::internal::kEmptyString) {
         texture_->clear();
       }
     }
-    duration_ = 0;
+    duration_ms_ = 1000;
     looping_ = false;
   }
   frame_.Clear();
@@ -248,27 +238,10 @@ bool Animation::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional string name = 1;
+      // optional .rogue.animation_config.AnimationId id = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_name()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-            this->name().data(), this->name().length(),
-            ::google::protobuf::internal::WireFormat::PARSE);
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(16)) goto parse_id;
-        break;
-      }
-
-      // optional .rogue.animation_config.AnimationId id = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_id:
           int value;
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
@@ -276,17 +249,17 @@ bool Animation::MergePartialFromCodedStream(
           if (::rogue::animation_config::AnimationId_IsValid(value)) {
             set_id(static_cast< ::rogue::animation_config::AnimationId >(value));
           } else {
-            mutable_unknown_fields()->AddVarint(2, value);
+            mutable_unknown_fields()->AddVarint(1, value);
           }
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(26)) goto parse_texture;
+        if (input->ExpectTag(18)) goto parse_texture;
         break;
       }
 
-      // optional string texture = 3;
-      case 3: {
+      // optional string texture = 2;
+      case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_texture:
@@ -298,28 +271,28 @@ bool Animation::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(32)) goto parse_duration;
+        if (input->ExpectTag(24)) goto parse_duration_ms;
         break;
       }
 
-      // optional int32 duration = 4;
-      case 4: {
+      // optional int32 duration_ms = 3 [default = 1000];
+      case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_duration:
+         parse_duration_ms:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &duration_)));
-          set_has_duration();
+                 input, &duration_ms_)));
+          set_has_duration_ms();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(42)) goto parse_frame;
+        if (input->ExpectTag(34)) goto parse_frame;
         break;
       }
 
-      // repeated .rogue.sprite.TextureRect frame = 5;
-      case 5: {
+      // repeated .rogue.sprite.TextureRect frame = 4;
+      case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_frame:
@@ -328,13 +301,13 @@ bool Animation::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(42)) goto parse_frame;
-        if (input->ExpectTag(48)) goto parse_looping;
+        if (input->ExpectTag(34)) goto parse_frame;
+        if (input->ExpectTag(40)) goto parse_looping;
         break;
       }
 
-      // optional bool looping = 6 [default = false];
-      case 6: {
+      // optional bool looping = 5 [default = false];
+      case 5: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_looping:
@@ -367,44 +340,35 @@ bool Animation::MergePartialFromCodedStream(
 
 void Animation::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // optional string name = 1;
-  if (has_name()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-      this->name().data(), this->name().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE);
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      1, this->name(), output);
-  }
-
-  // optional .rogue.animation_config.AnimationId id = 2;
+  // optional .rogue.animation_config.AnimationId id = 1;
   if (has_id()) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      2, this->id(), output);
+      1, this->id(), output);
   }
 
-  // optional string texture = 3;
+  // optional string texture = 2;
   if (has_texture()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->texture().data(), this->texture().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     ::google::protobuf::internal::WireFormatLite::WriteString(
-      3, this->texture(), output);
+      2, this->texture(), output);
   }
 
-  // optional int32 duration = 4;
-  if (has_duration()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->duration(), output);
+  // optional int32 duration_ms = 3 [default = 1000];
+  if (has_duration_ms()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->duration_ms(), output);
   }
 
-  // repeated .rogue.sprite.TextureRect frame = 5;
+  // repeated .rogue.sprite.TextureRect frame = 4;
   for (int i = 0; i < this->frame_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      5, this->frame(i), output);
+      4, this->frame(i), output);
   }
 
-  // optional bool looping = 6 [default = false];
+  // optional bool looping = 5 [default = false];
   if (has_looping()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->looping(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->looping(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -415,47 +379,37 @@ void Animation::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* Animation::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // optional string name = 1;
-  if (has_name()) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
-      this->name().data(), this->name().length(),
-      ::google::protobuf::internal::WireFormat::SERIALIZE);
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->name(), target);
-  }
-
-  // optional .rogue.animation_config.AnimationId id = 2;
+  // optional .rogue.animation_config.AnimationId id = 1;
   if (has_id()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      2, this->id(), target);
+      1, this->id(), target);
   }
 
-  // optional string texture = 3;
+  // optional string texture = 2;
   if (has_texture()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->texture().data(), this->texture().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->texture(), target);
+        2, this->texture(), target);
   }
 
-  // optional int32 duration = 4;
-  if (has_duration()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->duration(), target);
+  // optional int32 duration_ms = 3 [default = 1000];
+  if (has_duration_ms()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->duration_ms(), target);
   }
 
-  // repeated .rogue.sprite.TextureRect frame = 5;
+  // repeated .rogue.sprite.TextureRect frame = 4;
   for (int i = 0; i < this->frame_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
-        5, this->frame(i), target);
+        4, this->frame(i), target);
   }
 
-  // optional bool looping = 6 [default = false];
+  // optional bool looping = 5 [default = false];
   if (has_looping()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(6, this->looping(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->looping(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -469,40 +423,33 @@ int Animation::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // optional string name = 1;
-    if (has_name()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->name());
-    }
-
-    // optional .rogue.animation_config.AnimationId id = 2;
+    // optional .rogue.animation_config.AnimationId id = 1;
     if (has_id()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::EnumSize(this->id());
     }
 
-    // optional string texture = 3;
+    // optional string texture = 2;
     if (has_texture()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->texture());
     }
 
-    // optional int32 duration = 4;
-    if (has_duration()) {
+    // optional int32 duration_ms = 3 [default = 1000];
+    if (has_duration_ms()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->duration());
+          this->duration_ms());
     }
 
-    // optional bool looping = 6 [default = false];
+    // optional bool looping = 5 [default = false];
     if (has_looping()) {
       total_size += 1 + 1;
     }
 
   }
-  // repeated .rogue.sprite.TextureRect frame = 5;
+  // repeated .rogue.sprite.TextureRect frame = 4;
   total_size += 1 * this->frame_size();
   for (int i = 0; i < this->frame_size(); i++) {
     total_size +=
@@ -537,17 +484,14 @@ void Animation::MergeFrom(const Animation& from) {
   GOOGLE_CHECK_NE(&from, this);
   frame_.MergeFrom(from.frame_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_name()) {
-      set_name(from.name());
-    }
     if (from.has_id()) {
       set_id(from.id());
     }
     if (from.has_texture()) {
       set_texture(from.texture());
     }
-    if (from.has_duration()) {
-      set_duration(from.duration());
+    if (from.has_duration_ms()) {
+      set_duration_ms(from.duration_ms());
     }
     if (from.has_looping()) {
       set_looping(from.looping());
@@ -575,10 +519,9 @@ bool Animation::IsInitialized() const {
 
 void Animation::Swap(Animation* other) {
   if (other != this) {
-    std::swap(name_, other->name_);
     std::swap(id_, other->id_);
     std::swap(texture_, other->texture_);
-    std::swap(duration_, other->duration_);
+    std::swap(duration_ms_, other->duration_ms_);
     frame_.Swap(&other->frame_);
     std::swap(looping_, other->looping_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);

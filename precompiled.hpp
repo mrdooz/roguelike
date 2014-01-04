@@ -2,6 +2,11 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
+#include <SFML/Graphics/Export.hpp>
+#include <SFML/Graphics/Drawable.hpp>
+#include <SFML/Graphics/Transformable.hpp>
+#include <SFML/Graphics/Vertex.hpp>
+#include <SFML/Graphics/Rect.hpp>
 
 #ifdef _WIN32
   #include <windows.h>

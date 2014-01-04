@@ -42,6 +42,8 @@ namespace rogue
     bool calcPath(const Pos &start, const Pos &end, vector<Pos> *path);
 
     bool IsVisible(const Pos& a, const Pos& b);
+    void EntitiesInPath(const Pos& a, const Pos& b, vector<Entity*>* entities);
+
     Pos StepTowards(const Pos& a, const Pos& b);
 
     Player *playerAt(const Pos &pos);

@@ -79,18 +79,18 @@ namespace rogue
 
     map<LootItem::Type, Rect> _objectToTextureRect;
 
-    vector<Sprite> _tileSprites;
+    vector<HotloadSprite> _tileSprites;
     Pos _offset;
     int _leftMargin, _rightMargin, _topMargin, _bottomMargin;
     int _zoomLevel;
-    TextureCache _textureCache;
 
-    Font* _font;
-    Texture* _environmentTexture;
-    Texture* _characterTexture;
-    Texture* _objectTexture;
+    Font _font;
+    TextureHandle _environmentTexture;
+    TextureHandle _characterTexture;
+    TextureHandle _objectTexture;
 
-    Sprite _objectSprite;
+    HotloadSprite _objectSprite;
+
     Sprite _sprMain;
     Sprite _sprCharacter;
     Sprite _sprCombatLog;

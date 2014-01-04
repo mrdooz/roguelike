@@ -3,20 +3,19 @@ import "sprite.proto";
 
 enum AnimationId
 {
-	None 		= 0;
-	Blood 		= 1;
-	ArcaneBlast = 2;
+	None 			= 0;
+	Blood 			= 1;
+	ArcaneBlast 	= 2;
+	LightningBolt 	= 3;
 };
 
 message Animation
 {
-	optional string name = 1;
-	optional AnimationId id = 2;
-	optional string texture = 3;
-	// duration in ms
-	optional int32 duration = 4 [default=1000];
-	repeated sprite.TextureRect frame = 5;
-	optional bool looping = 6 [default=false];
+	optional AnimationId id = 1;
+	optional string texture = 2;
+	optional int32 duration_ms = 3 [default=1000];
+	repeated sprite.TextureRect frame = 4;
+	optional bool looping = 5 [default=false];
 };
 
 message Animations

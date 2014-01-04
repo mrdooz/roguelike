@@ -1,4 +1,5 @@
 #pragma once
+#include "hotload_sprite.hpp"
 
 namespace rogue
 {
@@ -20,12 +21,13 @@ namespace rogue
     {
       None,
       Blood,
-      ArcaneBlast
+      ArcaneBlast,
+      LightningBolt,
     };
 
-    Animation(Id id, const Texture& texture, time_duration duration);
+    Animation(Id id, const TextureHandle& texture, time_duration duration);
     Id _id;
-    Texture _texture;
+    TextureHandle _texture;
     time_duration _duration;
     vector<IntRect> _textureRects;
     bool _looping;
@@ -34,7 +36,7 @@ namespace rogue
   struct AnimationInstance
   {
     AnimationInstance();
-    Sprite _sprite;
+    HotloadSprite _sprite;
     Animation* _animation;
     ptime _startTime;
     ptime _endTime;
@@ -48,11 +50,11 @@ namespace rogue
   {
     public:
     void Init(
-        const Texture& texture, float scale,
+        const TextureHandle& texture, float scale,
         const Rect& south, const Rect& east, const Rect& north, const Rect& west);
 
     void Init(
-        const Texture& texture, float scale,
+        const TextureHandle& texture, float scale,
         const Rect& south, const Rect& southEast, const Rect& east, const Rect& northEast,
         const Rect& north, const Rect& northWest, const Rect& west, const Rect& southWest);
 
@@ -63,6 +65,6 @@ namespace rogue
     virtual void draw(RenderTarget& target, sf::RenderStates states) const;
   private:
     Rect _textureRects[8];
-    Sprite _sprite;
+    mutable HotloadSprite _sprite;
   };
 }

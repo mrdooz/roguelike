@@ -306,6 +306,50 @@ size_t Level::PosToIndex(const Pos& pos) const
 }
 
 //-----------------------------------------------------------------------------
+void Level::EntitiesInPath(const Pos& a, const Pos& b, vector<Entity*>* entities)
+{
+  entities->clear();
+
+  // Step from A to B, and return a list of entities hit
+  int dx = b.x - a.x;
+  int dy = b.y - a.y;
+
+  if (dx == 0 && dy == 0)
+    return;
+
+  int steps = IntAbs(dx) + IntAbs(dy);
+
+  int stepx = (dx << 16) / steps;
+  int stepy = (dy << 16) / steps;
+
+  int curx = a.x << 16;
+  int cury = a.y << 16;
+
+  int orgIdx = PosToIndex(Pos(curx >> 16, cury >> 16));
+
+  for (int i = 0; i < steps; ++i)
+  {
+    curx += stepx;
+    cury += stepy;
+
+    auto& tile = Get(curx >> 16, cury >> 16);
+    if (tile._type == Tile::Type::Wall)
+      return;
+
+    int curIdx = PosToIndex(Pos(curx >> 16, cury >> 16));
+    // Cheese a bit to avoid returning the starting tile
+    if (curIdx != orgIdx)
+    {
+      if (tile._monster)
+        entities->push_back(tile._monster);
+
+      if (tile._player)
+        entities->push_back(tile._player);
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
 bool Level::IsVisible(const Pos& a, const Pos& b)
 {
   // Step between 'a' and 'b', and return false is there is a wall between

@@ -38,12 +38,14 @@ Game::Game()
     , _debugRenderer(nullptr)
     , _windowEventManager(nullptr)
     , _gameEventManager(nullptr)
+    , _textureCache(nullptr)
 {
 }
 
 //-----------------------------------------------------------------------------
 Game::~Game()
 {
+  delete exch_null(_textureCache);
   delete exch_null(_playerFactory);
   delete exch_null(_gamePlayer);
   delete exch_null(_gameAI);
@@ -195,6 +197,7 @@ bool Game::init()
 
   _playerFactory = new PlayerFactory();
   _gameEventManager = new GameEventManager();
+  _textureCache = new TextureCache();
 
   _gameState._level = LevelFactory::CreateLevel(1,30,30);
 
@@ -286,6 +289,8 @@ int Game::run()
   // Start the game loop
   while (_window->isOpen())
   {
+    _textureCache->CheckForUpdates();
+
     if (_debugWindow && _debugRenderer)
       ProcessDebugWindow();
 
@@ -381,4 +386,10 @@ void Game::addLogMessage(const char *fmt, ...) {
 
   OutputDebugStringA(buf);
 #endif
+}
+
+//-----------------------------------------------------------------------------
+TextureCache* Game::GetTextureCache()
+{
+  return _textureCache;
 }

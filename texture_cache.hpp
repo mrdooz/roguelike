@@ -1,23 +1,30 @@
 #pragma once
+#include "texture_handle.hpp"
 
 namespace rogue
 {
-
-  // supersimple texture cache, just so i can map from string -> texture for config
   class TextureCache
   {
   public:
+    TextureCache();
     ~TextureCache();
 
-    Texture* LoadTexture(const string& filename);
-    Font* LoadFont(const string& filename);
+    void CheckForUpdates();
+    TextureHandle LoadTextureByHandle(const string& filename);
+    Texture* TextureByHandle(const TextureHandle& handle);
 
   private:
-    template <typename T>
-    T* LoadFromCache(const string& filename, unordered_map<string, T*>& cache);
+    struct TextureEntry
+    {
+      TextureEntry() : _texture(nullptr) {}
+      Texture* _texture;
+      time_t _last_modification;
+      string _filename;
+    };
 
-    unordered_map<string, Texture*> _textureCache;
-    unordered_map<string, Font*> _fontCache;
+    ptime _lastUpdate;
+    TextureEntry _elems[4096];
+    u16 _nextIdx;
+    unordered_map<string, TextureHandle> _filenameToHandle;
   };
-
 }

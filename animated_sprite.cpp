@@ -4,7 +4,7 @@
 using namespace rogue;
 
 //-----------------------------------------------------------------------------
-Animation::Animation(Id id, const Texture& texture, time_duration duration)
+Animation::Animation(Id id, const TextureHandle& texture, time_duration duration)
   : _id(id)
   , _texture(texture)
   , _duration(duration)
@@ -21,7 +21,9 @@ AnimationInstance::AnimationInstance()
 
 
 //-----------------------------------------------------------------------------
-void RotatedSprite::Init(const Texture& texture, float scale, const Rect& south, const Rect& east, const Rect& north, const Rect& west)
+void RotatedSprite::Init(
+    const TextureHandle& texture, float scale,
+    const Rect& south, const Rect& east, const Rect& north, const Rect& west)
 {
   _sprite.setTexture(texture);
   _sprite.setScale(scale, scale);
@@ -34,7 +36,7 @@ void RotatedSprite::Init(const Texture& texture, float scale, const Rect& south,
 
 //-----------------------------------------------------------------------------
 void RotatedSprite::Init(
-    const Texture& texture, float scale,
+    const TextureHandle& texture, float scale,
     const Rect& south, const Rect& southEast, const Rect& east, const Rect& northEast,
     const Rect& north, const Rect& northWest, const Rect& west, const Rect& southWest)
 {
@@ -71,5 +73,5 @@ void RotatedSprite::SetPosition(const Vector2f& pos)
 //-----------------------------------------------------------------------------
 void RotatedSprite::draw(RenderTarget& target, sf::RenderStates states) const
 {
-  target.draw(_sprite);
+  target.draw(_sprite, states);
 }

@@ -61,6 +61,7 @@ GamePlayer::GamePlayer(const fnTileAtPos& fnTileAtPos)
   : _fnTileAtPos(fnTileAtPos)
 {
   _actionMap[PlayerAction::ArcaneBlast] = new SpellArcaneBlast();
+  _actionMap[PlayerAction::LightningBolt] = new SpellLightningBolt();
 
   _actionMap[PlayerAction::MightyBlow] = new SpellMightyBlow();
   _actionMap[PlayerAction::Charge] = new SpellCharge();
@@ -69,11 +70,7 @@ GamePlayer::GamePlayer(const fnTileAtPos& fnTileAtPos)
 //-----------------------------------------------------------------------------
 GamePlayer::~GamePlayer()
 {
-  for (auto a : _actionMap)
-  {
-    delete a.second;
-  }
-  _actionMap.clear();
+  assoc_delete(&_actionMap);
 }
 
 //-----------------------------------------------------------------------------
@@ -245,7 +242,7 @@ bool GamePlayer::ValidMultiPhaseAction(GameState& state, const Event& event)
     { PlayerClass::kCleric, Keyboard::Num3, Keyboard::R, PlayerAction::Resurrect,         Selection::Player,    "Resurrect" },
 
     { PlayerClass::kWizard, Keyboard::Num0, Keyboard::A, PlayerAction::ArcaneBlast,       Selection::Monster,   "ArcaneBlast" },
-    { PlayerClass::kWizard, Keyboard::Num1, Keyboard::L, PlayerAction::LightningBolt,     Selection::None,      "LightningBolt" },
+    { PlayerClass::kWizard, Keyboard::Num1, Keyboard::L, PlayerAction::LightningBolt,     Selection::Any,       "LightningBolt" },
     { PlayerClass::kWizard, Keyboard::Num2, Keyboard::F, PlayerAction::Fireball,          Selection::Monster,   "Fireball" },
     { PlayerClass::kWizard, Keyboard::Num3, Keyboard::P, PlayerAction::PoisonCloud,       Selection::Any,       "PoisonCloud" },
 
@@ -265,7 +262,7 @@ bool GamePlayer::ValidMultiPhaseAction(GameState& state, const Event& event)
       if (cur._selection != Selection::None)
       {
         state._selection = (int)cur._selection;
-        state._selectionRange = 5;
+        state._selectionRange = 20;
         state._selectionOrg = player->GetPos();
       }
       else
@@ -402,21 +399,6 @@ bool GamePlayer::OnKeyPressed(const Event& event)
         validAction = true;
         nextPlayer = true;
         break;
-      }
-    }
-
-    // check for next phase of a multi phase action
-    if (state._actionPhase > 0)
-    {
-      // Find the current spell validator
-      auto it = _actionMap.find(state._playerAction);
-      if (it != _actionMap.end())
-      {
-        auto& spell = it->second;
-        if (spell->IsValid(state, event))
-        {
-
-        }
       }
     }
   }

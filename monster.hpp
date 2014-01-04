@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entity.hpp"
+#include "hotload_sprite.hpp"
 
 namespace rogue
 {
@@ -41,7 +42,7 @@ namespace rogue
     virtual void DebugDump(vector<string>& dump);
     virtual void DebugDraw(RenderTarget& rt);
 
-    sf::Sprite _sprite;
+    HotloadSprite _sprite;
     Type _type;
 
     Player* _aggroPlayer;
