@@ -48,7 +48,7 @@ TextureHandle TextureCache::LoadTextureByHandle(const string& filename)
   TextureEntry& entry = _elems[_nextIdx];
   entry._filename = filename;
   entry._texture = texture;
-  entry._last_modification = s.st_mtime;
+  entry._lastModification = s.st_mtime;
 
   return TextureHandle(TextureHandle::Type::Texture, _nextIdx++);
 }
@@ -60,7 +60,7 @@ Texture* TextureCache::TextureByHandle(const TextureHandle& handle)
 }
   
 //-----------------------------------------------------------------------------
-void TextureCache::CheckForUpdates()
+void TextureCache::CheckForReload()
 {
   // only update once per second
   ptime now = microsec_clock::local_time();
@@ -76,7 +76,7 @@ void TextureCache::CheckForUpdates()
     auto& elem = _elems[i];
     struct stat s;
     stat(elem._filename.c_str(), &s);
-    if (s.st_mtime > elem._last_modification)
+    if (s.st_mtime > elem._lastModification)
     {
       Texture* t = new Texture();
       if (t->loadFromFile(elem._filename))

@@ -9,7 +9,7 @@ namespace rogue
     TextureCache();
     ~TextureCache();
 
-    void CheckForUpdates();
+    void CheckForReload();
     TextureHandle LoadTextureByHandle(const string& filename);
     Texture* TextureByHandle(const TextureHandle& handle);
 
@@ -18,7 +18,7 @@ namespace rogue
     {
       TextureEntry() : _texture(nullptr) {}
       Texture* _texture;
-      time_t _last_modification;
+      time_t _lastModification;
       string _filename;
     };
 

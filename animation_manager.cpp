@@ -15,6 +15,23 @@ AnimationManager::~AnimationManager()
 }
 
 //-----------------------------------------------------------------------------
+void AnimationManager::CheckForReload()
+{
+  for (auto it = _lastModification.begin(); it != _lastModification.end(); ++it)
+  {
+    const char* filename = it->first.c_str();
+    struct stat s;
+    stat(filename, &s);
+    if (s.st_mtime > it->second)
+    {
+      // File on disk is newer
+      LoadAnimations(filename);
+      it->second = s.st_mtime;
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
 Animation* AnimationManager::FindAnimation(Animation::Id id)
 {
   auto it = _animationMap.find(id);
@@ -51,8 +68,29 @@ bool AnimationManager::LoadAnimations(const char* filename)
       auto& curFrame = cur.frame(j);
       anim->_textureRects.push_back(IntRect(curFrame.x(), curFrame.y(), curFrame.w(), curFrame.h()));
     }
-    _animationMap[anim->_id] = anim;
-  }
 
+    Animation*& prev = _animationMap[anim->_id];
+    delete exch_null(prev);
+    prev = anim;
+
+    // Add file to last modification map
+    auto it = _lastModification.find(filename);
+    if (it == _lastModification.end())
+    {
+      struct stat s;
+      stat(filename, &s);
+      _lastModification[filename] = s.st_mtime;
+    }
+  }
   return true;
+}
+
+//-----------------------------------------------------------------------------
+void AnimationManager::GetAnimations(vector<Animation*>* animations)
+{
+  animations->clear();
+  for (auto& a: _animationMap)
+  {
+    animations->push_back(a.second);
+  }
 }

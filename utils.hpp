@@ -86,4 +86,10 @@ namespace rogue
 
   bool LoadFile(const char* filename, vector<char>* buf);
   bool LoadFile(const char* filename, string* str);
+
+  template <typename T>
+  T Clamp(T v, T minValue, T maxValue)
+  {
+    return max(minValue, min(maxValue, v));
+  }
 }

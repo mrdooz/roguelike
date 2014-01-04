@@ -292,7 +292,8 @@ int Game::run()
   // Start the game loop
   while (_window->isOpen())
   {
-    _textureCache->CheckForUpdates();
+    _textureCache->CheckForReload();
+    _animationManager->CheckForReload();
 
     if (_debugWindow && _debugRenderer)
       ProcessDebugWindow();
