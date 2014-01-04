@@ -8,7 +8,7 @@
 #include "game.hpp"
 #include "window_event_manager.hpp"
 #include "spell.hpp"
-#include "protocol/animation_config.pb.h"
+#include "animation_manager.hpp"
 
 using namespace rogue;
 
@@ -52,9 +52,6 @@ Renderer::Renderer(sf::RenderWindow *window)
 //-----------------------------------------------------------------------------
 Renderer::~Renderer()
 {
-  for (const auto& a : _animationMap)
-    delete a.second;
-  _animationMap.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -689,8 +686,6 @@ bool Renderer::Init(const GameState& state)
     }
   }
 
-  InitAnimations();
-
   OnResize(Event());
 
   return true;
@@ -733,56 +728,19 @@ void Renderer::AddAnimation(
     const Pos& endPos,
     const time_duration& duration)
 {
-  auto it = _animationMap.find(id);
-  if (it == _animationMap.end())
+  Animation* animation = ANIMATION->FindAnimation(id);
+  if (!animation)
   {
-    //LOG_WARN(LogKeyValue("Unable to find animation"));
     return;
   }
 
   AnimationInstance instance;
-  instance._animation = it->second;
+  instance._animation = animation;
   instance._startTime = microsec_clock::local_time();
   instance._endTime = instance._startTime + duration;
   instance._startPos = startPos;
   instance._endPos = endPos;
   instance._duration = duration;
-  instance._sprite.setTexture(it->second->_texture);
+  instance._sprite.setTexture(animation->_texture);
   _activeAnimations.push_back(instance);
-}
-
-//-----------------------------------------------------------------------------
-bool Renderer::InitAnimations()
-{
-  rogue::animation_config::Animations animations;
-  
-  string str;
-  if (!LoadFile("config/animation_config.pb", &str))
-    return false;
-
-  if (!TextFormat::ParseFromString(str, &animations))
-    return false;
-
-  for (int i = 0; i < animations.animation_size(); ++i)
-  {
-    auto& cur = animations.animation(i);
-    TextureHandle texture = TEXTURE_CACHE->LoadTextureByHandle(cur.texture());
-    if (!texture)
-    {
-      //LOG_WARN("unable to find texture")..
-      return false;
-    }
-    Animation* anim = new Animation((Animation::Id)cur.id(), texture, milliseconds(cur.duration_ms()));
-    anim->_looping = cur.looping();
-
-    // Load the animation frames
-    for (int j = 0; j < cur.frame_size(); ++j)
-    {
-      auto& curFrame = cur.frame(j);
-      anim->_textureRects.push_back(IntRect(curFrame.x(), curFrame.y(), curFrame.w(), curFrame.h()));
-    }
-    _animationMap[anim->_id] = anim;
-  }
-
-  return true;
 }

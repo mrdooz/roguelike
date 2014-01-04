@@ -1,6 +1,6 @@
 #pragma once
 
-#include "animated_sprite.hpp"
+#include "animation.hpp"
 
 namespace rogue
 {

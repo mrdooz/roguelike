@@ -14,6 +14,7 @@
 #include "game_player.hpp"
 #include "game_ai.hpp"
 #include "game_event_manager.hpp"
+#include "animation_manager.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -40,6 +41,7 @@ Game::Game()
     , _debugWindowEventManager(nullptr)
     , _gameEventManager(nullptr)
     , _textureCache(nullptr)
+    , _animationManager(nullptr)
 {
 }
 
@@ -47,6 +49,7 @@ Game::Game()
 Game::~Game()
 {
   delete exch_null(_textureCache);
+  delete exch_null(_animationManager);
   delete exch_null(_playerFactory);
   delete exch_null(_gamePlayer);
   delete exch_null(_gameAI);
@@ -197,6 +200,11 @@ bool Game::init()
   _playerFactory = new PlayerFactory();
   _gameEventManager = new GameEventManager();
   _textureCache = new TextureCache();
+  _animationManager = new AnimationManager();
+  if (!_animationManager->LoadAnimations("config/animation_config.pb"))
+  {
+    return false;
+  }
 
   _gameState._level = LevelFactory::CreateLevel(1,30,30);
 
@@ -371,4 +379,10 @@ void Game::AddPlayerMessage(const time_duration& duration, const char* fmt, ...)
 TextureCache* Game::GetTextureCache()
 {
   return _textureCache;
+}
+
+//-----------------------------------------------------------------------------
+AnimationManager* Game::GetAnimationManager()
+{
+  return _animationManager;
 }

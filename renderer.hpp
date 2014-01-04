@@ -2,6 +2,7 @@
 
 #include "game_event_manager.hpp"
 #include "level.hpp"
+#include "animation.hpp"
 #include "animated_sprite.hpp"
 #include "texture_cache.hpp"
 
@@ -67,7 +68,6 @@ namespace rogue
         const Pos& startPos,
         const Pos& endPos,
         const time_duration& duration);
-    bool InitAnimations();
 
     Pos HalfOffset() const;
 
@@ -98,7 +98,6 @@ namespace rogue
     RenderTexture _rtCharacterPane;
     RenderTexture _rtCombatLog;
 
-    map<Animation::Id, Animation*> _animationMap;
     deque<AnimationInstance> _activeAnimations;
 
     Entity* _debugDump;

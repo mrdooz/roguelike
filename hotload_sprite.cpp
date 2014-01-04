@@ -1,15 +1,9 @@
 #include "hotload_sprite.hpp"
 #include "game.hpp"
+#include "texture_cache.hpp"
 
 using namespace rogue;
 using namespace sf;
-
-
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Texture.hpp>
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <cmath>
-
 
 ////////////////////////////////////////////////////////////
 HotloadSprite::HotloadSprite() :

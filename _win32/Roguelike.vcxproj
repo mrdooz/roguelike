@@ -95,6 +95,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\animated_sprite.hpp" />
+    <ClInclude Include="..\animation.hpp" />
+    <ClInclude Include="..\animation_manager.hpp" />
     <ClInclude Include="..\debug_renderer.hpp" />
     <ClInclude Include="..\entity.hpp" />
     <ClInclude Include="..\error.hpp" />
@@ -126,6 +128,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\animated_sprite.cpp" />
+    <ClCompile Include="..\animation.cpp" />
+    <ClCompile Include="..\animation_manager.cpp" />
     <ClCompile Include="..\debug_renderer.cpp" />
     <ClCompile Include="..\entity.cpp" />
     <ClCompile Include="..\error.cpp" />
