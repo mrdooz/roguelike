@@ -45,6 +45,8 @@ Renderer::Renderer(sf::RenderWindow *window)
   , _zoomLevel(3)
   , _debugDump(nullptr)
 {
+  WINDOW_EVENT->RegisterHandler(Event::Resized, bind(&Renderer::OnResize, this, _1));
+  WINDOW_EVENT->RegisterHandler(Event::MouseMoved, bind(&Renderer::OnMouseMove, this, _1));
 }
 
 //-----------------------------------------------------------------------------
@@ -161,7 +163,7 @@ void Renderer::VisibleArea(const Level* level, int* rows, int* cols) const
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::Resize(const GameState& state)
+bool Renderer::OnResize(const Event& event)
 {
   auto windowSize = _window->getSize();
 
@@ -175,6 +177,8 @@ void Renderer::Resize(const GameState& state)
   _rtCombatLog.create(windowSize.x - _rightMargin, _bottomMargin);
   _sprCombatLog.setTexture(_rtCombatLog.getTexture());
   _sprCombatLog.setPosition(0, (float)(windowSize.y - _bottomMargin));
+  
+  return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -439,8 +443,11 @@ int Renderer::TileAtPos(const GameState& state, int x, int y) const
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::OnMouseMove(const GameState& state, int x, int y, bool hover)
+bool Renderer::OnMouseMove(const Event& event)
 {
+  const GameState& state = GAME.GetGameState();
+  int x = event.mouseMove.x;
+  int y = event.mouseMove.y;
   auto level = state._level;
 
   if (_prevSelected != -1)
@@ -449,9 +456,11 @@ void Renderer::OnMouseMove(const GameState& state, int x, int y, bool hover)
   int idx = TileAtPos(state, x, y);
   _prevSelected = idx;
   if (idx == -1)
-    return;
+    return false;
 
   level->_tiles[idx]._selected = true;
+
+  return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -682,7 +691,7 @@ bool Renderer::Init(const GameState& state)
 
   InitAnimations();
 
-  Resize(state);
+  OnResize(Event());
 
   return true;
 }

@@ -10,8 +10,8 @@ namespace rogue
     DebugRenderer(RenderWindow *window);
 
     bool Init();
-    void Resize();
-    void Update(const GameState& state, const Event* event);
+    bool OnResize(const Event& event);
+    void Update();
   private:
 
     RenderWindow *_window;

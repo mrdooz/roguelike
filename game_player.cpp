@@ -24,36 +24,6 @@ namespace
     }
     return false;
   }
-
-#if 0
-  static bool isTwoPhaseAction(PlayerAction action)
-  {
-    return action == PlayerAction::kMeleeAttack
-    || action == PlayerAction::kRangedAttack
-    || action == PlayerAction::kSpellAttack;
-  }
-
-  bool keyToTwoPhase(sf::Keyboard::Key code, PlayerAction *action)
-  {
-    switch (code)
-    {
-      case sf::Keyboard::A: *action = PlayerAction::kMeleeAttack; return true;
-      case sf::Keyboard::R: *action = PlayerAction::kRangedAttack; return true;
-      case sf::Keyboard::S: *action = PlayerAction::kSpellAttack; return true;
-    }
-    return false;
-  }
-  //-----------------------------------------------------------------------------
-  void HandleAttack(GameState& state, Player *player, Monster *monster)
-  {
-    if (0 == --monster->_health)
-    {
-      state._level->monsterKilled(monster);
-//      GAME.addLogMessage("Player %s killed monster!\n", player->_name.c_str());
-    }
-  }
-#endif
-
 }
 
 //-----------------------------------------------------------------------------

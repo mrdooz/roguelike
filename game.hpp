@@ -34,12 +34,11 @@ namespace rogue
     int run();
 
     void AddPlayerMessage(const time_duration& duration, const char* fmt, ...);
-    void addLogMessage(const char *fmt, ...);
 
     GameState& GetGameState();
-    void SetGameState(const GameState& state);
 
     WindowEventManager* GetWindowEventManager();
+    WindowEventManager* GetDebugWindowEventManager();
     GameEventManager* GetGameEventManager();
 
     TextureCache* GetTextureCache();
@@ -52,7 +51,7 @@ namespace rogue
     bool InitDebugWindow();
 
     bool OnMouseMove(const Event& event);
-    bool OnResized(const Event& event);
+    bool OnResize(const Event& event);
 
     void ProcessMainWindow();
     void ProcessDebugWindow();
@@ -78,6 +77,7 @@ namespace rogue
     DebugRenderer* _debugRenderer;
 
     WindowEventManager* _windowEventManager;
+    WindowEventManager* _debugWindowEventManager;
     GameEventManager* _gameEventManager;
 
     TextureCache* _textureCache;
@@ -91,6 +91,7 @@ namespace rogue
 
 #define GAME rogue::Game::instance()
 #define WINDOW_EVENT rogue::Game::instance().GetWindowEventManager()
+#define DEBUG_WINDOW_EVENT rogue::Game::instance().GetDebugWindowEventManager()
 #define GAME_EVENT rogue::Game::instance().GetGameEventManager()
 #define TEXTURE_CACHE rogue::Game::instance().GetTextureCache()
 

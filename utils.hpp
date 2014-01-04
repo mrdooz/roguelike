@@ -2,6 +2,10 @@
 
 #define ELEMS_IN_ARRAY(x) sizeof(x) / sizeof((x)[0])
 
+#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
+  TypeName(const TypeName&);   \
+  void operator=(const TypeName&)
+
 namespace rogue
 {
   template <class T>

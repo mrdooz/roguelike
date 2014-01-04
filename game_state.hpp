@@ -1,4 +1,5 @@
 #pragma once
+#include "utils.hpp"
 
 namespace rogue
 {
@@ -67,6 +68,9 @@ namespace rogue
     PlayerAction _playerAction;
     SpellBase* _curSpell;
     bool _monsterPhase;
+
+  private:
+    DISALLOW_COPY_AND_ASSIGN(GameState);
   };
 
   void UpdateState(GameState& state, Event* event);

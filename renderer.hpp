@@ -19,11 +19,11 @@ namespace rogue
 
     bool Init(const GameState& state);
     void DrawWorld(const GameState& state);
-    void Resize(const GameState& state);
+
+    bool OnResize(const Event& event);
+    bool OnMouseMove(const Event& event);
 
     void Update(const GameState& state, const sf::Event* event);
-
-    void OnMouseMove(const GameState& state, int x, int y, bool hover);
 
     // Given the x/y window coordinates, return the tile at that position
     int TileAtPos(const GameState& state, int x, int y) const;

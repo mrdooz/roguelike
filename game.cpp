@@ -21,7 +21,7 @@
 #include <CoreGraphics/CGDirectDisplay.h>
 #endif
 
-//#define USE_DEBUG_WINDOW
+#define USE_DEBUG_WINDOW
 
 using namespace rogue;
 
@@ -37,6 +37,7 @@ Game::Game()
     , _renderer(nullptr)
     , _debugRenderer(nullptr)
     , _windowEventManager(nullptr)
+    , _debugWindowEventManager(nullptr)
     , _gameEventManager(nullptr)
     , _textureCache(nullptr)
 {
@@ -56,6 +57,7 @@ Game::~Game()
   delete exch_null(_debugWindow);
 #endif
   delete exch_null(_windowEventManager);
+  delete exch_null(_debugWindowEventManager);
   delete exch_null(_gameEventManager);
 }
 
@@ -83,6 +85,12 @@ Game &Game::instance()
 }
 
 //-----------------------------------------------------------------------------
+WindowEventManager* Game::GetDebugWindowEventManager()
+{
+  return _debugWindowEventManager;
+}
+
+//-----------------------------------------------------------------------------
 WindowEventManager* Game::GetWindowEventManager()
 {
   return _windowEventManager;
@@ -98,12 +106,6 @@ GameEventManager* Game::GetGameEventManager()
 GameState& Game::GetGameState()
 {
   return _gameState;
-}
-
-//-----------------------------------------------------------------------------
-void Game::SetGameState(const GameState& state)
-{
-  _gameState = state;
 }
 
 //-----------------------------------------------------------------------------
@@ -131,21 +133,13 @@ void Game::CreateParty()
 }
 
 //-----------------------------------------------------------------------------
-bool Game::OnMouseMove(const Event& event)
-{
-  _renderer->OnMouseMove(_gameState, event.mouseMove.x, event.mouseMove.y, true);
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-bool Game::OnResized(const Event& event)
+bool Game::OnResize(const Event& event)
 {
   size_t width = event.size.width;
   size_t height = event.size.height;
   _window->setView(sf::View(sf::FloatRect(0,0,(float)width, (float)height)));
-  _renderer->Resize(_gameState);
 
-  return true;
+  return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -163,11 +157,12 @@ bool Game::InitMainWindow()
 
   _window = new sf::RenderWindow(sf::VideoMode(8 * width / 10, 8 * height / 10), "...");
   _window->setFramerateLimit(60);
-  _windowEventManager = new WindowEventManager(_window);
 
-  _windowEventManager->RegisterHandler(Event::MouseMoved, bind(&Game::OnMouseMove, this, _1));
-  _windowEventManager->RegisterHandler(Event::Resized, bind(&Game::OnResized, this, _1));
+  // Note, to avoid bugs having to do with registering handlers pointing to NULL objects,
+  // it's easier if classes register themselves in their ctors
+  _windowEventManager = new WindowEventManager(_window);
   _windowEventManager->RegisterHandler(Event::Closed, [this](const Event&) { _window->close(); return true; });
+  _windowEventManager->RegisterHandler(Event::Resized, bind(&Game::OnResize, this, _1));
 
   _renderer = new Renderer(_window);
   if (!_renderer->Init(_gameState))
@@ -183,9 +178,13 @@ bool Game::InitMainWindow()
 bool Game::InitDebugWindow()
 {
   _debugWindow = new sf::RenderWindow(sf::VideoMode(800, 600), "debug");
+  _debugWindow->setFramerateLimit(60);
+  _debugWindowEventManager = new WindowEventManager(_debugWindow);
+
   _debugRenderer = new DebugRenderer(_debugWindow);
   if (!_debugRenderer->Init())
     return false;
+
 
   return true;
 }
@@ -243,14 +242,10 @@ void Game::ProcessDebugWindow()
 {
 #ifdef USE_DEBUG_WINDOW
   _debugWindow->setActive();
-  sf::Event event;
-  while (_debugWindow->pollEvent(event))
-  {
-    _debugRenderer->Update(_gameState, &event);
-  }
 
+  _debugWindowEventManager->Poll();
   _debugWindow->clear();
-  _debugRenderer->Update(_gameState, nullptr);
+  _debugRenderer->Update();
   _debugWindow->display();
 #endif
 }
@@ -370,22 +365,6 @@ void Game::AddPlayerMessage(const time_duration& duration, const char* fmt, ...)
   va_start(args, fmt);
   _playerMessages.emplace_back(expiry, ToString(fmt, args));
   va_end(args);
-}
-
-void Game::addLogMessage(const char *fmt, ...) {
-
-#ifdef _WIN32
-  va_list arg;
-  va_start(arg, fmt);
-
-  const int len = _vscprintf(fmt, arg) + 1;
-
-  char* buf = (char*)_alloca(len);
-  vsprintf_s(buf, len, fmt, arg);
-  va_end(arg);
-
-  OutputDebugStringA(buf);
-#endif
 }
 
 //-----------------------------------------------------------------------------

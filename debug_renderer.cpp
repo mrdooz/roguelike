@@ -1,13 +1,18 @@
 #include "debug_renderer.hpp"
+#include "game.hpp"
+#include "window_event_manager.hpp"
 
 using namespace rogue;
 
+//-----------------------------------------------------------------------------
 DebugRenderer::DebugRenderer(RenderWindow *window)
   : _window(window)
   , _font(nullptr)
 {
+  DEBUG_WINDOW_EVENT->RegisterHandler(Event::Resized, bind(&DebugRenderer::OnResize, this, _1));
 }
 
+//-----------------------------------------------------------------------------
 bool DebugRenderer::Init()
 {
   _font = new sf::Font();
@@ -17,12 +22,14 @@ bool DebugRenderer::Init()
   return true;
 }
 
-void DebugRenderer::Resize()
+//-----------------------------------------------------------------------------
+bool DebugRenderer::OnResize(const Event& event)
 {
-
+  return false;
 }
 
-void DebugRenderer::Update(const GameState& state, const sf::Event* event)
+//-----------------------------------------------------------------------------
+void DebugRenderer::Update()
 {
   sf::Text normal("", *_font, 10);
   normal.setString("test");
