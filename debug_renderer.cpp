@@ -75,7 +75,7 @@ void DebugRenderer::Update()
   _curAnimation = Clamp(_curAnimation, 0, (int)animations.size() - 1);
 
   Animation* animation = animations[_curAnimation];
-  size_t numFrames = animation->_textureRects.size();
+  size_t numFrames = animation->_frames.size();
 
   // Set the animation texture for the sprites
   _animationSprite.setTexture(animation->_texture);
@@ -84,7 +84,7 @@ void DebugRenderer::Update()
   // Draw header
   sf::Text normal("", *_font, 15);
   normal.setString(toString("Animation: %d [%d frames, %d ms]",
-      _curAnimation, animation->_textureRects.size(), animation->_duration.total_milliseconds()));
+      _curAnimation, numFrames, animation->_duration.total_milliseconds()));
   normal.setPosition(sf::Vector2f(5, 5));
   normal.setColor(sf::Color::White);
   _window->draw(normal);
@@ -93,30 +93,34 @@ void DebugRenderer::Update()
   Vector2f pos(10, 25);
   for (size_t i = 0; i < numFrames; ++i)
   {
-    auto& frame = animation->_textureRects[i];
+    auto& frame = animation->_frames[i];
     auto& sprite = _animationFrames[i];
     sprite.setScale((float)_curZoom, (float)_curZoom);
-    sprite.setTextureRect(frame);
+    sprite.setTextureRect(frame._textureRect);
     sprite.setTexture(animation->_texture);
     sprite.setPosition(pos);
-    pos.x += (i == numFrames - 1 ? 2 : 1) * frame.width * _curZoom;
+    pos.x += (i == numFrames - 1 ? 2 : 1) * frame._textureRect.width * _curZoom;
     _window->draw(sprite);
   }
 
   // Draw the current frame
   float ratio = delta.total_milliseconds() / (float)animation->_duration.total_milliseconds();
 
-  size_t rectIdx;
+  size_t frameIdx;
+  size_t weightSum = animation->_weightSum;
   if (_playOnce)
   {
-    rectIdx = min((size_t)(ratio * numFrames), numFrames - 1);
+    frameIdx = min((size_t)(ratio * weightSum), weightSum - 1);
   }
   else
   {
-    rectIdx = (size_t)(ratio * numFrames) % numFrames;
+    frameIdx = (size_t)(ratio * weightSum) % weightSum;
   }
 
-  _animationSprite.setTextureRect(animation->_textureRects[rectIdx]);
+  // apply frame weights
+  frameIdx = animation->_frameIndex[frameIdx];
+
+  _animationSprite.setTextureRect(animation->_frames[frameIdx]._textureRect);
   _animationSprite.setPosition(pos);
   _animationSprite.setScale((float)_curZoom, (float)_curZoom);
   _window->draw(_animationSprite);

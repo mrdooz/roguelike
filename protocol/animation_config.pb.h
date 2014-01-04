@@ -36,6 +36,7 @@ void  protobuf_AddDesc_animation_5fconfig_2eproto();
 void protobuf_AssignDesc_animation_5fconfig_2eproto();
 void protobuf_ShutdownFile_animation_5fconfig_2eproto();
 
+class Frame;
 class Animation;
 class Animations;
 
@@ -61,6 +62,100 @@ inline bool AnimationId_Parse(
     AnimationId_descriptor(), name, value);
 }
 // ===================================================================
+
+class Frame : public ::google::protobuf::Message {
+ public:
+  Frame();
+  virtual ~Frame();
+
+  Frame(const Frame& from);
+
+  inline Frame& operator=(const Frame& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Frame& default_instance();
+
+  void Swap(Frame* other);
+
+  // implements Message ----------------------------------------------
+
+  Frame* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Frame& from);
+  void MergeFrom(const Frame& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int32 weight = 1 [default = 1];
+  inline bool has_weight() const;
+  inline void clear_weight();
+  static const int kWeightFieldNumber = 1;
+  inline ::google::protobuf::int32 weight() const;
+  inline void set_weight(::google::protobuf::int32 value);
+
+  // optional .rogue.sprite.TextureRect texture_rect = 2;
+  inline bool has_texture_rect() const;
+  inline void clear_texture_rect();
+  static const int kTextureRectFieldNumber = 2;
+  inline const ::rogue::sprite::TextureRect& texture_rect() const;
+  inline ::rogue::sprite::TextureRect* mutable_texture_rect();
+  inline ::rogue::sprite::TextureRect* release_texture_rect();
+  inline void set_allocated_texture_rect(::rogue::sprite::TextureRect* texture_rect);
+
+  // @@protoc_insertion_point(class_scope:rogue.animation_config.Frame)
+ private:
+  inline void set_has_weight();
+  inline void clear_has_weight();
+  inline void set_has_texture_rect();
+  inline void clear_has_texture_rect();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::rogue::sprite::TextureRect* texture_rect_;
+  ::google::protobuf::int32 weight_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_animation_5fconfig_2eproto();
+  friend void protobuf_AssignDesc_animation_5fconfig_2eproto();
+  friend void protobuf_ShutdownFile_animation_5fconfig_2eproto();
+
+  void InitAsDefaultInstance();
+  static Frame* default_instance_;
+};
+// -------------------------------------------------------------------
 
 class Animation : public ::google::protobuf::Message {
  public:
@@ -142,16 +237,16 @@ class Animation : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 duration_ms() const;
   inline void set_duration_ms(::google::protobuf::int32 value);
 
-  // repeated .rogue.sprite.TextureRect frame = 4;
+  // repeated .rogue.animation_config.Frame frame = 4;
   inline int frame_size() const;
   inline void clear_frame();
   static const int kFrameFieldNumber = 4;
-  inline const ::rogue::sprite::TextureRect& frame(int index) const;
-  inline ::rogue::sprite::TextureRect* mutable_frame(int index);
-  inline ::rogue::sprite::TextureRect* add_frame();
-  inline const ::google::protobuf::RepeatedPtrField< ::rogue::sprite::TextureRect >&
+  inline const ::rogue::animation_config::Frame& frame(int index) const;
+  inline ::rogue::animation_config::Frame* mutable_frame(int index);
+  inline ::rogue::animation_config::Frame* add_frame();
+  inline const ::google::protobuf::RepeatedPtrField< ::rogue::animation_config::Frame >&
       frame() const;
-  inline ::google::protobuf::RepeatedPtrField< ::rogue::sprite::TextureRect >*
+  inline ::google::protobuf::RepeatedPtrField< ::rogue::animation_config::Frame >*
       mutable_frame();
 
   // optional bool looping = 5 [default = false];
@@ -177,7 +272,7 @@ class Animation : public ::google::protobuf::Message {
   ::std::string* texture_;
   int id_;
   ::google::protobuf::int32 duration_ms_;
-  ::google::protobuf::RepeatedPtrField< ::rogue::sprite::TextureRect > frame_;
+  ::google::protobuf::RepeatedPtrField< ::rogue::animation_config::Frame > frame_;
   bool looping_;
 
   mutable int _cached_size_;
@@ -279,6 +374,70 @@ class Animations : public ::google::protobuf::Message {
 
 
 // ===================================================================
+
+// Frame
+
+// optional int32 weight = 1 [default = 1];
+inline bool Frame::has_weight() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Frame::set_has_weight() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Frame::clear_has_weight() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Frame::clear_weight() {
+  weight_ = 1;
+  clear_has_weight();
+}
+inline ::google::protobuf::int32 Frame::weight() const {
+  return weight_;
+}
+inline void Frame::set_weight(::google::protobuf::int32 value) {
+  set_has_weight();
+  weight_ = value;
+}
+
+// optional .rogue.sprite.TextureRect texture_rect = 2;
+inline bool Frame::has_texture_rect() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void Frame::set_has_texture_rect() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void Frame::clear_has_texture_rect() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void Frame::clear_texture_rect() {
+  if (texture_rect_ != NULL) texture_rect_->::rogue::sprite::TextureRect::Clear();
+  clear_has_texture_rect();
+}
+inline const ::rogue::sprite::TextureRect& Frame::texture_rect() const {
+  return texture_rect_ != NULL ? *texture_rect_ : *default_instance_->texture_rect_;
+}
+inline ::rogue::sprite::TextureRect* Frame::mutable_texture_rect() {
+  set_has_texture_rect();
+  if (texture_rect_ == NULL) texture_rect_ = new ::rogue::sprite::TextureRect;
+  return texture_rect_;
+}
+inline ::rogue::sprite::TextureRect* Frame::release_texture_rect() {
+  clear_has_texture_rect();
+  ::rogue::sprite::TextureRect* temp = texture_rect_;
+  texture_rect_ = NULL;
+  return temp;
+}
+inline void Frame::set_allocated_texture_rect(::rogue::sprite::TextureRect* texture_rect) {
+  delete texture_rect_;
+  texture_rect_ = texture_rect;
+  if (texture_rect) {
+    set_has_texture_rect();
+  } else {
+    clear_has_texture_rect();
+  }
+}
+
+// -------------------------------------------------------------------
 
 // Animation
 
@@ -397,27 +556,27 @@ inline void Animation::set_duration_ms(::google::protobuf::int32 value) {
   duration_ms_ = value;
 }
 
-// repeated .rogue.sprite.TextureRect frame = 4;
+// repeated .rogue.animation_config.Frame frame = 4;
 inline int Animation::frame_size() const {
   return frame_.size();
 }
 inline void Animation::clear_frame() {
   frame_.Clear();
 }
-inline const ::rogue::sprite::TextureRect& Animation::frame(int index) const {
+inline const ::rogue::animation_config::Frame& Animation::frame(int index) const {
   return frame_.Get(index);
 }
-inline ::rogue::sprite::TextureRect* Animation::mutable_frame(int index) {
+inline ::rogue::animation_config::Frame* Animation::mutable_frame(int index) {
   return frame_.Mutable(index);
 }
-inline ::rogue::sprite::TextureRect* Animation::add_frame() {
+inline ::rogue::animation_config::Frame* Animation::add_frame() {
   return frame_.Add();
 }
-inline const ::google::protobuf::RepeatedPtrField< ::rogue::sprite::TextureRect >&
+inline const ::google::protobuf::RepeatedPtrField< ::rogue::animation_config::Frame >&
 Animation::frame() const {
   return frame_;
 }
-inline ::google::protobuf::RepeatedPtrField< ::rogue::sprite::TextureRect >*
+inline ::google::protobuf::RepeatedPtrField< ::rogue::animation_config::Frame >*
 Animation::mutable_frame() {
   return &frame_;
 }

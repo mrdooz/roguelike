@@ -699,7 +699,7 @@ void Renderer::DrawAnimations()
   for (auto it = _activeAnimations.begin(); it != _activeAnimations.end(); )
   {
     auto& instance = *it;
-    auto animation = instance._animation;
+    const Animation* animation = instance._animation;
 
     // Check if the animation has ended; otherwise draw it
     time_duration remaining = instance._endTime - now;
@@ -710,10 +710,9 @@ void Renderer::DrawAnimations()
     else
     {
       float ratio = 1 - (float)remaining.total_milliseconds() / instance._duration.total_milliseconds();
-      size_t rectIdx = (size_t)(ratio * animation->_textureRects.size());
-
+      size_t frameIdx = animation->_frameIndex[(size_t)(animation->_weightSum * ratio)];
       auto& sprite = instance._sprite;
-      sprite.setTextureRect(animation->_textureRects[rectIdx]);
+      sprite.setTextureRect(animation->_frames[frameIdx]._textureRect);
       sprite.setPosition(VectorCast<float>(lerp(instance._startPos, instance._endPos, ratio)));
       _rtMain.draw(sprite);
       ++it;

@@ -66,7 +66,16 @@ bool AnimationManager::LoadAnimations(const char* filename)
     for (int j = 0; j < cur.frame_size(); ++j)
     {
       auto& curFrame = cur.frame(j);
-      anim->_textureRects.push_back(IntRect(curFrame.x(), curFrame.y(), curFrame.w(), curFrame.h()));
+      Frame frame;
+      frame._weight = curFrame.weight();
+      auto& textureRect = cur.frame(j).texture_rect();
+      frame._textureRect = IntRect(textureRect.x(), textureRect.y(), textureRect.w(), textureRect.h());
+      anim->_frames.push_back(frame);
+
+      // update the weight table with the current frame
+      anim->_weightSum += frame._weight;
+      for (int k = 0; k < frame._weight; ++k)
+        anim->_frameIndex.push_back(j);
     }
 
     Animation*& prev = _animationMap[anim->_id];

@@ -5,6 +5,12 @@
 
 namespace rogue
 {
+  struct Frame
+  {
+    int _weight;
+    IntRect _textureRect;
+  };
+
   struct Animation
   {
     enum class Id
@@ -19,7 +25,10 @@ namespace rogue
     Id _id;
     TextureHandle _texture;
     time_duration _duration;
-    vector<IntRect> _textureRects;
+    vector<Frame> _frames;
+    // for each index [0,weightSum), which frame should be drawn
+    vector<size_t> _frameIndex;
+    size_t _weightSum;
     bool _looping;
   };
 

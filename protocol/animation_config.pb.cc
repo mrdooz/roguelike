@@ -21,6 +21,9 @@ namespace animation_config {
 
 namespace {
 
+const ::google::protobuf::Descriptor* Frame_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  Frame_reflection_ = NULL;
 const ::google::protobuf::Descriptor* Animation_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   Animation_reflection_ = NULL;
@@ -38,7 +41,23 @@ void protobuf_AssignDesc_animation_5fconfig_2eproto() {
     ::google::protobuf::DescriptorPool::generated_pool()->FindFileByName(
       "animation_config.proto");
   GOOGLE_CHECK(file != NULL);
-  Animation_descriptor_ = file->message_type(0);
+  Frame_descriptor_ = file->message_type(0);
+  static const int Frame_offsets_[2] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Frame, weight_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Frame, texture_rect_),
+  };
+  Frame_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Frame_descriptor_,
+      Frame::default_instance_,
+      Frame_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Frame, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Frame, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Frame));
+  Animation_descriptor_ = file->message_type(1);
   static const int Animation_offsets_[5] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, texture_),
@@ -57,7 +76,7 @@ void protobuf_AssignDesc_animation_5fconfig_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Animation));
-  Animations_descriptor_ = file->message_type(1);
+  Animations_descriptor_ = file->message_type(2);
   static const int Animations_offsets_[1] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animations, animation_),
   };
@@ -86,6 +105,8 @@ inline void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    Frame_descriptor_, &Frame::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Animation_descriptor_, &Animation::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Animations_descriptor_, &Animations::default_instance());
@@ -94,6 +115,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
 }  // namespace
 
 void protobuf_ShutdownFile_animation_5fconfig_2eproto() {
+  delete Frame::default_instance_;
+  delete Frame_reflection_;
   delete Animation::default_instance_;
   delete Animation_reflection_;
   delete Animations::default_instance_;
@@ -109,19 +132,23 @@ void protobuf_AddDesc_animation_5fconfig_2eproto() {
   ::rogue::sprite::protobuf_AddDesc_sprite_2eproto();
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\026animation_config.proto\022\026rogue.animatio"
-    "n_config\032\014sprite.proto\"\252\001\n\tAnimation\022/\n\002"
-    "id\030\001 \001(\0162#.rogue.animation_config.Animat"
-    "ionId\022\017\n\007texture\030\002 \001(\t\022\031\n\013duration_ms\030\003 "
-    "\001(\005:\0041000\022(\n\005frame\030\004 \003(\0132\031.rogue.sprite."
-    "TextureRect\022\026\n\007looping\030\005 \001(\010:\005false\"B\n\nA"
-    "nimations\0224\n\tanimation\030\001 \003(\0132!.rogue.ani"
-    "mation_config.Animation*F\n\013AnimationId\022\010"
-    "\n\004None\020\000\022\t\n\005Blood\020\001\022\017\n\013ArcaneBlast\020\002\022\021\n\r"
-    "LightningBolt\020\003", 375);
+    "n_config\032\014sprite.proto\"K\n\005Frame\022\021\n\006weigh"
+    "t\030\001 \001(\005:\0011\022/\n\014texture_rect\030\002 \001(\0132\031.rogue"
+    ".sprite.TextureRect\"\256\001\n\tAnimation\022/\n\002id\030"
+    "\001 \001(\0162#.rogue.animation_config.Animation"
+    "Id\022\017\n\007texture\030\002 \001(\t\022\031\n\013duration_ms\030\003 \001(\005"
+    ":\0041000\022,\n\005frame\030\004 \003(\0132\035.rogue.animation_"
+    "config.Frame\022\026\n\007looping\030\005 \001(\010:\005false\"B\n\n"
+    "Animations\0224\n\tanimation\030\001 \003(\0132!.rogue.an"
+    "imation_config.Animation*F\n\013AnimationId\022"
+    "\010\n\004None\020\000\022\t\n\005Blood\020\001\022\017\n\013ArcaneBlast\020\002\022\021\n"
+    "\rLightningBolt\020\003", 456);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "animation_config.proto", &protobuf_RegisterTypes);
+  Frame::default_instance_ = new Frame();
   Animation::default_instance_ = new Animation();
   Animations::default_instance_ = new Animations();
+  Frame::default_instance_->InitAsDefaultInstance();
   Animation::default_instance_->InitAsDefaultInstance();
   Animations::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_animation_5fconfig_2eproto);
@@ -147,6 +174,259 @@ bool AnimationId_IsValid(int value) {
     default:
       return false;
   }
+}
+
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int Frame::kWeightFieldNumber;
+const int Frame::kTextureRectFieldNumber;
+#endif  // !_MSC_VER
+
+Frame::Frame()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void Frame::InitAsDefaultInstance() {
+  texture_rect_ = const_cast< ::rogue::sprite::TextureRect*>(&::rogue::sprite::TextureRect::default_instance());
+}
+
+Frame::Frame(const Frame& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void Frame::SharedCtor() {
+  _cached_size_ = 0;
+  weight_ = 1;
+  texture_rect_ = NULL;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+Frame::~Frame() {
+  SharedDtor();
+}
+
+void Frame::SharedDtor() {
+  if (this != default_instance_) {
+    delete texture_rect_;
+  }
+}
+
+void Frame::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Frame::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return Frame_descriptor_;
+}
+
+const Frame& Frame::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_animation_5fconfig_2eproto();
+  return *default_instance_;
+}
+
+Frame* Frame::default_instance_ = NULL;
+
+Frame* Frame::New() const {
+  return new Frame;
+}
+
+void Frame::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    weight_ = 1;
+    if (has_texture_rect()) {
+      if (texture_rect_ != NULL) texture_rect_->::rogue::sprite::TextureRect::Clear();
+    }
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool Frame::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional int32 weight = 1 [default = 1];
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &weight_)));
+          set_has_weight();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_texture_rect;
+        break;
+      }
+
+      // optional .rogue.sprite.TextureRect texture_rect = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_texture_rect:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_texture_rect()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void Frame::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional int32 weight = 1 [default = 1];
+  if (has_weight()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->weight(), output);
+  }
+
+  // optional .rogue.sprite.TextureRect texture_rect = 2;
+  if (has_texture_rect()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      2, this->texture_rect(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* Frame::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // optional int32 weight = 1 [default = 1];
+  if (has_weight()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->weight(), target);
+  }
+
+  // optional .rogue.sprite.TextureRect texture_rect = 2;
+  if (has_texture_rect()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        2, this->texture_rect(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int Frame::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional int32 weight = 1 [default = 1];
+    if (has_weight()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->weight());
+    }
+
+    // optional .rogue.sprite.TextureRect texture_rect = 2;
+    if (has_texture_rect()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->texture_rect());
+    }
+
+  }
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Frame::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const Frame* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Frame*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void Frame::MergeFrom(const Frame& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_weight()) {
+      set_weight(from.weight());
+    }
+    if (from.has_texture_rect()) {
+      mutable_texture_rect()->::rogue::sprite::TextureRect::MergeFrom(from.texture_rect());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void Frame::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Frame::CopyFrom(const Frame& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Frame::IsInitialized() const {
+
+  return true;
+}
+
+void Frame::Swap(Frame* other) {
+  if (other != this) {
+    std::swap(weight_, other->weight_);
+    std::swap(texture_rect_, other->texture_rect_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata Frame::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = Frame_descriptor_;
+  metadata.reflection = Frame_reflection_;
+  return metadata;
 }
 
 
@@ -291,7 +571,7 @@ bool Animation::MergePartialFromCodedStream(
         break;
       }
 
-      // repeated .rogue.sprite.TextureRect frame = 4;
+      // repeated .rogue.animation_config.Frame frame = 4;
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
@@ -360,7 +640,7 @@ void Animation::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->duration_ms(), output);
   }
 
-  // repeated .rogue.sprite.TextureRect frame = 4;
+  // repeated .rogue.animation_config.Frame frame = 4;
   for (int i = 0; i < this->frame_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       4, this->frame(i), output);
@@ -400,7 +680,7 @@ void Animation::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->duration_ms(), target);
   }
 
-  // repeated .rogue.sprite.TextureRect frame = 4;
+  // repeated .rogue.animation_config.Frame frame = 4;
   for (int i = 0; i < this->frame_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
@@ -449,7 +729,7 @@ int Animation::ByteSize() const {
     }
 
   }
-  // repeated .rogue.sprite.TextureRect frame = 4;
+  // repeated .rogue.animation_config.Frame frame = 4;
   total_size += 1 * this->frame_size();
   for (int i = 0; i < this->frame_size(); i++) {
     total_size +=

@@ -7,6 +7,7 @@ Animation::Animation(Id id, const TextureHandle& texture, time_duration duration
   : _id(id)
   , _texture(texture)
   , _duration(duration)
+  , _weightSum(0)
   , _looping(false)
 {
 }
