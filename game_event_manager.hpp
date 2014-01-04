@@ -5,6 +5,7 @@ namespace rogue
 {
   class GameState;
   class Entity;
+  struct SpellBase;
 
   struct GameEvent
   {
@@ -17,7 +18,7 @@ namespace rogue
       ItemGained,
     };
 
-    GameEvent(Type type) : _type(type) {}
+    GameEvent(Type type) : _spell(nullptr), _type(type) {}
 
     union
     {
@@ -25,6 +26,8 @@ namespace rogue
       int _healing;
       LootItem _item;
     };
+
+    SpellBase* _spell;
 
     Entity* _agent;
     Entity* _target;
@@ -47,8 +50,8 @@ namespace rogue
 
   private:
     typedef pair<size_t, fnEventHandler> HandlerPair;
-    map<GameEvent::Type, vector<HandlerPair> > m_handlers;
-    unordered_map<size_t, GameEvent::Type> m_IdToEvent;
-    size_t m_nextId;
+    map<GameEvent::Type, vector<HandlerPair> > _handlers;
+    unordered_map<size_t, GameEvent::Type> _idToEvent;
+    size_t _nextId;
   };
 }

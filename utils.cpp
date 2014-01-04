@@ -79,14 +79,8 @@ namespace rogue
 #endif
 
   //-----------------------------------------------------------------------------
-
-
-
-  float lerp(float a, float b, float v) {
-    return (1-v) * a + v * b;
-  }
-
-  float randf(float a, float b) {
+  float randf(float a, float b)
+  {
     float t = (float)rand() / RAND_MAX;
     return lerp(a, b, t);
   }
@@ -125,6 +119,12 @@ namespace rogue
   Rect operator+(const Rect& org, const Pos& ofs)
   {
     return Rect(Pos(org.left + ofs.x, org.top + ofs.y), Pos(org.width, org.height));
+  }
+
+  //-----------------------------------------------------------------------------
+  Pos operator*(float s, const Pos& a)
+  {
+    return Pos((int)(s * a.x), (int)(s * a.y));
   }
 
   //-----------------------------------------------------------------------------

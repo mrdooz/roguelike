@@ -8,50 +8,50 @@ void LogSink::Log(const vector<pair<string, string> >& msg)
 }
 
 LogSinkFile::LogSinkFile()
-    : m_log(nullptr)
+    : _log(nullptr)
 {
 }
 
 LogSinkFile::~LogSinkFile()
 {
-  if (m_log)
-    fclose(m_log);
+  if (_log)
+    fclose(_log);
 }
 
 bool LogSinkFile::Open(const char* filename)
 {
-  m_log = fopen(filename, "at");
-  return !!m_log;
+  _log = fopen(filename, "at");
+  return !!_log;
 }
 
 void LogSinkFile::Log(const vector<pair<string, string> >& msg)
 {
-  if (!m_log)
+  if (!_log)
     return;
 
   for (size_t i = 0; i < msg.size(); ++i)
   {
     auto& p = msg[i];
     bool last = i == msg.size() - 1;
-    fprintf(m_log, "%s=%s%c", p.first.c_str(), p.second.c_str(), last ? '\n' : '|');
+    fprintf(_log, "%s=%s%c", p.first.c_str(), p.second.c_str(), last ? '\n' : '|');
   }
-  fflush(m_log);
+  fflush(_log);
 }
 
 LogStream::LogStream(LogSink* sink)
-    : m_sink(sink)
+    : _sink(sink)
 {
 }
 
 LogStream::~LogStream()
 {
-  if (m_sink)
-    m_sink->Log(m_output);
+  if (_sink)
+    _sink->Log(_output);
 }
 
 void LogStream::Append(const string& key, const string& value)
 {
-  m_output.push_back(make_pair(key, value));
+  _output.push_back(make_pair(key, value));
 }
 
 LogSinkFile rogue::g_logSinkFile;

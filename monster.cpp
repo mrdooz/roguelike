@@ -24,7 +24,16 @@ Monster::Monster(Type type)
 //-----------------------------------------------------------------------------
 void Monster::DebugDump(vector<string>& dump)
 {
-  dump.push_back(toString("Aggro: 0x%.8x", _aggroPlayer));
+  if (_aggroPlayer)
+  {
+    dump.push_back(toString("Name: %s (0x%.8x)", Name().c_str(), this));
+    dump.push_back(toString("Aggro: %s (0x%.8x)", _aggroPlayer->Name().c_str(), _aggroPlayer));
+  }
+  else
+  {
+    dump.push_back("No aggro");
+  }
+
   dump.push_back(toString("AggroDecay: %d", _aggroDecay));
   dump.push_back(toString("PlayerVisible: %s", _playerVisible ? "Y" : "N"));
 }

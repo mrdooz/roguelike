@@ -33,7 +33,7 @@ namespace rogue
     bool Open(const char* filename);
     virtual void Log(const vector<pair<string, string> >& msg);
 
-    FILE* m_log;
+    FILE* _log;
   };
 
   //----------------------------------------------------------------------------------
@@ -49,8 +49,8 @@ namespace rogue
 
     void Append(const string& key, const string& value);
 
-    vector<pair<string, string> > m_output;
-    LogSink* m_sink;
+    vector<pair<string, string> > _output;
+    LogSink* _sink;
   };
 
   template <typename T>

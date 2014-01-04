@@ -29,6 +29,12 @@ bool SpellBase::Finished(const GameState& state)
 }
 
 //-----------------------------------------------------------------------------
+Animation::Id SpellBase::AnimationId()
+{
+  return Animation::Id::None;
+}
+
+//-----------------------------------------------------------------------------
 bool SpellCharge::IsValid(GameState& state, const Event& event)
 {
   auto party = state._party;
@@ -93,12 +99,19 @@ bool SpellArcaneBlast::Finished(const GameState& state)
 }
 
 //-----------------------------------------------------------------------------
+Animation::Id SpellArcaneBlast::AnimationId()
+{
+  return Animation::Id::ArcaneBlast;
+}
+
+//-----------------------------------------------------------------------------
 bool SpellArcaneBlast::OnMonsterSelected(GameState& state, Monster* monster)
 {
   GameEvent event(GameEvent::Type::Attack);
   Player* player = state.GetActivePlayer();
   event._agent = player;
   event._target = monster;
+  event._spell = this;
 
   event._damage = (5 * player->Level() + player->WeaponBonus());
 

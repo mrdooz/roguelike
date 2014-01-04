@@ -4,7 +4,7 @@ using namespace rogue;
 
 //-----------------------------------------------------------------------------
 WindowEventManager::WindowEventManager(RenderWindow* window)
-    : m_nextId(1)
+    : _nextId(1)
     , _window(window)
 {
 }
@@ -12,28 +12,28 @@ WindowEventManager::WindowEventManager(RenderWindow* window)
 //-----------------------------------------------------------------------------
 size_t WindowEventManager::RegisterHandler(Event::EventType event, const fnEventHandler& handler)
 {
-  m_handlers[event].push_back(make_pair(m_nextId, handler));
+  _handlers[event].push_back(make_pair(_nextId, handler));
 
   // Store the id -> event mapping, so we can speed up unregistering
-  m_IdToEvent[m_nextId] = event;
-  return m_nextId++;
+  _idToEvent[_nextId] = event;
+  return _nextId++;
 }
 
 //-----------------------------------------------------------------------------
 void WindowEventManager::UnregisterHandler(size_t handle)
 {
-  auto it = m_IdToEvent.find(handle);
-  if (it != m_IdToEvent.end())
+  auto it = _idToEvent.find(handle);
+  if (it != _idToEvent.end())
   {
     Event::EventType type = it->second;
-    auto& handlers = m_handlers[type];
+    auto& handlers = _handlers[type];
     for (auto j = handlers.begin(); j != handlers.end(); ++j)
     {
       const HandlerPair& p = *j;
       if (p.first == handle)
       {
         handlers.erase(j);
-        m_IdToEvent.erase(handle);
+        _idToEvent.erase(handle);
         return;
       }
     }
@@ -49,8 +49,8 @@ void WindowEventManager::Poll()
   Event event;
   while (_window->pollEvent(event))
   {
-    auto it = m_handlers.find(event.type);
-    if (it != m_handlers.end())
+    auto it = _handlers.find(event.type);
+    if (it != _handlers.end())
     {
       auto& handlers = it->second;
       for (auto p : handlers)

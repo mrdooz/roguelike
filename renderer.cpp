@@ -7,6 +7,7 @@
 #include "game_state.hpp"
 #include "game.hpp"
 #include "window_event_manager.hpp"
+#include "spell.hpp"
 
 using namespace rogue;
 
@@ -43,6 +44,14 @@ Renderer::Renderer(sf::RenderWindow *window)
   , _zoomLevel(3)
   , _debugDump(nullptr)
 {
+}
+
+//-----------------------------------------------------------------------------
+Renderer::~Renderer()
+{
+  for (const auto& a : _animationMap)
+    delete a.second;
+  _animationMap.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -110,6 +119,7 @@ void Renderer::DrawWorld(const GameState& state)
   DrawLevel(state);
   DrawMonsters(state);
   DrawParty(state);
+  DrawAnimations();
 
   if (_debugDump)
     _debugDump->DebugDraw(_rtMain);
@@ -472,13 +482,36 @@ bool Renderer::OnKeyPressed(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
+Pos Renderer::HalfOffset() const
+{
+  return Pos(_zoomLevel*4, _zoomLevel*4);
+}
+
+//-----------------------------------------------------------------------------
 void Renderer::OnAttack(const GameEvent& event)
 {
   // Add to combat log
   AddToCombatLog(toString("%s attacks %s for %d",
     event._agent->Name().c_str(), event._target->Name().c_str(), event._damage));
 
-  // todo: start animation!
+  // Check if the attack has its own animation, or if we should just use the
+  // generic one
+  bool foundAnimation = false;
+  if (event._spell)
+  {
+    Animation::Id id = event._spell->AnimationId();
+    if (id != Animation::Id::None)
+    {
+      AddAnimation(id, PlayerToWorld(event._agent->GetPos()), PlayerToWorld(event._target->GetPos()), seconds(1));
+      foundAnimation = true;
+    }
+  }
+
+  if (!foundAnimation)
+  {
+    Pos pos(PlayerToWorld(event._target->GetPos()));
+    AddAnimation(Animation::Id::Blood, pos, pos, seconds(1));
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -646,7 +679,82 @@ bool Renderer::Init(const GameState& state)
     }
   }
 
+  InitAnimations();
+
   Resize(state);
 
   return true;
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::DrawAnimations()
+{
+  auto now = microsec_clock::local_time();
+
+  for (auto it = _activeAnimations.begin(); it != _activeAnimations.end(); )
+  {
+    auto& instance = *it;
+    auto animation = instance._animation;
+
+    // Check if the animation has ended; otherwise draw it
+    time_duration remaining = instance._endTime - now;
+    if (remaining.total_milliseconds() <= 0)
+    {
+      it = _activeAnimations.erase(it);
+    }
+    else
+    {
+      float ratio = 1 - (float)remaining.total_milliseconds() / instance._duration.total_milliseconds();
+      size_t rectIdx = (size_t)(ratio * animation->_textureRects.size());
+
+      auto& sprite = instance._sprite;
+      sprite.setTextureRect(animation->_textureRects[rectIdx]);
+      sprite.setPosition(VectorCast<float>(lerp(instance._startPos, instance._endPos, ratio)));
+      _rtMain.draw(sprite);
+      ++it;
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::AddAnimation(
+    Animation::Id id,
+    const Pos& startPos,
+    const Pos& endPos,
+    const time_duration& duration)
+{
+  auto it = _animationMap.find(id);
+  if (it == _animationMap.end())
+  {
+    //LOG_WARN(LogKeyValue("Unable to find animation"));
+    return;
+  }
+
+  AnimationInstance instance;
+  instance._animation = it->second;
+  instance._startTime = microsec_clock::local_time();
+  instance._endTime = instance._startTime + duration;
+  instance._startPos = startPos;
+  instance._endPos = endPos;
+  instance._duration = duration;
+  instance._sprite.setTexture(it->second->_texture);
+  _activeAnimations.push_back(instance);
+}
+
+//-----------------------------------------------------------------------------
+void Renderer::InitAnimations()
+{
+  Animation* anim;
+
+  // Yes, this should be data driven :)
+  anim = new Animation(Animation::Id::Blood, _objectTexture, seconds(1));
+  for (int i = 0; i < 6; ++i)
+    anim->_textureRects.push_back(IntRect(i*8, 5*8, 8, 8));
+  _animationMap[anim->_id] = anim;
+
+  anim = new Animation(Animation::Id::ArcaneBlast, _objectTexture, seconds(1));
+  for (int i = 0; i < 6; ++i)
+    anim->_textureRects.push_back(IntRect((3+i)*8, 8*8, 8, 8));
+  _animationMap[anim->_id] = anim;
+
 }

@@ -307,7 +307,7 @@ void LevelFactory::CreateDrops(Level* level)
 //-----------------------------------------------------------------------------
 void LevelFactory::CreateMonsters(Level* level)
 {
-  for (int i = 0; i < 10; ++i)
+  for (int i = 0; i < 100; ++i)
   {
     Pos pos;
     if (FindEmptyTile(level, pos))

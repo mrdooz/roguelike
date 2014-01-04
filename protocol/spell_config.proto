@@ -1,0 +1,6 @@
+package rogue.spells;
+
+message Spell
+{
+	optional string name = 1;
+};

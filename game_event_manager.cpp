@@ -5,35 +5,35 @@ using namespace rogue;
 
 //-----------------------------------------------------------------------------
 GameEventManager::GameEventManager()
-    : m_nextId(1)
+    : _nextId(1)
 {
 }
 
 //-----------------------------------------------------------------------------
 size_t GameEventManager::RegisterHandler(GameEvent::Type event, const fnEventHandler& handler)
 {
-  m_handlers[event].push_back(make_pair(m_nextId, handler));
+  _handlers[event].push_back(make_pair(_nextId, handler));
 
   // Store the id -> event mapping, so we can speed up unregistering
-  m_IdToEvent[m_nextId] = event;
-  return m_nextId++;
+  _idToEvent[_nextId] = event;
+  return _nextId++;
 }
 
 //-----------------------------------------------------------------------------
 void GameEventManager::UnregisterHandler(size_t handle)
 {
-  auto it = m_IdToEvent.find(handle);
-  if (it != m_IdToEvent.end())
+  auto it = _idToEvent.find(handle);
+  if (it != _idToEvent.end())
   {
     GameEvent::Type type = it->second;
-    auto& handlers = m_handlers[type];
+    auto& handlers = _handlers[type];
     for (auto j = handlers.begin(); j != handlers.end(); ++j)
     {
       const HandlerPair& p = *j;
       if (p.first == handle)
       {
         handlers.erase(j);
-        m_IdToEvent.erase(handle);
+        _idToEvent.erase(handle);
         return;
       }
     }
@@ -43,8 +43,8 @@ void GameEventManager::UnregisterHandler(size_t handle)
 //-----------------------------------------------------------------------------
 void GameEventManager::SendEvent(const GameEvent& event)
 {
-  auto it = m_handlers.find(event._type);
-  if (it == m_handlers.end())
+  auto it = _handlers.find(event._type);
+  if (it == _handlers.end())
   {
 //    LOG_DEBUG(LogKeyValue("event", "no handlers registered for event")
 //           << LogKeyValue("type", (int)event.type));

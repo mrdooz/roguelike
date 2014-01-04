@@ -372,6 +372,15 @@ bool GamePlayer::OnKeyPressed(const Event& event)
       break;
     }
 
+    if (key == Keyboard::Space)
+    {
+      // skip the turn
+      state._actionPhase = 0;
+      validAction = true;
+      nextPlayer = true;
+      break;
+    }
+
     if (state._actionPhase == 0)
     {
       if (ValidSinglePhaseAction(state, event))

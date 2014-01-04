@@ -42,5 +42,5 @@ Player::Player()
 
 void Player::DebugDump(vector<string>& dump)
 {
-  dump.push_back(toString("this: 0x%.8x", this));
+  dump.push_back(toString("Name: %s (0x%.8x)", Name().c_str(), this));
 }

@@ -44,6 +44,7 @@ namespace rogue
 
   using sf::Vector2f;
   using sf::Vector2i;
+  using sf::IntRect;
 
   typedef sf::Vector2i Pos;
   typedef sf::Rect<int> Rect;

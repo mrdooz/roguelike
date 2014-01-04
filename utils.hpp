@@ -43,7 +43,12 @@ namespace rogue
   string toString(char const * const format, ...);
   string ToString(const char* fmt, va_list args);
 
-  float lerp(float a, float b, float v);
+  template <typename T>
+  T lerp(T a, T b, float v)
+  {
+    return (1-v) * a + v * b;
+  }
+
   float randf(float a, float b);
   float gaussianRand(float mean, float variance);
 
@@ -63,6 +68,7 @@ namespace rogue
   }
 
   Rect operator+(const Rect& org, const Pos& ofs);
+  Pos operator*(float s, const Pos& a);
 
   inline int IntAbs(int a)
   {
@@ -73,5 +79,4 @@ namespace rogue
 
   // Manhattan distance
   int MDist(const Pos& a, const Pos& b);
-
 }

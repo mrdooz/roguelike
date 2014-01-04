@@ -2,6 +2,7 @@
 
 #include "game_event_manager.hpp"
 #include "level.hpp"
+#include "animated_sprite.hpp"
 
 namespace rogue
 {
@@ -13,6 +14,7 @@ namespace rogue
   {
   public:
     Renderer(RenderWindow *window);
+    ~Renderer();
 
     bool Init(const GameState& state);
     void DrawWorld(const GameState& state);
@@ -50,6 +52,7 @@ namespace rogue
     void DrawPartyStats(const GameState& state);
     void DrawLevel(const GameState& state);
     void DrawMonsters(const GameState& state);
+    void DrawAnimations();
 
     void DrawHealthBar(int health, int maxHealth, const Pos &pos);
 
@@ -57,6 +60,15 @@ namespace rogue
 
     void AddToCombatLog(const string& msg);
     void DrawCombatLog();
+
+    void AddAnimation(
+        Animation::Id id,
+        const Pos& startPos,
+        const Pos& endPos,
+        const time_duration& duration);
+    void InitAnimations();
+
+    Pos HalfOffset() const;
 
     RenderWindow *_window;
     int _partyStatsWidth;
@@ -82,6 +94,9 @@ namespace rogue
     RenderTexture _rtMain;
     RenderTexture _rtCharacterPane;
     RenderTexture _rtCombatLog;
+
+    map<Animation::Id, Animation*> _animationMap;
+    deque<AnimationInstance> _activeAnimations;
 
     Entity* _debugDump;
   };
