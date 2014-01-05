@@ -7,8 +7,8 @@ using namespace rogue;
 
 //-----------------------------------------------------------------------------
 TextureCache::TextureCache()
-  : _nextIdx(0)
-  , _lastUpdate(microsec_clock::local_time())
+  : _lastUpdate(microsec_clock::local_time())
+  , _nextIdx(0)
 {
 }
 

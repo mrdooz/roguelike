@@ -20,10 +20,11 @@ namespace rogue
     HotloadSprite _animationSprite;
     vector<HotloadSprite> _animationFrames;
 
-    bool _playOnce;
-    int _curAnimation;
-    int _curZoom;
     RenderWindow *_window;
     Font* _font;
+
+    int _curAnimation;
+    int _curZoom;
+    bool _playOnce;
   };
 }

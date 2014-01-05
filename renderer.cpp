@@ -426,8 +426,8 @@ int Renderer::TileAtPos(const GameState& state, int x, int y) const
   auto level = state._level;
   size_t zoom = _zoomLevel * 8;
 
-  //Vector2f wsPos = _rtMain.mapPixelToCoords(Pos(x,y));
-  Vector2f wsPos = _rtMain.convertCoords(Pos(x,y));
+  Vector2f wsPos = _rtMain.mapPixelToCoords(Pos(x,y));
+//  Vector2f wsPos = _rtMain.convertCoords(Pos(x,y));
   int tx = (int)(wsPos.x / zoom);
   int ty = (int)(wsPos.y / zoom);
 

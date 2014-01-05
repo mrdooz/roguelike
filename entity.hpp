@@ -33,6 +33,7 @@ namespace rogue
 
   protected:
     Entity();
+    virtual ~Entity() {}
     
     Pos _pos;
     string _name;

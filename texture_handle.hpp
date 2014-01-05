@@ -17,7 +17,7 @@ namespace rogue
       Texture,
       Font,
     };
-    TextureHandle(Type type, u16 idx) : _idx(idx), _type(type), _generation(0) {}
+    TextureHandle(Type type, u16 idx) : _idx(idx), _generation(0), _type(type) {}
     u16 _idx;
     u8 _generation;
     Type _type;

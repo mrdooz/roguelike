@@ -28,14 +28,14 @@ string rogue::playerModeToString(PlayerMode pm)
 }
 
 Player::Player()
-  : _chargeRange(3)
-  , _heading(Heading::East)
-  , _mode(PlayerMode::kInteractive)
+  : _xp(0)
+  , _xpForNextLevel(10)
+  , _chargeRange(3)
   , _gold(0)
   , _manaPotions(0)
   , _healthPotions(0)
-  , _xp(0)
-  , _xpForNextLevel(10)
+  , _heading(Heading::East)
+  , _mode(PlayerMode::kInteractive)
   , _hasMoved(false)
 {
 }

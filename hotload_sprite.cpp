@@ -7,17 +7,15 @@ using namespace sf;
 
 ////////////////////////////////////////////////////////////
 HotloadSprite::HotloadSprite() :
-  m_lastTexture(NULL),
-  m_textureRect()
+  m_lastTexture(NULL)
 {
 }
 
 
 ////////////////////////////////////////////////////////////
 HotloadSprite::HotloadSprite(const TextureHandle& texture) :
-  m_lastTexture(NULL),
   m_texture(texture),
-  m_textureRect()
+  m_lastTexture(NULL)
 {
   setTexture(texture);
 }

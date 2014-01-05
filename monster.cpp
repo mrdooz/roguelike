@@ -10,13 +10,13 @@ Monster::Monster(Type type)
     , _aggroPlayer(nullptr)
     , _tauntPlayer(nullptr)
     , _tauntRemaining(0)
-    , _stunRemaining(0)
-    , _immobilizeRemaining(0)
-    , _action(Action::Unknown)
-    , _visibilityRange(5)
     , _aggroDecay(0)
     , _playerVisible(false)
     , _attackRange(0)
+    , _stunRemaining(0)
+    , _immobilizeRemaining(0)
+    , _visibilityRange(5)
+    , _action(Action::Unknown)
 {
   _name = TypeToString(type);
 }
@@ -62,7 +62,7 @@ const char* Monster::TypeToString(Type type)
   {
     case Monster::Type::Goblin: return "Goblin";
     case Monster::Type::Skeleton: return "Skeleton";
-    case Monster::Type::SkeletonWarrior: "Skeleton Warrior";
+    case Monster::Type::SkeletonWarrior: return "Skeleton Warrior";
     case Monster::Type::SkeletonMage: return "Skeleton Mage";
     case Monster::Type::FireElemental: return "Fire Elemental";
     case Monster::Type::WaterElemental: return "Water Elemental";

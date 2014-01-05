@@ -5,8 +5,6 @@ namespace rogue
 {
   // Code ripped from sf::Sprite, and comments removed from brievity
 
-  class Texture;
-
   class HotloadSprite : public sf::Drawable, public sf::Transformable
   {
   public :

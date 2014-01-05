@@ -47,6 +47,9 @@ namespace rogue
   string toString(char const * const format, ...);
   string ToString(const char* fmt, va_list args);
 
+  Rect operator+(const Rect& org, const Pos& ofs);
+  Pos operator*(float s, const Pos& a);
+
   template <typename T>
   T lerp(T a, T b, float v)
   {
@@ -71,8 +74,6 @@ namespace rogue
     return sf::Vector2<To>((To)src.x, (To)src.y);
   }
 
-  Rect operator+(const Rect& org, const Pos& ofs);
-  Pos operator*(float s, const Pos& a);
 
   inline int IntAbs(int a)
   {
