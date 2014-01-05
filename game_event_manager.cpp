@@ -46,8 +46,7 @@ void GameEventManager::SendEvent(const GameEvent& event)
   auto it = _handlers.find(event._type);
   if (it == _handlers.end())
   {
-//    LOG_DEBUG(LogKeyValue("event", "no handlers registered for event")
-//           << LogKeyValue("type", (int)event.type));
+    LOG_DEBUG("no handlers registered for event" << LogKeyValue("type", (int)event._type));
     return;
   }
 

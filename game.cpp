@@ -65,7 +65,7 @@ Game::~Game()
 }
 
 //-----------------------------------------------------------------------------
-bool Game::close()
+bool Game::Close()
 {
   assert(_instance);
   delete exch_null(_instance);
@@ -73,15 +73,15 @@ bool Game::close()
 }
 
 //-----------------------------------------------------------------------------
-bool Game::create()
+bool Game::Create()
 {
   assert(!_instance);
   _instance = new Game();
-  return _instance->init();
+  return _instance->Init();
 }
 
 //-----------------------------------------------------------------------------
-Game &Game::instance()
+Game &Game::Instance()
 {
   assert(_instance);
   return *_instance;
@@ -193,9 +193,14 @@ bool Game::InitDebugWindow()
 }
 
 //-----------------------------------------------------------------------------
-bool Game::init()
+bool Game::Init()
 {
+  srand(1337);
+
   FindAppRoot();
+
+  if (!g_logSinkFile.Open("rogue.log"))
+    return 1;
 
   _playerFactory = new PlayerFactory();
   _gameEventManager = new GameEventManager();
@@ -287,7 +292,7 @@ void Game::ProcessPlayerMessages(const ptime& now)
 }
 
 //-----------------------------------------------------------------------------
-int Game::run()
+int Game::Run()
 {
   // Start the game loop
   while (_window->isOpen())

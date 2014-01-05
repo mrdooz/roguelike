@@ -29,11 +29,11 @@ namespace rogue
   {
   public:
 
-    static Game &instance();
-    static bool create();
-    static bool close();
+    static Game &Instance();
+    static bool Create();
+    static bool Close();
 
-    int run();
+    int Run();
 
     void AddPlayerMessage(const time_duration& duration, const char* fmt, ...);
 
@@ -59,7 +59,7 @@ namespace rogue
     void ProcessMainWindow();
     void ProcessDebugWindow();
 
-    bool init();
+    bool Init();
 
     void CreateParty();
     void FindAppRoot();
@@ -93,11 +93,11 @@ namespace rogue
     static Game *_instance;
   };
 
-#define GAME rogue::Game::instance()
-#define WINDOW_EVENT rogue::Game::instance().GetWindowEventManager()
-#define DEBUG_WINDOW_EVENT rogue::Game::instance().GetDebugWindowEventManager()
-#define GAME_EVENT rogue::Game::instance().GetGameEventManager()
-#define TEXTURE_CACHE rogue::Game::instance().GetTextureCache()
-#define ANIMATION rogue::Game::instance().GetAnimationManager()
+#define GAME rogue::Game::Instance()
+#define WINDOW_EVENT rogue::Game::Instance().GetWindowEventManager()
+#define DEBUG_WINDOW_EVENT rogue::Game::Instance().GetDebugWindowEventManager()
+#define GAME_EVENT rogue::Game::Instance().GetGameEventManager()
+#define TEXTURE_CACHE rogue::Game::Instance().GetTextureCache()
+#define ANIMATION rogue::Game::Instance().GetAnimationManager()
 
 }

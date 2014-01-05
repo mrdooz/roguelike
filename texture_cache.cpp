@@ -1,6 +1,7 @@
 #include "texture_cache.hpp"
 #include "utils.hpp"
 #include "game.hpp"
+#include "error.hpp"
 
 using namespace rogue;
 
@@ -38,7 +39,7 @@ TextureHandle TextureCache::LoadTextureByHandle(const string& filename)
   // Assign the next free index
   if (_nextIdx == ELEMS_IN_ARRAY(_elems) - 1)
   {
-    // LOG_WARN(need bigger texture cache)
+    LOG_WARN("Texture cache too small!");
     return handle;
   }
 
@@ -86,7 +87,8 @@ void TextureCache::CheckForReload()
       }
       else
       {
-        //LOG_INFO("Error loading texture..")
+        LOG_INFO("Error loading texture.."
+              << LogKeyValue("filename", elem._filename));
       }
     }
   }

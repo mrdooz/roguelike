@@ -92,4 +92,9 @@ namespace rogue
   {
     return max(minValue, min(maxValue, v));
   }
+
+  // Macro for creating "local" names
+#define GEN_NAME2(prefix, line) prefix##line
+#define GEN_NAME(prefix, line) GEN_NAME2(prefix, line)
+
 }

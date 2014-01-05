@@ -3,6 +3,7 @@
 #include "game.hpp"
 #include "texture_cache.hpp"
 #include "protocol/animation_config.pb.h"
+#include "error.hpp"
 
 using namespace rogue;
 
@@ -44,8 +45,11 @@ bool AnimationManager::LoadAnimations(const char* filename)
   rogue::animation_config::Animations animations;
 
   string str;
-  if (!LoadFile("config/animation_config.pb", &str))
+  if (!LoadFile(filename, &str))
+  {
+    LOG_WARN("Error loading animation pb" << LogKeyValue("filename", filename));
     return false;
+  }
 
   if (!TextFormat::ParseFromString(str, &animations))
     return false;
@@ -56,7 +60,7 @@ bool AnimationManager::LoadAnimations(const char* filename)
     TextureHandle texture = TEXTURE_CACHE->LoadTextureByHandle(cur.texture());
     if (!texture)
     {
-      //LOG_WARN("unable to find texture")..
+      LOG_WARN("Unable to find texture" << LogKeyValue("filename", cur.texture()));
       return false;
     }
     Animation* anim = new Animation((Animation::Id)cur.id(), texture, milliseconds(cur.duration_ms()));

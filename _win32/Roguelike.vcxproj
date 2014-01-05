@@ -135,7 +135,10 @@
     <ClCompile Include="..\error.cpp" />
     <ClCompile Include="..\game.cpp" />
     <ClCompile Include="..\game_ai.cpp" />
-    <ClCompile Include="..\game_event_manager.cpp" />
+    <ClCompile Include="..\game_event_manager.cpp">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreprocessToFile>
+      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreprocessSuppressLineNumbers>
+    </ClCompile>
     <ClCompile Include="..\game_player.cpp" />
     <ClCompile Include="..\game_state.cpp" />
     <ClCompile Include="..\hotload_sprite.cpp" />
