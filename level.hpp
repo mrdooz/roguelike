@@ -55,6 +55,9 @@ namespace rogue
     size_t PosToIndex(const Pos& pos) const;
 
   private:
+
+    void TilesInPath(const Pos& a, const Pos& b, vector<Tile*>* tiles);
+
     void OnDeath(const GameEvent& event);
     void MonsterKilled(Monster *m);
 

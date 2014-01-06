@@ -117,15 +117,15 @@ bool SpellLightningBolt::OnMonsterSelected(GameState& state, Monster* monster)
   if (!state._level->IsVisible(player->GetPos(), monster->GetPos()))
     return false;
 
-  // Zap all mobs in the LOS
+  // Zap all mobs in the LOS (skip self!)
   vector<Entity*> mobs;
   state._level->EntitiesInPath(player->GetPos(), monster->GetPos(), &mobs);
 
-  for (auto& m : mobs)
+  for (size_t i = 1; i < mobs.size(); ++i)
   {
     GameEvent event(GameEvent::Type::Attack);
     event._agent = player;
-    event._target = m;
+    event._target = mobs[i];
     event._spell = this;
 
     event._damage = (5 * player->Level() + player->WeaponBonus());

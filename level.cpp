@@ -306,74 +306,78 @@ size_t Level::PosToIndex(const Pos& pos) const
 }
 
 //-----------------------------------------------------------------------------
-void Level::EntitiesInPath(const Pos& a, const Pos& b, vector<Entity*>* entities)
+void Level::TilesInPath(const Pos& a, const Pos& b, vector<Tile*>* tiles)
 {
-  entities->clear();
+  tiles->clear();
 
-  // Step from A to B, and return a list of entities hit
   int dx = b.x - a.x;
   int dy = b.y - a.y;
 
   if (dx == 0 && dy == 0)
     return;
 
-  int steps = IntAbs(dx) + IntAbs(dy);
-
-  int stepx = (dx << 16) / steps;
-  int stepy = (dy << 16) / steps;
-
-  int curx = a.x << 16;
-  int cury = a.y << 16;
-
-  int orgIdx = PosToIndex(Pos(curx >> 16, cury >> 16));
-
-  for (int i = 0; i < steps; ++i)
+  // We want to step along the greatest axis
+  if (dx > dy)
   {
-    curx += stepx;
-    cury += stepy;
+    int m = (dy << 16) / dx;
+    Pos p(a.x, a.y);
+    int ty = a.y << 16;
+    for (int i = 0; i <= dx; ++i)
+    {
+      auto& tile = Get(p);
+      tiles->push_back(&tile);
+      p.x++;
+      ty += m;
+      p.y = ty >> 16;
 
-    auto& tile = Get(curx >> 16, cury >> 16);
-    if (tile._type == Tile::Type::Wall)
+    }
+  }
+  else
+  {
+    int m = (dx << 16) / dy;
+    Pos p(a.x, a.y);
+    int tx = a.x << 16;
+    for (int i = 0; i <= dy; ++i)
+    {
+      auto& tile = Get(p);
+      tiles->push_back(&tile);
+
+      p.y++;
+      tx += m;
+      p.x = tx >> 16;
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+void Level::EntitiesInPath(const Pos& a, const Pos& b, vector<Entity*>* entities)
+{
+  entities->clear();
+  vector<Tile*> tiles;
+  TilesInPath(a, b, &tiles);
+
+  for (Tile* t : tiles)
+  {
+    if (t->_type == Tile::Type::Wall)
       return;
 
-    int curIdx = PosToIndex(Pos(curx >> 16, cury >> 16));
-    // Cheese a bit to avoid returning the starting tile
-    if (curIdx != orgIdx)
-    {
-      if (tile._monster)
-        entities->push_back(tile._monster);
+    if (t->_monster)
+      entities->push_back(t->_monster);
 
-      if (tile._player)
-        entities->push_back(tile._player);
-    }
+    if (t->_player)
+      entities->push_back(t->_player);
   }
 }
 
 //-----------------------------------------------------------------------------
 bool Level::IsVisible(const Pos& a, const Pos& b)
 {
-  // Step between 'a' and 'b', and return false is there is a wall between
-  int dx = b.x - a.x;
-  int dy = b.y - a.y;
+  vector<Tile*> tiles;
+  TilesInPath(a, b, &tiles);
 
-  if (dx == 0 && dy == 0)
-    return true;
-
-  int steps = IntAbs(dx) + IntAbs(dy);
-
-  int stepx = (dx << 16) / steps;
-  int stepy = (dy << 16) / steps;
-
-  int curx = a.x << 16;
-  int cury = a.y << 16;
-
-  for (int i = 0; i < steps; ++i)
+  for (Tile* t : tiles)
   {
-    curx += stepx;
-    cury += stepy;
-
-    auto& tile = Get(curx >> 16, cury >> 16);
-    if (tile._type == Tile::Type::Wall)
+    if (t->_type == Tile::Type::Wall)
       return false;
   }
 
