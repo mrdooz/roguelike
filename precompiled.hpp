@@ -69,19 +69,4 @@ typedef int16_t s16;
 typedef int32_t s32;
 typedef int64_t s64;
 
-#ifdef _WIN32
-  #define OVERRIDE override
-  #ifdef _DEBUG
-    #pragma comment(lib, "sfml-graphics-s-d.lib")
-    #pragma comment(lib, "sfml-window-s-d.lib")
-    #pragma comment(lib, "sfml-system-s-d.lib")
-  #else
-    #pragma comment(lib, "sfml-graphics-s.lib")
-    #pragma comment(lib, "sfml-window-s.lib")
-    #pragma comment(lib, "sfml-system-s.lib")
-  #endif
-#else
-  #define OVERRIDE
-#endif
-
 #include "roguelike.hpp"

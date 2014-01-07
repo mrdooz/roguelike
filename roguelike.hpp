@@ -35,6 +35,7 @@ namespace rogue
 
   using sf::Color;
   using sf::Font;
+  using sf::Image;
   using sf::Texture;
   using sf::Sprite;
   using sf::RectangleShape;
@@ -44,9 +45,11 @@ namespace rogue
   using sf::Keyboard;
   using sf::Event;
   using sf::View;
+  using sf::VertexArray;
 
   using sf::Vector2f;
   using sf::Vector2i;
+  using sf::Vector2u;
   using sf::IntRect;
 
   typedef sf::Vector2i Pos;
