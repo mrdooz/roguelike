@@ -124,6 +124,8 @@
     <ClInclude Include="..\texture_handle.hpp" />
     <ClInclude Include="..\tile.hpp" />
     <ClInclude Include="..\utils.hpp" />
+    <ClInclude Include="..\virtual_window.hpp" />
+    <ClInclude Include="..\virtual_window_manager.hpp" />
     <ClInclude Include="..\window_event_manager.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +165,8 @@
     <ClCompile Include="..\texture_handle.cpp" />
     <ClCompile Include="..\tile.cpp" />
     <ClCompile Include="..\utils.cpp" />
+    <ClCompile Include="..\virtual_window.cpp" />
+    <ClCompile Include="..\virtual_window_manager.cpp" />
     <ClCompile Include="..\window_event_manager.cpp" />
   </ItemGroup>
   <ItemGroup>

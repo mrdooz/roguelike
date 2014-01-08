@@ -1,11 +1,12 @@
 #pragma once
 #include "hotload_sprite.hpp"
+#include "virtual_window_manager.hpp"
 
 namespace rogue
 {
   class GameState;
 
-  class DebugRenderer
+    class DebugRenderer
   {
   public:
     DebugRenderer(RenderWindow *window);
@@ -18,18 +19,36 @@ namespace rogue
     void Update();
   private:
 
-    void DrawAnimation();
+    void DrawAnimationWidget();
+    void DrawCanvasWidget();
+    void DrawColorPickerWidget();
+    void DrawFramesWidget();
+
     void DrawEditor();
     void DrawGrid();
 
     bool LoadImage(const char* filename);
     Vector2i ImageOffset();
 
+
+    RenderTexture _rtAnimation;
+    RenderTexture _rtMenu;
+    RenderTexture _rtCanvas;
+    RenderTexture _rtColorPicker;
+    RenderTexture _rtFrames;
+
+    Sprite _sprAnimation;
+    Sprite _sprMenu;
+    Sprite _sprCanvas;
+    Sprite _sprColorPicker;
+    Sprite _sprFrames;
+
     ptime _lastFrame;
     HotloadSprite _animationSprite;
     vector<HotloadSprite> _animationFrames;
 
     RenderWindow *_window;
+    VirtualWindowManager _windowManager;
     Font* _font;
 
     vector<u8> _doubleBuffer;

@@ -17,14 +17,14 @@ namespace rogue
   }
 
   template<class T> 
-  void seq_delete(T *seq) {
+  void SeqDelete(T *seq) {
     for (auto it = begin(*seq); it != end(*seq); ++it)
       delete *it;
     seq->clear();
   }
 
   template<class T> 
-  void assoc_delete(T* t) {
+  void AssocDelete(T* t) {
     for (typename T::iterator it = t->begin(); it != t->end(); ++it)
       delete it->second;
     t->clear();

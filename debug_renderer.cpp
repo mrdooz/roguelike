@@ -2,12 +2,60 @@
 #include "game.hpp"
 #include "window_event_manager.hpp"
 #include "animation_manager.hpp"
+#include "virtual_window.hpp"
 
 using namespace rogue;
+
+struct AnimationWindow : public VirtualWindow
+{
+  AnimationWindow(const string& title, const Vector2u& pos, const Vector2u& size)
+    : VirtualWindow(title, pos, size)
+  {
+  }
+
+  void Draw()
+  {
+    _texture.clear();
+
+    sf::RectangleShape rect(VectorCast<float>(_size));
+    rect.setFillColor(_focus ? Color::White : Color::Yellow);
+    _texture.draw(rect);
+    _texture.display();
+  }
+};
+
+struct CanvasWindow : public VirtualWindow
+{
+  CanvasWindow(const string& title, const Vector2u& pos, const Vector2u& size)
+    : VirtualWindow(title, pos, size)
+  {
+  }
+
+  void Draw()
+  {
+    _texture.clear();
+
+    sf::RectangleShape rect(VectorCast<float>(_size));
+    rect.setFillColor(_focus ? Color::White : Color::Yellow);
+    _texture.draw(rect);
+    _texture.display();
+  }
+};
+
+struct ColorPickerWindow : public VirtualWindow
+{
+
+};
+
+struct FramesWindow : public VirtualWindow
+{
+
+};
 
 //-----------------------------------------------------------------------------
 DebugRenderer::DebugRenderer(RenderWindow *window)
   : _window(window)
+  , _windowManager(window)
   , _font(nullptr)
   , _gridSize(8, 8)
   , _curAnimation(0)
@@ -20,6 +68,9 @@ DebugRenderer::DebugRenderer(RenderWindow *window)
 
   DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseButtonReleased, bind(&DebugRenderer::OnMouseButtonDown, this, _1));
   DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseMoved, bind(&DebugRenderer::OnMouseMove, this, _1));
+
+  _windowManager.AddWindow(new AnimationWindow("ANIMATION", Vector2u(0,0), Vector2u(200,200)));
+  _windowManager.AddWindow(new CanvasWindow("CANVAS", Vector2u(200,0), Vector2u(500,500)));
 }
 
 //-----------------------------------------------------------------------------
@@ -97,6 +148,179 @@ Vector2i DebugRenderer::ImageOffset()
 }
 
 //-----------------------------------------------------------------------------
+void DebugRenderer::DrawAnimationWidget()
+{
+  _rtAnimation.clear();
+
+  ptime now = microsec_clock::local_time();
+  if (_lastFrame.is_not_a_date_time())
+    _lastFrame = now;
+
+  time_duration delta = now - _lastFrame;
+
+  // Fetch all animations
+  vector<Animation*> animations;
+  ANIMATION->GetAnimations(&animations);
+  _curAnimation = Clamp(_curAnimation, 0, (int)animations.size() - 1);
+
+  Animation* animation = animations[_curAnimation];
+  size_t numFrames = animation->_frames.size();
+
+  // Set the animation texture for the sprites
+  _animationSprite.setTexture(animation->_texture);
+  _animationFrames.resize(numFrames);
+
+  // Draw header
+  sf::Text text("", *_font, 15);
+  text.setString(toString("Animation: %d [%d frames, %d ms]",
+      _curAnimation, numFrames, animation->_duration.total_milliseconds()));
+  text.setPosition(sf::Vector2f(5, 5));
+  text.setColor(sf::Color::White);
+  _rtAnimation.draw(text);
+
+  // Draw the frames
+  Vector2f pos(10, 25);
+  for (size_t i = 0; i < numFrames; ++i)
+  {
+    auto& frame = animation->_frames[i];
+    auto& sprite = _animationFrames[i];
+    sprite.setScale((float)_curZoom, (float)_curZoom);
+    sprite.setTextureRect(frame._textureRect);
+    sprite.setTexture(animation->_texture);
+    sprite.setPosition(pos);
+    pos.x += (i == numFrames - 1 ? 2 : 1) * frame._textureRect.width * _curZoom;
+    _rtAnimation.draw(sprite);
+  }
+
+  // Draw the current frame
+  float ratio = delta.total_milliseconds() / (float)animation->_duration.total_milliseconds();
+
+  size_t frameIdx;
+  size_t weightSum = animation->_weightSum;
+  if (_playOnce)
+  {
+    frameIdx = min((size_t)(ratio * weightSum), weightSum - 1);
+  }
+  else
+  {
+    frameIdx = (size_t)(ratio * weightSum) % weightSum;
+  }
+
+  // apply frame weights
+  frameIdx = animation->_frameIndex[frameIdx];
+
+  _animationSprite.setTextureRect(animation->_frames[frameIdx]._textureRect);
+  _animationSprite.setPosition(pos);
+  _animationSprite.setScale((float)_curZoom, (float)_curZoom);
+  _rtAnimation.draw(_animationSprite);
+
+  _rtAnimation.display();
+
+  _window->draw(_sprAnimation);
+}
+
+//-----------------------------------------------------------------------------
+void DebugRenderer::DrawCanvasWidget()
+{
+  _rtCanvas.clear();
+
+  _rtCanvas.draw(_editorSprite);
+
+  float ix = (float)_imageSize.x;
+  float iy = (float)_imageSize.y;
+
+  float gx = (float)_gridSize.x;
+  float gy = (float)_gridSize.y;
+
+  Vector2f ofs(0,0); // (VectorCast<float>(ImageOffset()));
+
+  size_t vLines = _imageSize.x / _gridSize.x;
+  size_t hLines = _imageSize.y / _gridSize.y;
+
+  VertexArray verts(sf::Lines, 2 * vLines + 2 * hLines);
+
+  size_t idx = 0;
+  for (size_t i = 0; i < vLines; ++i)
+  {
+    verts[idx+0].position = ofs + Vector2f(i*gx, 0);
+    verts[idx+1].position = ofs + Vector2f(i*gx, iy);
+    idx +=2;
+  }
+
+  for (size_t i = 0; i < hLines; ++i)
+  {
+    verts[idx+0].position = ofs + Vector2f(0, i*gy);
+    verts[idx+1].position = ofs + Vector2f(ix, i*gy);
+    idx +=2;
+  }
+  _rtCanvas.draw(verts);
+
+  // Fetch all animations
+  vector<Animation*> animations;
+  ANIMATION->GetAnimations(&animations);
+  _curAnimation = Clamp(_curAnimation, 0, (int)animations.size() - 1);
+
+  Animation* animation = animations[_curAnimation];
+  size_t numFrames = animation->_frames.size();
+
+  // Draw the frames
+  for (size_t i = 0; i < numFrames; ++i)
+  {
+    VertexArray frameVerts(sf::LinesStrip, 4);
+
+    auto& frame = animation->_frames[i];
+
+    // convert texture rect to coords
+    auto& r = frame._textureRect;
+    float left    = (float)r.left;
+    float top     = (float)r.top;
+    float width   = (float)r.width;
+    float height  = (float)r.height;
+
+    frameVerts[0].position = ofs + Vector2f(left, top);
+    frameVerts[0].color = Color::Red;
+    frameVerts[1].position = frameVerts[0].position + Vector2f(width, 0);
+    frameVerts[1].color = Color::Red;
+    frameVerts[2].position = frameVerts[1].position + Vector2f(0, height);
+    frameVerts[2].color = Color::Red;
+    frameVerts[3].position = frameVerts[0].position + Vector2f(0, height);
+    frameVerts[3].color = Color::Red;
+
+    _rtCanvas.draw(frameVerts);
+  }
+
+  _rtCanvas.display();
+
+  _window->draw(_sprCanvas);
+}
+
+//-----------------------------------------------------------------------------
+void DebugRenderer::DrawColorPickerWidget()
+{
+  _rtColorPicker.clear();
+  RectangleShape rs;
+  rs.setSize(Vector2f(200, 200));
+  rs.setFillColor(sf::Color::Blue);
+  _rtColorPicker.draw(rs);
+  _rtColorPicker.display();
+
+  _window->draw(_sprColorPicker);
+}
+
+//-----------------------------------------------------------------------------
+void DebugRenderer::DrawFramesWidget()
+{
+  _rtFrames.clear();
+  RectangleShape rs;
+  rs.setSize(Vector2f(200, 200));
+  rs.setFillColor(sf::Color::Green);
+  _rtFrames.draw(rs);
+  _rtFrames.display();
+
+  _window->draw(_sprFrames);
+}
+
+//-----------------------------------------------------------------------------
 bool DebugRenderer::OnResize(const Event& event)
 {
   float wx = (float)_window->getSize().x;
@@ -104,10 +328,28 @@ bool DebugRenderer::OnResize(const Event& event)
   View view(Vector2f(wx/2, wy/2), Vector2f(wx, wy));
 
   // center the sprite on the window
-  _editorSprite.setPosition(VectorCast<float>(ImageOffset()));
-  view.zoom(1/(float)_curZoom);
+  //_editorSprite.setPosition(VectorCast<float>(ImageOffset()));
+  //view.zoom(1/(float)_curZoom);
 
   _window->setView(view);
+
+  // Setup the various render targets
+  _rtAnimation.create(300, 300);
+  _rtCanvas.create(500, 500);
+  _rtColorPicker.create(200, 200);
+  _rtFrames.create(200, 400);
+
+  _sprAnimation.setTexture(_rtAnimation.getTexture());
+  _sprAnimation.setPosition(0,0);
+
+  _sprCanvas.setTexture(_rtCanvas.getTexture());
+  _sprCanvas.setPosition(300, 0);
+
+  _sprColorPicker.setTexture(_rtColorPicker.getTexture());
+  _sprColorPicker.setPosition(800, 0);
+
+  _sprFrames.setTexture(_rtFrames.getTexture());
+  _sprFrames.setPosition(800, 200);
 
   return false;
 }
@@ -153,78 +395,18 @@ bool DebugRenderer::OnKeyReleased(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-void DebugRenderer::DrawAnimation()
-{
-  ptime now = microsec_clock::local_time();
-  if (_lastFrame.is_not_a_date_time())
-    _lastFrame = now;
-
-  time_duration delta = now - _lastFrame;
-
-  // Fetch all animations
-  vector<Animation*> animations;
-  ANIMATION->GetAnimations(&animations);
-  _curAnimation = Clamp(_curAnimation, 0, (int)animations.size() - 1);
-
-  Animation* animation = animations[_curAnimation];
-  size_t numFrames = animation->_frames.size();
-
-  // Set the animation texture for the sprites
-  _animationSprite.setTexture(animation->_texture);
-  _animationFrames.resize(numFrames);
-
-  // Draw header
-  sf::Text normal("", *_font, 15);
-  normal.setString(toString("Animation: %d [%d frames, %d ms]",
-    _curAnimation, numFrames, animation->_duration.total_milliseconds()));
-  normal.setPosition(sf::Vector2f(5, 5));
-  normal.setColor(sf::Color::White);
-  _window->draw(normal);
-
-  // Draw the frames
-  Vector2f pos(10, 25);
-  for (size_t i = 0; i < numFrames; ++i)
-  {
-    auto& frame = animation->_frames[i];
-    auto& sprite = _animationFrames[i];
-    sprite.setScale((float)_curZoom, (float)_curZoom);
-    sprite.setTextureRect(frame._textureRect);
-    sprite.setTexture(animation->_texture);
-    sprite.setPosition(pos);
-    pos.x += (i == numFrames - 1 ? 2 : 1) * frame._textureRect.width * _curZoom;
-    _window->draw(sprite);
-  }
-
-  // Draw the current frame
-  float ratio = delta.total_milliseconds() / (float)animation->_duration.total_milliseconds();
-
-  size_t frameIdx;
-  size_t weightSum = animation->_weightSum;
-  if (_playOnce)
-  {
-    frameIdx = min((size_t)(ratio * weightSum), weightSum - 1);
-  }
-  else
-  {
-    frameIdx = (size_t)(ratio * weightSum) % weightSum;
-  }
-
-  // apply frame weights
-  frameIdx = animation->_frameIndex[frameIdx];
-
-  _animationSprite.setTextureRect(animation->_frames[frameIdx]._textureRect);
-  _animationSprite.setPosition(pos);
-  _animationSprite.setScale((float)_curZoom, (float)_curZoom);
-  _window->draw(_animationSprite);
-}
-
-//-----------------------------------------------------------------------------
 void DebugRenderer::DrawEditor()
 {
+/*
   _window->draw(_editorSprite);
 
   if (_showGrid)
     DrawGrid();
+*/
+  DrawAnimationWidget();
+  DrawCanvasWidget();
+  DrawColorPickerWidget();
+  DrawFramesWidget();
 }
 
 //-----------------------------------------------------------------------------
@@ -276,10 +458,10 @@ void DebugRenderer::DrawGrid()
 
     // convert texture rect to coords
     auto& r = frame._textureRect;
-    float left = r.left;
-    float top = r.top;
-    float width = r.width;
-    float height = r.height;
+    float left    = (float)r.left;
+    float top     = (float)r.top;
+    float width   = (float)r.width;
+    float height  = (float)r.height;
 
     frameVerts[0].position = ofs + Vector2f(left, top);
     frameVerts[0].color = Color::Red;
@@ -298,5 +480,6 @@ void DebugRenderer::DrawGrid()
 //-----------------------------------------------------------------------------
 void DebugRenderer::Update()
 {
-  DrawEditor();
+  _windowManager.Update();
+  //DrawEditor();
 }

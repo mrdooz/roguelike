@@ -180,7 +180,7 @@ bool Game::InitMainWindow()
 //-----------------------------------------------------------------------------
 bool Game::InitDebugWindow()
 {
-  _debugWindow = new sf::RenderWindow(sf::VideoMode(800, 600), "debug");
+  _debugWindow = new sf::RenderWindow(sf::VideoMode(1200, 600), "debug");
   _debugWindow->setFramerateLimit(60);
   _debugWindowEventManager = new WindowEventManager(_debugWindow);
 

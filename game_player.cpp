@@ -40,7 +40,7 @@ GamePlayer::GamePlayer(const fnTileAtPos& fnTileAtPos)
 //-----------------------------------------------------------------------------
 GamePlayer::~GamePlayer()
 {
-  assoc_delete(&_actionMap);
+  AssocDelete(&_actionMap);
 }
 
 //-----------------------------------------------------------------------------
