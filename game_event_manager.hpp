@@ -45,13 +45,13 @@ namespace rogue
 
     void SendEvent(const GameEvent& event);
 
-    size_t RegisterHandler(GameEvent::Type event, const fnEventHandler& handler);
-    void UnregisterHandler(size_t handle);
+    u32 RegisterHandler(GameEvent::Type event, const fnEventHandler& handler);
+    void UnregisterHandler(u32 handle);
 
   private:
-    typedef pair<size_t, fnEventHandler> HandlerPair;
+    typedef pair<u32, fnEventHandler> HandlerPair;
     map<GameEvent::Type, vector<HandlerPair> > _handlers;
-    unordered_map<size_t, GameEvent::Type> _idToEvent;
-    size_t _nextId;
+    unordered_map<u32, GameEvent::Type> _idToEvent;
+    u32 _nextId;
   };
 }

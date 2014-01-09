@@ -13,8 +13,10 @@ namespace rogue
   protected:
     VirtualWindow(
         const string& title,
-        const Vector2u& pos,
-        const Vector2u& size);
+        const Vector2f& pos,
+        const Vector2f& size);
+
+    void SetPosition(const Vector2f& pos);
 
     VirtualWindowManager* _windowManager;
 
@@ -22,9 +24,12 @@ namespace rogue
     RenderTexture _texture;
 
     string _title;
-    Vector2u _pos;
-    Vector2u _size;
-    size_t _borderWidth;
+    Vector2f _pos;
+    Vector2f _size;
+    int _depth;
+    u32 _borderWidth;
+    u32 _titleBarHeight;
     bool _focus;
+    bool _moving;
   };
 }

@@ -119,6 +119,7 @@
     <ClInclude Include="..\protocol\sprite.pb.h" />
     <ClInclude Include="..\renderer.hpp" />
     <ClInclude Include="..\roguelike.hpp" />
+    <ClInclude Include="..\shapes.hpp" />
     <ClInclude Include="..\spell.hpp" />
     <ClInclude Include="..\texture_cache.hpp" />
     <ClInclude Include="..\texture_handle.hpp" />
@@ -160,6 +161,7 @@
     <ClCompile Include="..\protocol\sprite.pb.cc" />
     <ClCompile Include="..\renderer.cpp" />
     <ClCompile Include="..\roguelike.cpp" />
+    <ClCompile Include="..\shapes.cpp" />
     <ClCompile Include="..\spell.cpp" />
     <ClCompile Include="..\texture_cache.cpp" />
     <ClCompile Include="..\texture_handle.cpp" />

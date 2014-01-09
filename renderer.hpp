@@ -39,7 +39,7 @@ namespace rogue
     void OnItemGained(const GameEvent& event);
     void OnLevelGained(const GameEvent& event);
 
-    void DrawQuad(const Pos& topLeft, size_t size, sf::Color color);
+    void DrawQuad(const Pos& topLeft, u32 size, sf::Color color);
 
     // Convert a pos in world (global) space to window space
     Pos ToLocal(const Pos& pos) const;

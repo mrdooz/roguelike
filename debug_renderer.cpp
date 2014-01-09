@@ -3,12 +3,13 @@
 #include "window_event_manager.hpp"
 #include "animation_manager.hpp"
 #include "virtual_window.hpp"
+#include "shapes.hpp"
 
 using namespace rogue;
 
 struct AnimationWindow : public VirtualWindow
 {
-  AnimationWindow(const string& title, const Vector2u& pos, const Vector2u& size)
+  AnimationWindow(const string& title, const Vector2f& pos, const Vector2f& size)
     : VirtualWindow(title, pos, size)
   {
   }
@@ -17,16 +18,17 @@ struct AnimationWindow : public VirtualWindow
   {
     _texture.clear();
 
-    sf::RectangleShape rect(VectorCast<float>(_size));
-    rect.setFillColor(_focus ? Color::White : Color::Yellow);
-    _texture.draw(rect);
+    //sf::RoundedRectangleShape rect(VectorCast<float>(_size), 100, 100);
+    //_texture.draw(rect);
     _texture.display();
   }
+
+  Font _font;
 };
 
 struct CanvasWindow : public VirtualWindow
 {
-  CanvasWindow(const string& title, const Vector2u& pos, const Vector2u& size)
+  CanvasWindow(const string& title, const Vector2f& pos, const Vector2f& size)
     : VirtualWindow(title, pos, size)
   {
   }
@@ -69,8 +71,8 @@ DebugRenderer::DebugRenderer(RenderWindow *window)
   DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseButtonReleased, bind(&DebugRenderer::OnMouseButtonDown, this, _1));
   DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseMoved, bind(&DebugRenderer::OnMouseMove, this, _1));
 
-  _windowManager.AddWindow(new AnimationWindow("ANIMATION", Vector2u(0,0), Vector2u(200,200)));
-  _windowManager.AddWindow(new CanvasWindow("CANVAS", Vector2u(200,0), Vector2u(500,500)));
+  _windowManager.AddWindow(new AnimationWindow("ANIMATION", Vector2f(20, 20), Vector2f(200,200)));
+  _windowManager.AddWindow(new CanvasWindow("CANVAS", Vector2f(250,20), Vector2f(500,500)));
 }
 
 //-----------------------------------------------------------------------------

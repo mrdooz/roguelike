@@ -57,8 +57,8 @@ namespace rogue
 
     string _description;
     Player* GetActivePlayer() const;
-    size_t _elapsedTime;
-    size_t _activePlayer;
+    u32 _elapsedTime;
+    u32 _activePlayer;
     Level *_level;
     Party *_party;
     int _actionPhase;

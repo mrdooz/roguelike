@@ -35,6 +35,7 @@ namespace rogue
 
   using sf::Color;
   using sf::Font;
+  using sf::Text;
   using sf::Image;
   using sf::Texture;
   using sf::Sprite;
@@ -51,7 +52,8 @@ namespace rogue
   using sf::Vector2i;
   using sf::Vector2u;
   using sf::IntRect;
-
+  using sf::FloatRect;
+  
   typedef sf::Vector2i Pos;
   typedef sf::Rect<int> Rect;
 }

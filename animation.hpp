@@ -27,8 +27,8 @@ namespace rogue
     time_duration _duration;
     vector<Frame> _frames;
     // for each index [0,weightSum), which frame should be drawn
-    vector<size_t> _frameIndex;
-    size_t _weightSum;
+    vector<u32> _frameIndex;
+    u32 _weightSum;
     bool _looping;
   };
 

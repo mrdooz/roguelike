@@ -9,16 +9,16 @@ namespace rogue
 
     WindowEventManager(RenderWindow* window);
 
-    size_t RegisterHandler(Event::EventType event, const fnEventHandler& handler);
-    void UnregisterHandler(size_t handle);
+    u32 RegisterHandler(Event::EventType event, const fnEventHandler& handler);
+    void UnregisterHandler(u32 handle);
 
     void Poll();
 
   private:
-    typedef pair<size_t, fnEventHandler> HandlerPair;
+    typedef pair<u32, fnEventHandler> HandlerPair;
     map<Event::EventType, vector<HandlerPair> > _handlers;
-    unordered_map<size_t, Event::EventType> _idToEvent;
-    size_t _nextId;
+    unordered_map<u32, Event::EventType> _idToEvent;
+    u32 _nextId;
 
     RenderWindow* _window;
   };
