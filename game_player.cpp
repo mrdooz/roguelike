@@ -27,8 +27,11 @@ namespace
 }
 
 //-----------------------------------------------------------------------------
-GamePlayer::GamePlayer(const fnTileAtPos& fnTileAtPos)
-  : _fnTileAtPos(fnTileAtPos)
+GamePlayer::GamePlayer(
+    WindowEventManager* windowEventManager,
+    const fnTileAtPos& fnTileAtPos)
+  : _windowEventManager(windowEventManager)
+  , _fnTileAtPos(fnTileAtPos)
 {
   _actionMap[PlayerAction::ArcaneBlast] = new SpellArcaneBlast();
   _actionMap[PlayerAction::LightningBolt] = new SpellLightningBolt();
@@ -46,8 +49,8 @@ GamePlayer::~GamePlayer()
 //-----------------------------------------------------------------------------
 bool GamePlayer::Init()
 {
-  WINDOW_EVENT->RegisterHandler(Event::KeyReleased, bind(&GamePlayer::OnKeyPressed, this, _1));
-  WINDOW_EVENT->RegisterHandler(Event::MouseButtonReleased, bind(&GamePlayer::OnMouseButtonReleased, this, _1));
+  _windowEventManager->RegisterHandler(Event::KeyReleased, bind(&GamePlayer::OnKeyPressed, this, _1));
+  _windowEventManager->RegisterHandler(Event::MouseButtonReleased, bind(&GamePlayer::OnMouseButtonReleased, this, _1));
 
   GAME_EVENT->RegisterHandler(GameEvent::Type::Attack, bind(&GamePlayer::OnAttack, this, _1));
   GAME_EVENT->RegisterHandler(GameEvent::Type::Heal, bind(&GamePlayer::OnHeal, this, _1));

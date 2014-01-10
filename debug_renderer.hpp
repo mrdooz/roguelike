@@ -9,7 +9,7 @@ namespace rogue
     class DebugRenderer
   {
   public:
-    DebugRenderer(RenderWindow *window);
+    DebugRenderer(RenderWindow *window, WindowEventManager* eventManager);
 
     bool Init();
     bool OnResize(const Event& event);

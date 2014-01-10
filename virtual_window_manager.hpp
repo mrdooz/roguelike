@@ -2,18 +2,21 @@
 
 namespace rogue
 {
-
   class VirtualWindow;
+  class WindowEventManager;
 
   class VirtualWindowManager
   {
   public:
     typedef function<bool(const Event&)> fnEventHandler;
 
-    VirtualWindowManager(RenderWindow *window);
+    VirtualWindowManager(
+        RenderWindow* window,
+        WindowEventManager* eventManager);
     ~VirtualWindowManager();
 
     void AddWindow(VirtualWindow* window);
+    bool Init();
 
     void Update();
 
@@ -40,11 +43,10 @@ namespace rogue
     map<Event::EventType, HandlersByWindow > _handlers;
 
     RenderWindow* _renderWindow;
+    WindowEventManager* _eventManager;
     vector<VirtualWindow*> _windows;
     u32 _nextId;
     u32 _nextDepth;
-
-    Font _font;
 
     // Moving data
     Vector2f _startMovePos;

@@ -79,13 +79,15 @@ namespace rogue
   extern LogSinkFile g_logSinkFile;
   extern LogLevel g_logLevel;
 
+// think about: encase x in an extra set of parens, to make the macro self contained (to be able
+// to add start/end tags)
 #define LOG_DEBUG(x) \
-  LogStream GEN_NAME(s, __LINE__)(&g_logSinkFile, LogLevel::Debug); GEN_NAME(s, __LINE__) << x
+  rogue::LogStream GEN_NAME(s, __LINE__)(&rogue::g_logSinkFile, rogue::LogLevel::Debug); GEN_NAME(s, __LINE__) << x
 #define LOG_INFO(x) \
-  LogStream GEN_NAME(s, __LINE__)(&g_logSinkFile, LogLevel::Info); GEN_NAME(s, __LINE__) << x
+  rogue::LogStream GEN_NAME(s, __LINE__)(&rogue::g_logSinkFile, rogue::LogLevel::Info); GEN_NAME(s, __LINE__) << x
 #define LOG_WARN(x) \
-  LogStream GEN_NAME(s, __LINE__)(&g_logSinkFile, LogLevel::Warning); GEN_NAME(s, __LINE__) << x
+  rogue::LogStream GEN_NAME(s, __LINE__)(&rogue::g_logSinkFile, rogue::LogLevel::Warning); GEN_NAME(s, __LINE__) << x
 #define LOG_ERROR(x)  \
-  LogStream GEN_NAME(s, __LINE__)(&g_logSinkFile, LogLevel::Error); GEN_NAME(s, __LINE__) << x
+  rogue::LogStream GEN_NAME(s, __LINE__)(&rogue::g_logSinkFile, rogue::LogLevel::Error); GEN_NAME(s, __LINE__) << x
 }
 

@@ -167,7 +167,7 @@ bool Game::InitMainWindow()
   _windowEventManager->RegisterHandler(Event::Closed, [this](const Event&) { _window->close(); return true; });
   _windowEventManager->RegisterHandler(Event::Resized, bind(&Game::OnResize, this, _1));
 
-  _renderer = new Renderer(_window);
+  _renderer = new Renderer(_window, _windowEventManager);
   if (!_renderer->Init(_gameState))
     return false;
 
@@ -184,7 +184,7 @@ bool Game::InitDebugWindow()
   _debugWindow->setFramerateLimit(60);
   _debugWindowEventManager = new WindowEventManager(_debugWindow);
 
-  _debugRenderer = new DebugRenderer(_debugWindow);
+  _debugRenderer = new DebugRenderer(_debugWindow, _debugWindowEventManager);
   if (!_debugRenderer->Init())
     return false;
 
@@ -223,7 +223,7 @@ bool Game::Init()
   if (!InitMainWindow())
     return false;
 
-  _gamePlayer = new GamePlayer(bind(&Renderer::TileAtPos, _renderer, _1, _2, _3));
+  _gamePlayer = new GamePlayer(_windowEventManager, bind(&Renderer::TileAtPos, _renderer, _1, _2, _3));
   _gameAI = new GameAI();
 
   _gamePlayer->Init();

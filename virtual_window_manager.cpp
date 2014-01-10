@@ -4,30 +4,35 @@
 #include "game.hpp"
 #include "window_event_manager.hpp"
 #include "shapes.hpp"
+#include "standard_cursor.hpp"
 
 using namespace rogue;
+using namespace sf;
 
 //-----------------------------------------------------------------------------
-VirtualWindowManager::VirtualWindowManager(RenderWindow *window)
+VirtualWindowManager::VirtualWindowManager(
+    RenderWindow* window,
+    WindowEventManager* eventManager)
   : _renderWindow(window)
+  , _eventManager(eventManager)
   , _nextId(1)
   , _nextDepth(1)
   , _focusWindow(nullptr)
+  , _movingWindow(nullptr)
 {
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::LostFocus, bind(&VirtualWindowManager::OnLostFocus, this, _1));
+  _eventManager->RegisterHandler(Event::LostFocus, bind(&VirtualWindowManager::OnLostFocus, this, _1));
 
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::KeyReleased, bind(&VirtualWindowManager::OnKeyReleased, this, _1));
+  _eventManager->RegisterHandler(Event::KeyReleased, bind(&VirtualWindowManager::OnKeyReleased, this, _1));
 
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseButtonPressed, bind(&VirtualWindowManager::OnMouseButtonPressed, this, _1));
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseButtonReleased, bind(&VirtualWindowManager::OnMouseButtonReleased, this, _1));
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseMoved, bind(&VirtualWindowManager::OnMouseMove, this, _1));
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::Resized, bind(&VirtualWindowManager::OnResize, this, _1));
+  _eventManager->RegisterHandler(Event::MouseButtonPressed, bind(&VirtualWindowManager::OnMouseButtonPressed, this, _1));
+  _eventManager->RegisterHandler(Event::MouseButtonReleased, bind(&VirtualWindowManager::OnMouseButtonReleased, this, _1));
+  _eventManager->RegisterHandler(Event::MouseMoved, bind(&VirtualWindowManager::OnMouseMove, this, _1));
+  _eventManager->RegisterHandler(Event::Resized, bind(&VirtualWindowManager::OnResize, this, _1));
 
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::KeyReleased, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseButtonReleased, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseMoved, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
+  _eventManager->RegisterHandler(Event::KeyReleased, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
+  _eventManager->RegisterHandler(Event::MouseButtonReleased, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
+  _eventManager->RegisterHandler(Event::MouseMoved, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
 
-  _font.loadFromFile("gfx/wscsnrg.ttf");
 }
 
 //-----------------------------------------------------------------------------
@@ -90,7 +95,7 @@ bool VirtualWindowManager::OnMouseButtonReleased(const Event& event)
     return false;
   }
 
-  Vector2f pos = VectorCast<float>(sf::Mouse::getPosition(*_renderWindow));
+  Vector2f pos((float)event.mouseButton.x, (float)event.mouseButton.y);
   for (VirtualWindow* window : _windows)
   {
     // If the click is inside a new window, change focus
@@ -108,26 +113,67 @@ bool VirtualWindowManager::OnMouseButtonReleased(const Event& event)
 //-----------------------------------------------------------------------------
 bool VirtualWindowManager::OnMouseMove(const Event& event)
 {
+  Vector2f pos((float)event.mouseMove.x, (float)event.mouseMove.y);
+
   if (_movingWindow)
   {
-    Vector2f mouseDelta = Vector2f((float)event.mouseMove.x, (float)event.mouseMove.y) - _startMovePos;
+    Vector2f mouseDelta = pos - _startMovePos;
     _movingWindow->SetPosition(_windowOrgPos + mouseDelta);
   }
+
+  // Check if we should change the cursor due to being over a window corner
+  if (_focusWindow)
+  {
+    u32 mask    = _focusWindow->PointInsideBorder(pos);
+    bool top    = !!((mask & ~VirtualWindow::TopBorder) & VirtualWindow::TopBorderOuter);
+    bool bottom = !!(mask & VirtualWindow::BottomBorder);
+    bool left   = !!(mask & VirtualWindow::LeftBorder);
+    bool right  = !!(mask & VirtualWindow::RightBorder);
+
+    if ((top || bottom) && !left && !right)
+    {
+      StandardCursor::Set(StandardCursor::Type::SizeNS);
+    }
+    else if ((left || right) && !top && !bottom)
+    {
+      StandardCursor::Set(StandardCursor::Type::SizeWE);
+    }
+    else if ((top && left) || (bottom && right))
+    {
+      StandardCursor::Set(StandardCursor::Type::SizeNWSE);
+    }
+    else if ((top && right) || (bottom && left))
+    {
+      StandardCursor::Set(StandardCursor::Type::SizeNESW);
+    }
+    else
+    {
+      StandardCursor::Set(StandardCursor::Type::Normal);
+    }
+  }
+
   return false;
 }
 
 //-----------------------------------------------------------------------------
 bool VirtualWindowManager::OnMouseButtonPressed(const Event& event)
 {
-  Vector2f pos = VectorCast<float>(sf::Mouse::getPosition(*_renderWindow));
+  Vector2f pos((float)event.mouseButton.x, (float)event.mouseButton.y);
   for (VirtualWindow* window : _windows)
   {
-    // If inside the title bar, start moving the window
     float w = (float)window->_borderWidth;
     float h = (float)window->_titleBarHeight;
-    FloatRect titleRect(window->_pos - Vector2f(w, h), Vector2f(2*w + window->_size.x, h));
 
-    if (titleRect.contains(pos))
+    // If the click is inside a new window, change focus
+    if (_focusWindow != window)
+    {
+      if (window->PointInside(pos, true))
+        SetFocus(window);
+    }
+
+    // If inside the title bar, start moving the window
+    u32 mask = window->PointInsideBorder(pos);
+    if (!!(mask & VirtualWindow::TopBorder))
     {
       // Save original window/mouse position to be able to update
       // deltas in mouse_mouse.
@@ -135,14 +181,6 @@ bool VirtualWindowManager::OnMouseButtonPressed(const Event& event)
       _startMovePos = pos;
       window->_moving = true;
       _movingWindow = window;
-      break;
-    }
-
-    // If the click is inside a new window, change focus
-    FloatRect rect(window->_pos, window->_size);
-    if (rect.contains(pos))
-    {
-      SetFocus(window);
       break;
     }
   }
@@ -175,8 +213,36 @@ bool VirtualWindowManager::HandlerForFocusWindow(const Event& event)
   if (itHandler == itWindow->second.end())
     return false;
 
+  // If the event is a mouse event, remap the coordinates to the virtual
+  // window
+  int w = (int)_focusWindow->_size.x;
+  int h = (int)_focusWindow->_size.y;
+
+  Event remappedEvent(event);
+  if (event.type == Event::MouseButtonPressed)
+  {
+    remappedEvent.mouseButton.x -= (int)_focusWindow->_pos.x;
+    remappedEvent.mouseButton.y -= (int)_focusWindow->_pos.y;
+    remappedEvent.mouseButton.x = Clamp(remappedEvent.mouseButton.x, 0, w - 1);
+    remappedEvent.mouseButton.y = Clamp(remappedEvent.mouseButton.y, 0, h - 1);
+  }
+  else if (event.type == Event::MouseButtonReleased)
+  {
+    remappedEvent.mouseButton.x -= (int)_focusWindow->_pos.x;
+    remappedEvent.mouseButton.y -= (int)_focusWindow->_pos.y;
+    remappedEvent.mouseButton.x = Clamp(remappedEvent.mouseButton.x, 0, w - 1);
+    remappedEvent.mouseButton.y = Clamp(remappedEvent.mouseButton.y, 0, h - 1);
+  }
+  else if (event.type == Event::MouseMoved)
+  {
+    remappedEvent.mouseMove.x -= (int)_focusWindow->_pos.x;
+    remappedEvent.mouseMove.y -= (int)_focusWindow->_pos.y;
+    remappedEvent.mouseMove.x = Clamp(remappedEvent.mouseMove.x, 0, w - 1);
+    remappedEvent.mouseMove.y = Clamp(remappedEvent.mouseMove.y, 0, h - 1);
+  }
+
   // Call the handler
-  return itHandler->second.second(event);
+  return itHandler->second.second(remappedEvent);
 }
 
 //-----------------------------------------------------------------------------
@@ -219,6 +285,18 @@ void VirtualWindowManager::UnregisterHandler(size_t handle)
 }
 
 //-----------------------------------------------------------------------------
+bool VirtualWindowManager::Init()
+{
+  for (VirtualWindow* window : _windows)
+  {
+    if (!window->Init())
+      return false;
+  }
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
 void VirtualWindowManager::Update()
 {
   // Sort windows according to depth (smallest is drawn first)
@@ -229,21 +307,7 @@ void VirtualWindowManager::Update()
 
   for (VirtualWindow* window : _windows)
   {
-    // draw window border
-    float w = (float)window->_borderWidth;
-    Vector2f size = VectorCast<float>(window->_size);
-    sf::RoundedRectangleShape rect(size + Vector2f(2*w, w+10), 10, 10, 0, 0, 40);
-    rect.setPosition(window->_pos - Vector2f(w, 10));
-    rect.setFillColor(Color(43, 43, 43));
-
-    // center the text (taking border into account)
-    Text text(window->_title, _font, 8);
-    float tw = text.getLocalBounds().width;
-    text.setPosition(window->_pos + Vector2f(w + (size.x - tw) / 2, -10));
-    text.setColor(Color::White);
-    _renderWindow->draw(rect);
-    _renderWindow->draw(text);
-
+    window->DrawBorder(_renderWindow);
     window->Draw();
     _renderWindow->draw(window->_sprite);
   }

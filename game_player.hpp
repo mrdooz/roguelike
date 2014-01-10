@@ -12,7 +12,7 @@ namespace rogue
   public:
     typedef function<int (const GameState&, int, int)> fnTileAtPos;
 
-    GamePlayer(const fnTileAtPos& fnTileAtPos);
+    GamePlayer(WindowEventManager* windowEventManager, const fnTileAtPos& fnTileAtPos);
     ~GamePlayer();
 
     bool Init();
@@ -37,6 +37,7 @@ namespace rogue
 
     typedef function<bool(GameState&, const Event&)> fnProcessAction;
 
+    WindowEventManager* _windowEventManager;
     fnTileAtPos _fnTileAtPos;
     map<PlayerAction, SpellBase*> _actionMap;
   };

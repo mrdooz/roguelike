@@ -121,6 +121,7 @@
     <ClInclude Include="..\roguelike.hpp" />
     <ClInclude Include="..\shapes.hpp" />
     <ClInclude Include="..\spell.hpp" />
+    <ClInclude Include="..\standard_cursor.hpp" />
     <ClInclude Include="..\texture_cache.hpp" />
     <ClInclude Include="..\texture_handle.hpp" />
     <ClInclude Include="..\tile.hpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="..\roguelike.cpp" />
     <ClCompile Include="..\shapes.cpp" />
     <ClCompile Include="..\spell.cpp" />
+    <ClCompile Include="..\standard_cursor.cpp" />
     <ClCompile Include="..\texture_cache.cpp" />
     <ClCompile Include="..\texture_handle.cpp" />
     <ClCompile Include="..\tile.cpp" />

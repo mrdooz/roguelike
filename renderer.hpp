@@ -5,17 +5,57 @@
 #include "animation.hpp"
 #include "animated_sprite.hpp"
 #include "texture_cache.hpp"
+#include "virtual_window_manager.hpp"
+#include "virtual_window.hpp"
 
 namespace rogue
 {
   class Level;
   class Party;
   class GameState;
+  class WindowEventManager;
 
-  class Renderer
+  //-----------------------------------------------------------------------------
+  class MainWindow : public VirtualWindow
   {
   public:
-    Renderer(RenderWindow *window);
+    MainWindow(const string& title, const Vector2f& pos, const Vector2f& size, Renderer* renderer);
+    virtual void Draw();
+
+  private:
+    Renderer* _renderer;
+  };
+
+  //-----------------------------------------------------------------------------
+  class CombatLogWindow : public VirtualWindow
+  {
+  public:
+    CombatLogWindow(const string& title, const Vector2f& pos, const Vector2f& size, Renderer* renderer);
+    virtual void Draw();
+
+  private:
+    Renderer* _renderer;
+  };
+
+  //-----------------------------------------------------------------------------
+  class PartyWindow : public VirtualWindow
+  {
+  public:
+    PartyWindow(const string& title, const Vector2f& pos, const Vector2f& size, Renderer* renderer);
+    virtual void Draw();
+
+  private:
+    Renderer* _renderer;
+  };
+
+  //-----------------------------------------------------------------------------
+  class Renderer
+  {
+    friend class PartyWindow;
+    friend class CombatLogWindow;
+
+  public:
+    Renderer(RenderWindow* window, WindowEventManager* eventManager);
     ~Renderer();
 
     bool Init(const GameState& state);
@@ -51,7 +91,6 @@ namespace rogue
     void PlayerInView(const GameState& state);
 
     void DrawParty(const GameState& state);
-    void DrawPartyStats(const GameState& state);
     void DrawLevel(const GameState& state);
     void DrawMonsters(const GameState& state);
     void DrawAnimations();
@@ -61,7 +100,6 @@ namespace rogue
     void VisibleArea(const Level* level, int* rows, int* cols) const;
 
     void AddToCombatLog(const string& msg);
-    void DrawCombatLog();
 
     void AddAnimation(
         Animation::Id id,
@@ -72,7 +110,6 @@ namespace rogue
     Pos HalfOffset() const;
 
     RenderWindow *_window;
-    int _partyStatsWidth;
     int _prevSelected;
 
     vector<string> _combatLog;
@@ -81,7 +118,6 @@ namespace rogue
 
     vector<HotloadSprite> _tileSprites;
     Pos _offset;
-    int _leftMargin, _rightMargin, _topMargin, _bottomMargin;
     int _zoomLevel;
 
     Font _font;
@@ -91,12 +127,9 @@ namespace rogue
 
     HotloadSprite _objectSprite;
 
-    Sprite _sprMain;
-    Sprite _sprCharacter;
-    Sprite _sprCombatLog;
-    RenderTexture _rtMain;
-    RenderTexture _rtCharacterPane;
-    RenderTexture _rtCombatLog;
+    RenderTexture* _rtMain;
+
+    VirtualWindowManager _windowManager;
 
     deque<AnimationInstance> _activeAnimations;
 

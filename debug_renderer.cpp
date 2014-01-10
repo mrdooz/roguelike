@@ -55,9 +55,9 @@ struct FramesWindow : public VirtualWindow
 };
 
 //-----------------------------------------------------------------------------
-DebugRenderer::DebugRenderer(RenderWindow *window)
+DebugRenderer::DebugRenderer(RenderWindow *window, WindowEventManager* eventManager)
   : _window(window)
-  , _windowManager(window)
+  , _windowManager(window, eventManager)
   , _font(nullptr)
   , _gridSize(8, 8)
   , _curAnimation(0)
@@ -65,11 +65,11 @@ DebugRenderer::DebugRenderer(RenderWindow *window)
   , _playOnce(false)
   , _showGrid(true)
 {
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::Resized, bind(&DebugRenderer::OnResize, this, _1));
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::KeyReleased, bind(&DebugRenderer::OnKeyReleased, this, _1));
+  eventManager->RegisterHandler(Event::Resized, bind(&DebugRenderer::OnResize, this, _1));
+  eventManager->RegisterHandler(Event::KeyReleased, bind(&DebugRenderer::OnKeyReleased, this, _1));
 
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseButtonReleased, bind(&DebugRenderer::OnMouseButtonDown, this, _1));
-  DEBUG_WINDOW_EVENT->RegisterHandler(Event::MouseMoved, bind(&DebugRenderer::OnMouseMove, this, _1));
+  eventManager->RegisterHandler(Event::MouseButtonReleased, bind(&DebugRenderer::OnMouseButtonDown, this, _1));
+  eventManager->RegisterHandler(Event::MouseMoved, bind(&DebugRenderer::OnMouseMove, this, _1));
 
   _windowManager.AddWindow(new AnimationWindow("ANIMATION", Vector2f(20, 20), Vector2f(200,200)));
   _windowManager.AddWindow(new CanvasWindow("CANVAS", Vector2f(250,20), Vector2f(500,500)));
@@ -84,6 +84,8 @@ bool DebugRenderer::Init()
 
   if (!LoadImage("oryx_lofi/lofi_obj.png"))
     return false;
+
+  _windowManager.Init();
 
   return true;
 }
