@@ -25,6 +25,7 @@ namespace rogue
         const Vector2f& pos,
         const Vector2f& size);
 
+    void SetSize(const Vector2f& size);
     void SetPosition(const Vector2f& pos);
     void DrawBorder(RenderWindow* window);
 
@@ -43,5 +44,6 @@ namespace rogue
     u32 _titleBarHeight;
     bool _focus;
     bool _moving;
+    bool _resizing;
   };
 }

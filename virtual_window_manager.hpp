@@ -36,7 +36,7 @@ namespace rogue
     bool HandlerForFocusWindow(const Event& event);
     void SetFocus(VirtualWindow* window);
 
-    bool PointOnBorder(const VirtualWindow* window, int x, int y) const;
+    bool ResetMovingAndResizing();
 
     typedef pair<u32, fnEventHandler> HandlerPair;
     typedef map<VirtualWindow*, HandlerPair> HandlersByWindow;
@@ -49,11 +49,14 @@ namespace rogue
     u32 _nextDepth;
 
     // Moving data
-    Vector2f _startMovePos;
+    Vector2f _startOperationPos;
     Vector2f _windowOrgPos;
+    Vector2f _windowOrgSize;
     VirtualWindow* _focusWindow;
 
     VirtualWindow* _movingWindow;
+    VirtualWindow* _resizingWindow;
+    u8 _resizeFlags;
   };
 
 }

@@ -18,6 +18,7 @@ VirtualWindow::VirtualWindow(
   , _titleBarHeight(10)
   , _focus(false)
   , _moving(false)
+  , _resizing(false)
 {
   _texture.create((int)size.x, (int)size.y);
   _sprite.setTexture(_texture.getTexture());
@@ -31,6 +32,14 @@ bool VirtualWindow::Init()
     return false;
 
   return true;
+}
+
+//-----------------------------------------------------------------------------
+void VirtualWindow::SetSize(const Vector2f& size)
+{
+  _size = size;
+  _texture.create((int)size.x, (int)size.y);
+  _sprite.setTexture(_texture.getTexture(), true);
 }
 
 //-----------------------------------------------------------------------------

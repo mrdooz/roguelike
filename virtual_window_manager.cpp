@@ -19,6 +19,8 @@ VirtualWindowManager::VirtualWindowManager(
   , _nextDepth(1)
   , _focusWindow(nullptr)
   , _movingWindow(nullptr)
+  , _resizingWindow(nullptr)
+  , _resizeFlags(0)
 {
   _eventManager->RegisterHandler(Event::LostFocus, bind(&VirtualWindowManager::OnLostFocus, this, _1));
 
@@ -42,10 +44,31 @@ VirtualWindowManager::~VirtualWindowManager()
 }
 
 //-----------------------------------------------------------------------------
+bool VirtualWindowManager::ResetMovingAndResizing()
+{
+  if (_movingWindow)
+  {
+    _movingWindow->_moving = false;
+    _movingWindow = nullptr;
+    return true;
+  }
+
+  if (_resizingWindow)
+  {
+    _resizingWindow->_resizing = false;
+    _resizingWindow = nullptr;
+    _resizeFlags = 0;
+    return true;
+  }
+
+  return false;
+}
+
+//-----------------------------------------------------------------------------
 bool VirtualWindowManager::OnKeyReleased(const Event& event)
 {
   if (event.key.code == Keyboard::Escape)
-    _movingWindow = nullptr;
+    ResetMovingAndResizing();
 
   return false;
 }
@@ -64,36 +87,10 @@ bool VirtualWindowManager::OnResize(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-bool VirtualWindowManager::PointOnBorder(const VirtualWindow* window, int x, int y) const
-{
-  int w = window->_borderWidth;
-
-  int x0 = (int)window->_pos.x;
-  int x1 = x0 + (int)window->_size.x;
-
-  int y0 = (int)window->_pos.y;
-  int y1 = y0 + (int)window->_size.y;
-
-  // Check if the mouse position is inside the window's border
-  if ( (x >= x0 && x < x0 + w && y >= y0 && y < y1)
-    || (y >= y0 && y < y0 + w && x >= x0 && x < x1)
-    || (x >= x1 - w && x < x1 && y >= y0 && y < y1)
-    || (y >= y1 - w && y < y1 && x >= x0 && x < x1))
-  {
-    return true;
-  }
-
-  return false;
-}
-
-//-----------------------------------------------------------------------------
 bool VirtualWindowManager::OnMouseButtonReleased(const Event& event)
 {
-  if (_movingWindow)
-  {
-    _movingWindow = nullptr;
+  if (ResetMovingAndResizing())
     return false;
-  }
 
   Vector2f pos((float)event.mouseButton.x, (float)event.mouseButton.y);
   for (VirtualWindow* window : _windows)
@@ -117,8 +114,50 @@ bool VirtualWindowManager::OnMouseMove(const Event& event)
 
   if (_movingWindow)
   {
-    Vector2f mouseDelta = pos - _startMovePos;
+    Vector2f mouseDelta = pos - _startOperationPos;
     _movingWindow->SetPosition(_windowOrgPos + mouseDelta);
+  }
+  else if (_resizingWindow)
+  {
+    Vector2f mouseDelta = pos - _startOperationPos;
+    Vector2f finalSize(_windowOrgSize);
+    Vector2f finalPos(_windowOrgPos);
+
+    if (!!(_resizeFlags & VirtualWindow::RightBorder))
+    {
+      finalSize.x += mouseDelta.x;
+    }
+
+    if (!!(_resizeFlags & VirtualWindow::LeftBorder))
+    {
+      // on left/top borders, we need to adjust both the position
+      // and the size
+      finalPos.x += mouseDelta.x;
+      finalSize.x -= mouseDelta.x;
+    }
+
+    if (!!(_resizeFlags & VirtualWindow::BottomBorder))
+    {
+      finalSize.y += mouseDelta.y;
+    }
+
+    if (!!(_resizeFlags & VirtualWindow::TopBorder))
+    {
+      finalPos.y += mouseDelta.y;
+      finalSize.y -= mouseDelta.y;
+    }
+
+    _resizingWindow->SetSize(finalSize);
+
+    if (!!(_resizeFlags & (VirtualWindow::LeftBorder | VirtualWindow::TopBorder)))
+      _resizingWindow->SetPosition(finalPos);
+
+    // Send a resize event to the window
+    Event resizeEvent;
+    resizeEvent.type = Event::Resized;
+    resizeEvent.size.width = (int)finalSize.x;
+    resizeEvent.size.height = (int)finalSize.y;
+    HandlerForFocusWindow(resizeEvent);
   }
 
   // Check if we should change the cursor due to being over a window corner
@@ -173,15 +212,25 @@ bool VirtualWindowManager::OnMouseButtonPressed(const Event& event)
 
     // If inside the title bar, start moving the window
     u32 mask = window->PointInsideBorder(pos);
-    if (!!(mask & VirtualWindow::TopBorder))
+    if (!!(mask & VirtualWindow::TopBorder) && !(mask & VirtualWindow::TopBorderOuter))
     {
       // Save original window/mouse position to be able to update
       // deltas in mouse_mouse.
       _windowOrgPos = window->_pos;
-      _startMovePos = pos;
-      window->_moving = true;
+      _startOperationPos = pos;
       _movingWindow = window;
+      _movingWindow->_moving = true;
       break;
+    }
+    else if (mask > 0)
+    {
+      // inside one of the resize borders
+      _windowOrgSize = window->_size;
+      _windowOrgPos = window->_pos;
+      _startOperationPos = pos;
+      _resizingWindow = window;
+      _resizeFlags = mask;
+      _resizingWindow->_resizing = true;
     }
   }
 
@@ -308,7 +357,10 @@ void VirtualWindowManager::Update()
   for (VirtualWindow* window : _windows)
   {
     window->DrawBorder(_renderWindow);
-    window->Draw();
-    _renderWindow->draw(window->_sprite);
+    if (!window->_resizing)
+    {
+      window->Draw();
+      _renderWindow->draw(window->_sprite);
+    }
   }
 }
