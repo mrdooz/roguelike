@@ -357,10 +357,8 @@ void VirtualWindowManager::Update()
   for (VirtualWindow* window : _windows)
   {
     window->DrawBorder(_renderWindow);
-    if (!window->_resizing)
-    {
+    if (!(window->_resizing || window->_moving))
       window->Draw();
-      _renderWindow->draw(window->_sprite);
-    }
+    _renderWindow->draw(window->_sprite);
   }
 }

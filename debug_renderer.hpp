@@ -51,13 +51,13 @@ namespace rogue
     VirtualWindowManager _windowManager;
     Font* _font;
 
-    vector<u8> _doubleBuffer;
-    Texture _editorTexture;
-    Image _editorImage;
-    Sprite _editorSprite;
+    //vector<u8> _doubleBuffer;
+    //Texture _editorTexture;
+    //Image _editorImage;
+    //Sprite _editorSprite;
 
-    Vector2u _gridSize;
-    Vector2u _imageSize;
+    //Vector2u _gridSize;
+    //Vector2u _imageSize;
     int _curAnimation;
     int _curZoom;
     bool _playOnce;

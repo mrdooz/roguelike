@@ -303,18 +303,6 @@ void Renderer::VisibleArea(const Level* level, int* rows, int* cols) const
 bool Renderer::OnResize(const Event& event)
 {
   auto windowSize = _window->getSize();
-/*
-  _rtMain->create(windowSize.x - _rightMargin, windowSize.y - _topMargin - _bottomMargin);
-  _sprMain.setTexture(_rtMain->getTexture());
-
-  _texture.create(_rightMargin, windowSize.y - _topMargin - _bottomMargin);
-  _sprCharacter.setTexture(_texture.getTexture());
-  _sprCharacter.setPosition((float)(windowSize.x - _rightMargin), 0);
-
-  _rtCombatLog->create(windowSize.x - _rightMargin, _bottomMargin);
-  _sprCombatLog.setTexture(_rtCombatLog->getTexture());
-  _sprCombatLog.setPosition(0, (float)(windowSize.y - _bottomMargin));
-*/  
   return false;
 }
 
