@@ -15,7 +15,7 @@
 #include <X11/cursorfont.h>
 #include <X11/Xlib.h>
 #else
-#error This OS is not yet supported by the cursor library.
+//#error This OS is not yet supported by the cursor library.
 #endif
 
 namespace sf

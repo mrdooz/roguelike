@@ -10,7 +10,7 @@ GameEventManager::GameEventManager()
 }
 
 //-----------------------------------------------------------------------------
-size_t GameEventManager::RegisterHandler(GameEvent::Type event, const fnEventHandler& handler)
+u32 GameEventManager::RegisterHandler(GameEvent::Type event, const fnEventHandler& handler)
 {
   _handlers[event].push_back(make_pair(_nextId, handler));
 
@@ -20,7 +20,7 @@ size_t GameEventManager::RegisterHandler(GameEvent::Type event, const fnEventHan
 }
 
 //-----------------------------------------------------------------------------
-void GameEventManager::UnregisterHandler(size_t handle)
+void GameEventManager::UnregisterHandler(u32 handle)
 {
   auto it = _idToEvent.find(handle);
   if (it != _idToEvent.end())

@@ -8,6 +8,8 @@ namespace rogue
   {
     friend class VirtualWindowManager;
   public:
+    virtual ~VirtualWindow() {}
+
     virtual bool Init();
     virtual void Draw() = 0;
     RenderTexture* GetTexture() { return &_texture; }
@@ -24,6 +26,7 @@ namespace rogue
         const string& title,
         const Vector2f& pos,
         const Vector2f& size);
+
 
     void SetSize(const Vector2f& size);
     void SetPosition(const Vector2f& pos);

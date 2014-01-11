@@ -35,7 +35,6 @@ enum class Tiles
 //-----------------------------------------------------------------------------
 MainWindow::MainWindow(const string& title, const Vector2f& pos, const Vector2f& size, Renderer* renderer)
   : VirtualWindow(title, pos, size)
-  , _renderer(renderer)
 {
 }
 
@@ -302,12 +301,11 @@ void Renderer::VisibleArea(const Level* level, int* rows, int* cols) const
 //-----------------------------------------------------------------------------
 bool Renderer::OnResize(const Event& event)
 {
-  auto windowSize = _window->getSize();
   return false;
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::DrawQuad(const Pos& topLeft, size_t size, sf::Color color)
+void Renderer::DrawQuad(const Pos& topLeft, u32 size, sf::Color color)
 {
   int s = size * _zoomLevel;
   sf::Vertex verts[] = {

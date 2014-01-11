@@ -10,7 +10,7 @@ WindowEventManager::WindowEventManager(RenderWindow* window)
 }
 
 //-----------------------------------------------------------------------------
-size_t WindowEventManager::RegisterHandler(Event::EventType event, const fnEventHandler& handler)
+u32 WindowEventManager::RegisterHandler(Event::EventType event, const fnEventHandler& handler)
 {
   _handlers[event].push_back(make_pair(_nextId, handler));
 
@@ -20,7 +20,7 @@ size_t WindowEventManager::RegisterHandler(Event::EventType event, const fnEvent
 }
 
 //-----------------------------------------------------------------------------
-void WindowEventManager::UnregisterHandler(size_t handle)
+void WindowEventManager::UnregisterHandler(u32 handle)
 {
   auto it = _idToEvent.find(handle);
   if (it != _idToEvent.end())

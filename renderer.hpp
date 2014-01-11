@@ -14,6 +14,7 @@ namespace rogue
   class Party;
   class GameState;
   class WindowEventManager;
+  class Renderer;
 
   //-----------------------------------------------------------------------------
   class MainWindow : public VirtualWindow
@@ -23,7 +24,6 @@ namespace rogue
     virtual void Draw();
 
   private:
-    Renderer* _renderer;
   };
 
   //-----------------------------------------------------------------------------

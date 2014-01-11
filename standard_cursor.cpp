@@ -89,5 +89,8 @@ sf::StandardCursor::~StandardCursor()
 }
 
 #else
-#error This OS is not yet supported by the cursor library.
+void StandardCursor::Set(Type t)
+{
+
+}
 #endif

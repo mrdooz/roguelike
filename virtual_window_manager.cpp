@@ -200,9 +200,6 @@ bool VirtualWindowManager::OnMouseButtonPressed(const Event& event)
   Vector2f pos((float)event.mouseButton.x, (float)event.mouseButton.y);
   for (VirtualWindow* window : _windows)
   {
-    float w = (float)window->_borderWidth;
-    float h = (float)window->_titleBarHeight;
-
     // If the click is inside a new window, change focus
     if (_focusWindow != window)
     {
@@ -308,7 +305,7 @@ void VirtualWindowManager::AddWindow(VirtualWindow* window)
 }
 
 //-----------------------------------------------------------------------------
-size_t VirtualWindowManager::RegisterHandler(
+u32 VirtualWindowManager::RegisterHandler(
     Event::EventType event,
     VirtualWindow* window,
     const fnEventHandler& handler)
@@ -318,7 +315,7 @@ size_t VirtualWindowManager::RegisterHandler(
 }
 
 //-----------------------------------------------------------------------------
-void VirtualWindowManager::UnregisterHandler(size_t handle)
+void VirtualWindowManager::UnregisterHandler(u32 handle)
 {
   for (auto& h : _handlers)
   {
