@@ -26,7 +26,6 @@ bool AnimationWindow::Init()
   return true;
 }
 
-
 //-----------------------------------------------------------------------------
 bool AnimationWindow::OnKeyReleased(const Event& event)
 {
@@ -195,7 +194,7 @@ void CanvasWindow::UpdateDoubleBuffer()
   _frameTexture.create(w, h);
   _frameTexture.update(dst, w, h, 0, 0);
 
-  _frameSprite.scale(_size.x / w, _size.y / h);
+  _frameSprite.setScale(_size.x / w, _size.y / h);
   _frameSprite.setTexture(_frameTexture, true);
 }
 
