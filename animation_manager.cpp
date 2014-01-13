@@ -107,3 +107,20 @@ void AnimationManager::GetAnimations(vector<Animation*>* animations)
     animations->push_back(a.second);
   }
 }
+
+//-----------------------------------------------------------------------------
+bool AnimationManager::GetFrame(u32 animationIdx, u32 frameIdx, Frame* frame)
+{
+  vector<Animation*> animations;
+  GetAnimations(&animations);
+  if (animationIdx >= animations.size())
+    return false;
+
+  Animation* animation = animations[animationIdx];
+  if (frameIdx >- animation->_frames.size())
+    return false;
+
+  *frame = animation->_frames[frameIdx];
+  return true;
+}
+
