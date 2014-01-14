@@ -32,6 +32,7 @@ VirtualWindowManager::VirtualWindowManager(
   _eventManager->RegisterHandler(Event::Resized, bind(&VirtualWindowManager::OnResize, this, _1));
 
   _eventManager->RegisterHandler(Event::KeyReleased, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
+  _eventManager->RegisterHandler(Event::MouseButtonPressed, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
   _eventManager->RegisterHandler(Event::MouseButtonReleased, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
   _eventManager->RegisterHandler(Event::MouseMoved, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
 

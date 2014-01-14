@@ -1,4 +1,4 @@
-#include "debug_renderer.hpp"
+#include "animation_editor.hpp"
 #include "game.hpp"
 #include "window_event_manager.hpp"
 #include "animation_manager.hpp"
@@ -12,7 +12,7 @@ AnimationWindow::AnimationWindow(
      const string& title,
      const Vector2f& pos,
      const Vector2f& size,
-     DebugRenderer* renderer)
+     AnimationEditor* renderer)
   : VirtualWindow(title, pos, size)
   , _renderer(renderer)
   , _curZoom(1)
@@ -130,10 +130,11 @@ CanvasWindow::CanvasWindow(
      const string& title,
      const Vector2f& pos,
      const Vector2f& size,
-     DebugRenderer* renderer)
+     AnimationEditor* renderer)
   : VirtualWindow(title, pos, size)
   , _renderer(renderer)
   , _gridSize(8, 8)
+  , _showGrid(true)
 {
 }
 
@@ -144,6 +145,7 @@ bool CanvasWindow::Init()
     return false;
 
   _windowManager->RegisterHandler(Event::MouseMoved, this, bind(&CanvasWindow::OnMouseMove, this, _1));
+  _windowManager->RegisterHandler(Event::MouseButtonPressed, this, bind(&CanvasWindow::OnMouseButtonPressed, this, _1));
   _windowManager->RegisterHandler(Event::KeyReleased, this, bind(&CanvasWindow::OnKeyReleased, this, _1));
 
   return true;
@@ -179,6 +181,9 @@ void CanvasWindow::UpdateDoubleBuffer()
   size_t w = frame._textureRect.width;
   size_t h = frame._textureRect.height;
 
+  _frameSize.x = w;
+  _frameSize.y = h;
+
   size_t iw = _editorImage.getSize().x;
 
   _frameDoubleBuffer.resize(w * h * 4);
@@ -194,22 +199,10 @@ void CanvasWindow::UpdateDoubleBuffer()
   _frameTexture.create(w, h);
   _frameTexture.update(dst, w, h, 0, 0);
 
-  _frameSprite.setScale(_size.x / w, _size.y / h);
+  _scale = min(_size.x / w, _size.y / h);
+
+  _frameSprite.setScale(_scale, _scale);
   _frameSprite.setTexture(_frameTexture, true);
-}
-
-//-----------------------------------------------------------------------------
-Vector2f CanvasWindow::ImageOffset()
-{
-  float ix = (float)_imageSize.x;
-  float iy = (float)_imageSize.y;
-
-  float wx = _size.x;
-  float wy = _size.y;
-
-  View view(Vector2f(wx/2, wy/2), Vector2f(wx, wy));
-
-  return Vector2f((wx - ix) / 2, (wy - iy) / 2);
 }
 
 //-----------------------------------------------------------------------------
@@ -224,6 +217,9 @@ bool CanvasWindow::OnKeyReleased(const Event& event)
   if (event.key.code == Keyboard::Right)
     _renderer->_curFrame = Clamp(_renderer->_curFrame+1, 0, numFrames);
 
+  if (event.key.code == Keyboard::Key::G)
+    _showGrid = !_showGrid;
+
   if (prevFrame != _renderer->_curFrame)
     UpdateDoubleBuffer();
 
@@ -231,29 +227,50 @@ bool CanvasWindow::OnKeyReleased(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
+bool CanvasWindow::OnMouseButtonPressed(const Event& event)
+{
+  int x = event.mouseButton.x / _scale;
+  int y = event.mouseButton.y / _scale;
+
+  if (!event.mouseButton.button == sf::Mouse::Button::Left)
+    return false;
+
+  UpdateFrameBuffer(x, y, _renderer->_primaryColor);
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
 bool CanvasWindow::OnMouseMove(const Event& event)
 {
-  /*
-  sf::Vector2u size = _editorImage.getSize();
-  Vector2f c = _texture.mapPixelToCoords(Vector2i(event.mouseMove.x, event.mouseMove.y)) - ImageOffset();
-  int x = (int)c.x;
-  int y = (int)c.y;
+  int x = event.mouseMove.x / _scale;
+  int y = event.mouseMove.y / _scale;
 
   if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
     return false;
 
-  if (x < 0 || x >= (int)size.x || y < 0 || y >= (int)size.y)
-    return false;
+  UpdateFrameBuffer(x, y, _renderer->_primaryColor);
 
-  _doubleBuffer[(y*size.x+x)*4+0] = 0xff;
-  _doubleBuffer[(y*size.x+x)*4+1] = 0xff;
-  _doubleBuffer[(y*size.x+x)*4+2] = 0xff;
-  _doubleBuffer[(y*size.x+x)*4+3] = 0xff;
-
-  _editorTexture.update(_doubleBuffer.data(), size.x, size.y, 0, 0);
-   */
   return true;
 }
+
+//-----------------------------------------------------------------------------
+void CanvasWindow::UpdateFrameBuffer(int x, int y, const Color& color)
+{
+  int w = _frameSize.x;
+  int h = _frameSize.y;
+
+  if (x < 0 || x >= w || y < 0 || y >= h)
+    return;
+
+  _frameDoubleBuffer[(y*w+x)*4+0] = color.r;  // r
+  _frameDoubleBuffer[(y*w+x)*4+1] = color.g;  // g
+  _frameDoubleBuffer[(y*w+x)*4+2] = color.b;  // b
+  _frameDoubleBuffer[(y*w+x)*4+3] = color.a;  // a
+
+  _frameTexture.update(_frameDoubleBuffer.data(), w, h, 0, 0);
+}
+
 
 //-----------------------------------------------------------------------------
 void CanvasWindow::Draw()
@@ -261,108 +278,42 @@ void CanvasWindow::Draw()
   _texture.clear();
 
   // Draw the current frame
-//  _frameSprite.setScale(10, 10);
 
   // Draw the largest possible grid
-  Vector2f frameSize = _renderer->GetFrameSize();
+  if (_showGrid)
+  {
+    Vector2f frameSize = _renderer->GetFrameSize();
 
-  u32 hLines = frameSize.x;
-  u32 vLines = frameSize.y;
+    u32 hLines = frameSize.x;
+    u32 vLines = frameSize.y;
 
-  float gx = _size.x / hLines;
-  float gy = _size.y / vLines;
+    float gx = _size.x / hLines;
+    float gy = _size.y / vLines;
+
+    float ix = (float)_size.x;
+    float iy = (float)_size.y;
+
+    VertexArray verts(sf::Lines, 2 * vLines + 2 * hLines);
+
+    size_t idx = 0;
+    for (size_t i = 0; i < vLines; ++i)
+    {
+      verts[idx+0].position = Vector2f(i*gx, 0);
+      verts[idx+1].position = Vector2f(i*gx, iy);
+      idx +=2;
+    }
+
+    for (size_t i = 0; i < hLines; ++i)
+    {
+      verts[idx+0].position = Vector2f(0, i*gy);
+      verts[idx+1].position = Vector2f(ix, i*gy);
+      idx +=2;
+    }
+    _texture.draw(verts);
+  }
 
   _texture.draw(_frameSprite);
 
-  float ix = (float)_size.x;
-  float iy = (float)_size.y;
-
-  VertexArray verts(sf::Lines, 2 * vLines + 2 * hLines);
-
-  size_t idx = 0;
-  for (size_t i = 0; i < vLines; ++i)
-  {
-    verts[idx+0].position = Vector2f(i*gx, 0);
-    verts[idx+1].position = Vector2f(i*gx, iy);
-    idx +=2;
-  }
-
-  for (size_t i = 0; i < hLines; ++i)
-  {
-    verts[idx+0].position = Vector2f(0, i*gy);
-    verts[idx+1].position = Vector2f(ix, i*gy);
-    idx +=2;
-  }
-  _texture.draw(verts);
-
-  /*
-
-  _texture.draw(_editorSprite);
-
-  float ix = (float)_imageSize.x;
-  float iy = (float)_imageSize.y;
-
-  float gx = (float)_gridSize.x;
-  float gy = (float)_gridSize.y;
-
-  Vector2f ofs(0,0); // (VectorCast<float>(ImageOffset()));
-
-  size_t vLines = _imageSize.x / _gridSize.x;
-  size_t hLines = _imageSize.y / _gridSize.y;
-
-  VertexArray verts(sf::Lines, 2 * vLines + 2 * hLines);
-
-  size_t idx = 0;
-  for (size_t i = 0; i < vLines; ++i)
-  {
-    verts[idx+0].position = ofs + Vector2f(i*gx, 0);
-    verts[idx+1].position = ofs + Vector2f(i*gx, iy);
-    idx +=2;
-  }
-
-  for (size_t i = 0; i < hLines; ++i)
-  {
-    verts[idx+0].position = ofs + Vector2f(0, i*gy);
-    verts[idx+1].position = ofs + Vector2f(ix, i*gy);
-    idx +=2;
-  }
-  _texture.draw(verts);
-
-  // Fetch all animations
-  vector<Animation*> animations;
-  ANIMATION->GetAnimations(&animations);
-  _renderer->_curAnimation = Clamp(_renderer->_curAnimation, 0, (int)animations.size() - 1);
-
-  Animation* animation = animations[_renderer->_curAnimation];
-  size_t numFrames = animation->_frames.size();
-
-  // Draw the frames
-  for (size_t i = 0; i < numFrames; ++i)
-  {
-    VertexArray frameVerts(sf::LinesStrip, 4);
-
-    auto& frame = animation->_frames[i];
-
-    // convert texture rect to coords
-    auto& r = frame._textureRect;
-    float left    = (float)r.left;
-    float top     = (float)r.top;
-    float width   = (float)r.width;
-    float height  = (float)r.height;
-
-    frameVerts[0].position = ofs + Vector2f(left, top);
-    frameVerts[0].color = Color::Red;
-    frameVerts[1].position = frameVerts[0].position + Vector2f(width, 0);
-    frameVerts[1].color = Color::Red;
-    frameVerts[2].position = frameVerts[1].position + Vector2f(0, height);
-    frameVerts[2].color = Color::Red;
-    frameVerts[3].position = frameVerts[0].position + Vector2f(0, height);
-    frameVerts[3].color = Color::Red;
-
-    _texture.draw(frameVerts);
-  }
-*/
-  //_texture.draw(_sprCanvas);
   _texture.display();
 }
 
@@ -406,7 +357,7 @@ void ColorPickerWindow::Draw()
 }
 
 //-----------------------------------------------------------------------------
-DebugRenderer::DebugRenderer(RenderWindow *window, WindowEventManager* eventManager)
+AnimationEditor::AnimationEditor(RenderWindow *window, WindowEventManager* eventManager)
   : _window(window)
   , _windowManager(window, eventManager)
   , _font(nullptr)
@@ -414,13 +365,14 @@ DebugRenderer::DebugRenderer(RenderWindow *window, WindowEventManager* eventMana
   , _curFrame(1)
   , _curZoom(3)
   , _playOnce(false)
-  , _showGrid(true)
+  , _primaryColor(255, 255, 255, 255)
+  , _secondaryColor(0, 0, 0, 255)
 {
-  eventManager->RegisterHandler(Event::Resized, bind(&DebugRenderer::OnResize, this, _1));
-  eventManager->RegisterHandler(Event::KeyReleased, bind(&DebugRenderer::OnKeyReleased, this, _1));
+  eventManager->RegisterHandler(Event::Resized, bind(&AnimationEditor::OnResize, this, _1));
+  eventManager->RegisterHandler(Event::KeyReleased, bind(&AnimationEditor::OnKeyReleased, this, _1));
 
-  eventManager->RegisterHandler(Event::MouseButtonReleased, bind(&DebugRenderer::OnMouseButtonDown, this, _1));
-  eventManager->RegisterHandler(Event::MouseMoved, bind(&DebugRenderer::OnMouseMove, this, _1));
+  eventManager->RegisterHandler(Event::MouseButtonReleased, bind(&AnimationEditor::OnMouseButtonDown, this, _1));
+  eventManager->RegisterHandler(Event::MouseMoved, bind(&AnimationEditor::OnMouseMove, this, _1));
 
   _windowManager.AddWindow(new AnimationWindow("ANIMATION", Vector2f(20, 20), Vector2f(200,200), this));
   _windowManager.AddWindow(new CanvasWindow("CANVAS", Vector2f(250,150), Vector2f(400,400), this));
@@ -431,7 +383,7 @@ DebugRenderer::DebugRenderer(RenderWindow *window, WindowEventManager* eventMana
 }
 
 //-----------------------------------------------------------------------------
-bool DebugRenderer::Init()
+bool AnimationEditor::Init()
 {
   _font = new sf::Font();
   if (!_font->loadFromFile("gfx/wscsnrg.ttf"))
@@ -446,7 +398,7 @@ bool DebugRenderer::Init()
 }
 
 //-----------------------------------------------------------------------------
-Vector2f DebugRenderer::GetFrameSize() const
+Vector2f AnimationEditor::GetFrameSize() const
 {
   Vector2f res(0,0);
 
@@ -465,7 +417,7 @@ Vector2f DebugRenderer::GetFrameSize() const
 
 
 //-----------------------------------------------------------------------------
-bool DebugRenderer::LoadImage(const char* filename)
+bool AnimationEditor::LoadImage(const char* filename)
 {
 /*
   _editorImage.loadFromFile(filename);
@@ -483,13 +435,13 @@ bool DebugRenderer::LoadImage(const char* filename)
 }
 
 //-----------------------------------------------------------------------------
-bool DebugRenderer::OnMouseButtonDown(const Event& event)
+bool AnimationEditor::OnMouseButtonDown(const Event& event)
 {
   return false;
 }
 
 //-----------------------------------------------------------------------------
-bool DebugRenderer::OnMouseMove(const Event& event)
+bool AnimationEditor::OnMouseMove(const Event& event)
 {
 /*
   sf::Vector2u size = _editorImage.getSize();
@@ -514,35 +466,15 @@ bool DebugRenderer::OnMouseMove(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-Vector2i DebugRenderer::ImageOffset()
-{
-/*
-  float ix = (float)_imageSize.x;
-  float iy = (float)_imageSize.y;
-
-  float wx = (float)_window->getSize().x;
-  float wy = (float)_window->getSize().y;
-
-  View view(Vector2f(wx/2, wy/2), Vector2f(wx, wy));
-
-  return Vector2i((int)(wx - ix) / 2, (int)(wy - iy) / 2);
-*/
-  return Vector2i(0,0);
-}
-
-//-----------------------------------------------------------------------------
-bool DebugRenderer::OnResize(const Event& event)
+bool AnimationEditor::OnResize(const Event& event)
 {
   return false;
 }
 
 //-----------------------------------------------------------------------------
-bool DebugRenderer::OnKeyReleased(const Event& event)
+bool AnimationEditor::OnKeyReleased(const Event& event)
 {
   int _oldZoom = _curZoom;
-
-  if (event.key.code == Keyboard::Key::G)
-    _showGrid = !_showGrid;
 
   if (event.key.code == Keyboard::Key::Up)
     _curAnimation++;
@@ -577,7 +509,7 @@ bool DebugRenderer::OnKeyReleased(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-void DebugRenderer::Update()
+void AnimationEditor::Update()
 {
   _windowManager.Update();
 }

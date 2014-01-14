@@ -6,7 +6,6 @@ namespace rogue
 {
   class Party;
   class Renderer;
-  class DebugRenderer;
   class EventManager;
   class GameAI;
   class GamePlayer;
@@ -17,6 +16,7 @@ namespace rogue
 
   class TextureCache;
   class AnimationManager;
+  class AnimationEditor;
 
   struct LogMessage
   {
@@ -77,7 +77,7 @@ namespace rogue
     RenderWindow* _window;
     RenderWindow* _debugWindow;
     Renderer *_renderer;
-    DebugRenderer* _debugRenderer;
+    AnimationEditor* _animationEditor;
 
     WindowEventManager* _windowEventManager;
     WindowEventManager* _debugWindowEventManager;

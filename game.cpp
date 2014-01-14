@@ -6,7 +6,7 @@
 #include "player_factory.hpp"
 #include "level_factory.hpp"
 #include "renderer.hpp"
-#include "debug_renderer.hpp"
+#include "animation_editor.hpp"
 #include "party.hpp"
 #include "window_event_manager.hpp"
 #include "game_event_manager.hpp"
@@ -36,7 +36,7 @@ Game::Game()
     , _window(nullptr)
     , _debugWindow(nullptr)
     , _renderer(nullptr)
-    , _debugRenderer(nullptr)
+    , _animationEditor(nullptr)
     , _windowEventManager(nullptr)
     , _debugWindowEventManager(nullptr)
     , _gameEventManager(nullptr)
@@ -56,7 +56,7 @@ Game::~Game()
   delete exch_null(_renderer);
   delete exch_null(_window);
 #ifdef _USE_DEBUG_WINDOW
-  delete exch_null(_debugRenderer);
+  delete exch_null(_animationEditor);
   delete exch_null(_debugWindow);
 #endif
   delete exch_null(_windowEventManager);
@@ -184,8 +184,8 @@ bool Game::InitDebugWindow()
   _debugWindow->setFramerateLimit(60);
   _debugWindowEventManager = new WindowEventManager(_debugWindow);
 
-  _debugRenderer = new DebugRenderer(_debugWindow, _debugWindowEventManager);
-  if (!_debugRenderer->Init())
+  _animationEditor = new AnimationEditor(_debugWindow, _debugWindowEventManager);
+  if (!_animationEditor->Init())
     return false;
 
 
@@ -258,7 +258,7 @@ void Game::ProcessDebugWindow()
 
   _debugWindowEventManager->Poll();
   _debugWindow->clear();
-  _debugRenderer->Update();
+  _animationEditor->Update();
   _debugWindow->display();
 #endif
 }
@@ -300,7 +300,7 @@ int Game::Run()
     _textureCache->CheckForReload();
     _animationManager->CheckForReload();
 
-    if (_debugWindow && _debugRenderer)
+    if (_debugWindow && _animationEditor)
       ProcessDebugWindow();
 
     ProcessMainWindow();

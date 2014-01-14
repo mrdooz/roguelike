@@ -6,13 +6,13 @@
 namespace rogue
 {
   class GameState;
-  class DebugRenderer;
+  class AnimationEditor;
 
   //-----------------------------------------------------------------------------
   class AnimationWindow : public VirtualWindow
   {
     public:
-    AnimationWindow(const string& title, const Vector2f& pos, const Vector2f& size, DebugRenderer* renderer);
+    AnimationWindow(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* renderer);
     virtual bool Init();
     virtual void Draw();
 
@@ -21,7 +21,7 @@ namespace rogue
     HotloadSprite _animationSprite;
     vector<HotloadSprite> _animationFrames;
 
-    DebugRenderer* _renderer;
+    AnimationEditor* _renderer;
     ptime _lastFrame;
 
     float _curZoom;
@@ -31,17 +31,18 @@ namespace rogue
   class CanvasWindow : public VirtualWindow
   {
   public:
-    CanvasWindow(const string& title, const Vector2f& pos, const Vector2f& size, DebugRenderer* renderer);
+    CanvasWindow(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* renderer);
     bool Init();
     bool LoadImage(const char* filename);
-    Vector2f ImageOffset();
     bool OnMouseMove(const Event& event);
+    bool OnMouseButtonPressed(const Event& event);
     bool OnKeyReleased(const Event& event);
     void Draw();
 
     void UpdateDoubleBuffer();
+    void UpdateFrameBuffer(int x, int y, const Color& color);
 
-    DebugRenderer* _renderer;
+    AnimationEditor* _renderer;
 
     Image _editorImage;
 
@@ -50,12 +51,14 @@ namespace rogue
 
     vector<u8> _imageDoubleBuffer;
     vector<u8> _frameDoubleBuffer;
-//    vector<u8> _doubleBuffer;
     Texture _editorTexture;
     Sprite _editorSprite;
     
     Vector2u _gridSize;
     Vector2u _imageSize;
+    int _scale;
+    Vector2i _frameSize;
+    bool _showGrid;
   };
 
   //-----------------------------------------------------------------------------
@@ -83,7 +86,7 @@ namespace rogue
   };
 
   //-----------------------------------------------------------------------------
-  class DebugRenderer
+  class AnimationEditor
   {
     friend class AnimationWindow;
     friend class CanvasWindow;
@@ -92,7 +95,7 @@ namespace rogue
     friend class FramesWindow;
 
   public:
-    DebugRenderer(RenderWindow *window, WindowEventManager* eventManager);
+    AnimationEditor(RenderWindow *window, WindowEventManager* eventManager);
 
     bool Init();
     bool OnResize(const Event& event);
@@ -109,22 +112,8 @@ namespace rogue
     void DrawGrid();
 
     bool LoadImage(const char* filename);
-    Vector2i ImageOffset();
 
     Image _editorImage;
-/*
-    RenderTexture _rtAnimation;
-    RenderTexture _rtMenu;
-    RenderTexture _rtCanvas;
-    RenderTexture _rtColorPicker;
-    RenderTexture _rtFrames;
-
-    Sprite _sprAnimation;
-    Sprite _sprMenu;
-    Sprite _sprCanvas;
-    Sprite _sprColorPicker;
-    Sprite _sprFrames;
-*/
 
     RenderWindow *_window;
     VirtualWindowManager _windowManager;
@@ -135,6 +124,8 @@ namespace rogue
     int _curZoom;
     bool _playOnce;
 
-    bool _showGrid;
+    Color _primaryColor;
+    Color _secondaryColor;
+
   };
 }
