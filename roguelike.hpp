@@ -19,6 +19,7 @@ namespace rogue
   using std::make_pair;
   using std::shared_ptr;
   using std::unique_ptr;
+  using std::swap;
 
   using std::function;
   

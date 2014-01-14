@@ -50,7 +50,7 @@ namespace rogue
 
   private:
     typedef pair<u32, fnEventHandler> HandlerPair;
-    map<GameEvent::Type, vector<HandlerPair> > _handlers;
+    map<GameEvent::Type, vector<HandlerPair> > _handlersByWindow;
     unordered_map<u32, GameEvent::Type> _idToEvent;
     u32 _nextId;
   };

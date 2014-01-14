@@ -3,7 +3,7 @@
 #include "utils.hpp"
 #include "game.hpp"
 #include "window_event_manager.hpp"
-#include "shapes.hpp"
+#include "sfml_helpers.hpp"
 #include "standard_cursor.hpp"
 
 using namespace rogue;
@@ -245,14 +245,30 @@ void VirtualWindowManager::SetFocus(VirtualWindow* window)
 }
 
 //-----------------------------------------------------------------------------
+bool VirtualWindowManager::GenericHandler(const Event& event)
+{
+  auto it = _genericHandlers.find(event.type);
+  if (it == _genericHandlers.end())
+    return false;
+
+  for (const HandlerPair& h : it->second)
+  {
+    // call handler
+    if (h.second(event))
+      return true;
+  }
+  return false;
+}
+
+//-----------------------------------------------------------------------------
 bool VirtualWindowManager::HandlerForFocusWindow(const Event& event)
 {
   if (!_focusWindow)
     return false;
 
   // Check for any event handlers for the event
-  auto itWindow = _handlers.find(event.type);
-  if (itWindow == _handlers.end())
+  auto itWindow = _handlersByWindow.find(event.type);
+  if (itWindow == _handlersByWindow.end())
     return false;
 
   // Check if the focus window has a handler
@@ -311,14 +327,23 @@ u32 VirtualWindowManager::RegisterHandler(
     VirtualWindow* window,
     const fnEventHandler& handler)
 {
-  _handlers[event][window] = make_pair(_nextId, handler);
+
+  if (window)
+  {
+    _handlersByWindow[event][window] = make_pair(_nextId, handler);
+  }
+  else
+  {
+    _genericHandlers[event].push_back(make_pair(_nextId, handler));
+  }
+
   return _nextId++;
 }
 
 //-----------------------------------------------------------------------------
 void VirtualWindowManager::UnregisterHandler(u32 handle)
 {
-  for (auto& h : _handlers)
+  for (auto& h : _handlersByWindow)
   {
     for (auto it = h.second.begin(); it != h.second.end(); ++it)
     {
@@ -329,6 +354,8 @@ void VirtualWindowManager::UnregisterHandler(u32 handle)
       }
     }
   }
+
+  // todo: unregister generic handlers
 }
 
 //-----------------------------------------------------------------------------

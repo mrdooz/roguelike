@@ -1,6 +1,6 @@
 #include "virtual_window.hpp"
 #include "utils.hpp"
-#include "shapes.hpp"
+#include "sfml_helpers.hpp"
 
 using namespace rogue;
 
@@ -53,7 +53,7 @@ void VirtualWindow::SetPosition(const Vector2f& pos)
 void VirtualWindow::DrawBorder(RenderWindow* window)
 {
   float w = (float)_borderWidth;
-  sf::RoundedRectangleShape rect(_size + Vector2f(2*w, w+10), 10, 10, 0, 0, 40);
+  RoundedRectangleShape rect(_size + Vector2f(2*w, w+10), 10, 10, 0, 0, 40);
   rect.setPosition(_pos - Vector2f(w, 10));
   rect.setFillColor(_focus ? Color(50, 50, 50) : Color(30, 30, 30));
 

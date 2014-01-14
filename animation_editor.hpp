@@ -2,6 +2,7 @@
 #include "hotload_sprite.hpp"
 #include "virtual_window_manager.hpp"
 #include "virtual_window.hpp"
+#include "sfml_helpers.hpp"
 
 namespace rogue
 {
@@ -12,7 +13,7 @@ namespace rogue
   class AnimationWindow : public VirtualWindow
   {
     public:
-    AnimationWindow(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* renderer);
+    AnimationWindow(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* editor);
     virtual bool Init();
     virtual void Draw();
 
@@ -21,7 +22,7 @@ namespace rogue
     HotloadSprite _animationSprite;
     vector<HotloadSprite> _animationFrames;
 
-    AnimationEditor* _renderer;
+    AnimationEditor* _editor;
     ptime _lastFrame;
 
     float _curZoom;
@@ -31,7 +32,7 @@ namespace rogue
   class CanvasWindow : public VirtualWindow
   {
   public:
-    CanvasWindow(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* renderer);
+    CanvasWindow(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* editor);
     bool Init();
     bool LoadImage(const char* filename);
     bool OnMouseMove(const Event& event);
@@ -40,9 +41,9 @@ namespace rogue
     void Draw();
 
     void UpdateDoubleBuffer();
-    void UpdateFrameBuffer(int x, int y, const Color& color);
+    void UpdateFrameBuffer(int x, int y, sf::Mouse::Button btn);
 
-    AnimationEditor* _renderer;
+    AnimationEditor* _editor;
 
     Image _editorImage;
 
@@ -73,16 +74,33 @@ namespace rogue
   class ColorPickerWindow : public VirtualWindow
   {
   public:
-    ColorPickerWindow(const string& title, const Vector2f& pos, const Vector2f& size);
+    ColorPickerWindow(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* editor);
     virtual void Draw();
-  };
+    virtual bool Init();
 
-  //-----------------------------------------------------------------------------
-  class FramesWindow : public VirtualWindow
-  {
-  public:
-    FramesWindow(const string& title, const Vector2f& pos, const Vector2f& size);
-    virtual void Draw();
+    void UpdateHsv(int x, int y);
+    bool OnMousePressed(const Event& event);
+    bool OnMouseMoved(const Event& event);
+    bool OnResized(const Event& event);
+    bool OnKeyReleased(const Event& event);
+
+    void UpdatePicker();
+
+    void DrawSliders();
+    void DrawSwatches();
+
+    AnimationEditor* _editor;
+
+    int _valueWidth;
+    int _swatchSize;
+    
+    Texture _pickerHTexture;
+    Texture _pickerSTexture;
+    Texture _pickerVTexture;
+
+    Sprite _pickerHSprite;
+    Sprite _pickerSSprite;
+    Sprite _pickerVSprite;
   };
 
   //-----------------------------------------------------------------------------
@@ -98,10 +116,7 @@ namespace rogue
     AnimationEditor(RenderWindow *window, WindowEventManager* eventManager);
 
     bool Init();
-    bool OnResize(const Event& event);
     bool OnKeyReleased(const Event& event);
-    bool OnMouseButtonDown(const Event& event);
-    bool OnMouseMove(const Event& event);
     void Update();
 
     Vector2f GetFrameSize() const;
@@ -124,8 +139,10 @@ namespace rogue
     int _curZoom;
     bool _playOnce;
 
-    Color _primaryColor;
-    Color _secondaryColor;
+    HsvColor _primaryColor;
+    HsvColor _secondaryColor;
+    vector<HsvColor> _swatch;
 
+    bool _eyeDropper;
   };
 }

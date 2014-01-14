@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>SFML_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>precompiled.hpp</PrecompiledHeaderFile>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996; 4244</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ForcedIncludeFiles>precompiled.hpp;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <BrowseInformation>true</BrowseInformation>
@@ -80,7 +80,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>SFML_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>precompiled.hpp</PrecompiledHeaderFile>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996; 424</DisableSpecificWarnings>
       <ForcedIncludeFiles>precompiled.hpp</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -96,8 +96,8 @@
   <ItemGroup>
     <ClInclude Include="..\animated_sprite.hpp" />
     <ClInclude Include="..\animation.hpp" />
+    <ClInclude Include="..\animation_editor.hpp" />
     <ClInclude Include="..\animation_manager.hpp" />
-    <ClInclude Include="..\debug_renderer.hpp" />
     <ClInclude Include="..\entity.hpp" />
     <ClInclude Include="..\error.hpp" />
     <ClInclude Include="..\game.hpp" />
@@ -119,7 +119,7 @@
     <ClInclude Include="..\protocol\sprite.pb.h" />
     <ClInclude Include="..\renderer.hpp" />
     <ClInclude Include="..\roguelike.hpp" />
-    <ClInclude Include="..\shapes.hpp" />
+    <ClInclude Include="..\sfml_helpers.hpp" />
     <ClInclude Include="..\spell.hpp" />
     <ClInclude Include="..\standard_cursor.hpp" />
     <ClInclude Include="..\texture_cache.hpp" />
@@ -133,8 +133,8 @@
   <ItemGroup>
     <ClCompile Include="..\animated_sprite.cpp" />
     <ClCompile Include="..\animation.cpp" />
+    <ClCompile Include="..\animation_editor.cpp" />
     <ClCompile Include="..\animation_manager.cpp" />
-    <ClCompile Include="..\debug_renderer.cpp" />
     <ClCompile Include="..\entity.cpp" />
     <ClCompile Include="..\error.cpp" />
     <ClCompile Include="..\game.cpp" />
@@ -162,7 +162,7 @@
     <ClCompile Include="..\protocol\sprite.pb.cc" />
     <ClCompile Include="..\renderer.cpp" />
     <ClCompile Include="..\roguelike.cpp" />
-    <ClCompile Include="..\shapes.cpp" />
+    <ClCompile Include="..\sfml_helpers.cpp" />
     <ClCompile Include="..\spell.cpp" />
     <ClCompile Include="..\standard_cursor.cpp" />
     <ClCompile Include="..\texture_cache.cpp" />

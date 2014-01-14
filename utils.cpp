@@ -122,6 +122,12 @@ namespace rogue
   }
 
   //-----------------------------------------------------------------------------
+  Rect operator*(float s, const Rect& r)
+  {
+    return Rect(r.left, r.top, s * r.width, s * r.height);
+  }
+
+  //-----------------------------------------------------------------------------
   Pos operator*(float s, const Pos& a)
   {
     return Pos((int)(s * a.x), (int)(s * a.y));

@@ -117,10 +117,9 @@ bool AnimationManager::GetFrame(u32 animationIdx, u32 frameIdx, Frame* frame)
     return false;
 
   Animation* animation = animations[animationIdx];
-  if (frameIdx >- animation->_frames.size())
+  if (frameIdx > animation->_frames.size())
     return false;
 
   *frame = animation->_frames[frameIdx];
   return true;
 }
-

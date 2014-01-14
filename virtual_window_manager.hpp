@@ -33,6 +33,7 @@ namespace rogue
     bool OnMouseMove(const Event& event);
     bool OnKeyReleased(const Event& event);
 
+    bool GenericHandler(const Event& event);
     bool HandlerForFocusWindow(const Event& event);
     void SetFocus(VirtualWindow* window);
 
@@ -40,7 +41,8 @@ namespace rogue
 
     typedef pair<u32, fnEventHandler> HandlerPair;
     typedef map<VirtualWindow*, HandlerPair> HandlersByWindow;
-    map<Event::EventType, HandlersByWindow > _handlers;
+    map<Event::EventType, HandlersByWindow > _handlersByWindow;
+    map<Event::EventType, vector<HandlerPair> > _genericHandlers;
 
     RenderWindow* _renderWindow;
     WindowEventManager* _eventManager;

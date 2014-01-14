@@ -49,6 +49,7 @@ namespace rogue
 
   Rect operator+(const Rect& org, const Pos& ofs);
   Pos operator*(float s, const Pos& a);
+  Rect operator*(float s, const Rect& r);
 
   template <typename T>
   T lerp(T a, T b, float v)
@@ -92,6 +93,18 @@ namespace rogue
   T Clamp(T v, T minValue, T maxValue)
   {
     return max(minValue, min(maxValue, v));
+  }
+
+  template <typename T>
+  T min3(T a, T b, T c)
+  {
+    return min(c, min(a, b));
+  }
+
+  template <typename T>
+  T max3(T a, T b, T c)
+  {
+    return max(c, max(a, b));
   }
 
   // Macro for creating "local" names

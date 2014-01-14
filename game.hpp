@@ -94,8 +94,6 @@ namespace rogue
   };
 
 #define GAME rogue::Game::Instance()
-//#define WINDOW_EVENT rogue::Game::Instance().GetWindowEventManager()
-//#define DEBUG_WINDOW_EVENT rogue::Game::Instance().GetDebugWindowEventManager()
 #define GAME_EVENT rogue::Game::Instance().GetGameEventManager()
 #define TEXTURE_CACHE rogue::Game::Instance().GetTextureCache()
 #define ANIMATION rogue::Game::Instance().GetAnimationManager()

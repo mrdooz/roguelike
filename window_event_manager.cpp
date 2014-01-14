@@ -12,7 +12,7 @@ WindowEventManager::WindowEventManager(RenderWindow* window)
 //-----------------------------------------------------------------------------
 u32 WindowEventManager::RegisterHandler(Event::EventType event, const fnEventHandler& handler)
 {
-  _handlers[event].push_back(make_pair(_nextId, handler));
+  _handlersByWindow[event].push_back(make_pair(_nextId, handler));
 
   // Store the id -> event mapping, so we can speed up unregistering
   _idToEvent[_nextId] = event;
@@ -26,7 +26,7 @@ void WindowEventManager::UnregisterHandler(u32 handle)
   if (it != _idToEvent.end())
   {
     Event::EventType type = it->second;
-    auto& handlers = _handlers[type];
+    auto& handlers = _handlersByWindow[type];
     for (auto j = handlers.begin(); j != handlers.end(); ++j)
     {
       const HandlerPair& p = *j;
@@ -49,8 +49,8 @@ void WindowEventManager::Poll()
   Event event;
   while (_window->pollEvent(event))
   {
-    auto it = _handlers.find(event.type);
-    if (it != _handlers.end())
+    auto it = _handlersByWindow.find(event.type);
+    if (it != _handlersByWindow.end())
     {
       auto& handlers = it->second;
       for (auto p : handlers)

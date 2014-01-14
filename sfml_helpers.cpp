@@ -1,4 +1,5 @@
-#include "shapes.hpp"
+#include "sfml_helpers.hpp"
+#include "utils.hpp"
 
 using namespace sf;
 using namespace rogue;
@@ -123,4 +124,95 @@ Vector2f LineShape::getPoint(unsigned int index) const
   case 2: return (m_direction - offset);
   case 3: return (-offset);
   }
+}
+
+//-----------------------------------------------------------------------------
+// hue: 0-360°; sat: 0.f-1.f; val: 0.f-1.f
+Color rogue::ColorFromHsv(int hue, float sat, float val)
+{
+  hue %= 360;
+  while(hue<0) hue += 360;
+
+  sat = Clamp(sat, 0.f, 1.f);
+  val = Clamp(val, 0.f, 1.f);
+
+  int h = hue/60;
+  float f = float(hue)/60-h;
+  float p = val*(1.f-sat);
+  float q = val*(1.f-sat*f);
+  float t = val*(1.f-sat*(1-f));
+
+  switch(h)
+  {
+  default:
+  case 0:
+  case 6: return Color(val*255, t*255, p*255);
+  case 1: return Color(q*255, val*255, p*255);
+  case 2: return Color(p*255, val*255, t*255);
+  case 3: return Color(p*255, q*255, val*255);
+  case 4: return Color(t*255, p*255, val*255);
+  case 5: return Color(val*255, p*255, q*255);
+  }
+}
+
+//-----------------------------------------------------------------------------
+HsvColor rogue::HsvFromColor(const Color& color)
+{
+  // r,g,b values are from 0 to 1
+  // h = [0,360], s = [0,1], v = [0,1]
+  //		if s == 0, then h = -1 (undefined)
+
+  HsvColor res;
+  float r = color.r / 255.0f;
+  float g = color.g / 255.0f;
+  float b = color.b / 255.0f;
+
+  float min, max, delta;
+  min = min3( r, g, b );
+  max = max3( r, g, b );
+  // v
+  res.v = max;
+  delta = max - min;
+  if( max != 0 )
+  {
+    // s
+    res.s = delta / max;
+  }
+  else
+  {
+    // r = g = b = 0
+    // s = 0, v is undefined
+    res.s = 0;
+    res.h = -1;
+    return res;
+  }
+
+  if( r == max )
+    // between yellow & magenta
+    res.h = ( g - b ) / delta;
+  else if( g == max )
+    // between cyan & yellow
+    res.h = 2 + ( b - r ) / delta;
+  else
+    // between magenta & cyan
+    res.h = 4 + ( r - g ) / delta;
+
+  // degrees
+  res.h *= 60;
+  if( res.h < 0 )
+    res.h += 360;
+
+  return res;
+}
+
+//-----------------------------------------------------------------------------
+HsvColor::HsvColor(float h, float s, float v)
+  : h(h), s(s), v(v)
+{
+}
+
+//-----------------------------------------------------------------------------
+HsvColor::operator Color() const
+{
+  return ColorFromHsv(360*h, s, v);
 }

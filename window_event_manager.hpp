@@ -16,7 +16,7 @@ namespace rogue
 
   private:
     typedef pair<u32, fnEventHandler> HandlerPair;
-    map<Event::EventType, vector<HandlerPair> > _handlers;
+    map<Event::EventType, vector<HandlerPair> > _handlersByWindow;
     unordered_map<u32, Event::EventType> _idToEvent;
     u32 _nextId;
 

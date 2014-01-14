@@ -12,7 +12,7 @@ GameEventManager::GameEventManager()
 //-----------------------------------------------------------------------------
 u32 GameEventManager::RegisterHandler(GameEvent::Type event, const fnEventHandler& handler)
 {
-  _handlers[event].push_back(make_pair(_nextId, handler));
+  _handlersByWindow[event].push_back(make_pair(_nextId, handler));
 
   // Store the id -> event mapping, so we can speed up unregistering
   _idToEvent[_nextId] = event;
@@ -26,7 +26,7 @@ void GameEventManager::UnregisterHandler(u32 handle)
   if (it != _idToEvent.end())
   {
     GameEvent::Type type = it->second;
-    auto& handlers = _handlers[type];
+    auto& handlers = _handlersByWindow[type];
     for (auto j = handlers.begin(); j != handlers.end(); ++j)
     {
       const HandlerPair& p = *j;
@@ -43,8 +43,8 @@ void GameEventManager::UnregisterHandler(u32 handle)
 //-----------------------------------------------------------------------------
 void GameEventManager::SendEvent(const GameEvent& event)
 {
-  auto it = _handlers.find(event._type);
-  if (it == _handlers.end())
+  auto it = _handlersByWindow.find(event._type);
+  if (it == _handlersByWindow.end())
   {
     LOG_DEBUG("no handlers registered for event" << LogKeyValue("type", (int)event._type));
     return;
