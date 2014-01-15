@@ -1,11 +1,12 @@
 #pragma once
-#include "loot_item.hpp"
+#include "utils.hpp"
 
 namespace rogue
 {
   class GameState;
   class Entity;
   struct SpellBase;
+  struct LootItem;
 
   struct GameEvent
   {
@@ -18,13 +19,14 @@ namespace rogue
       ItemGained,
     };
 
-    GameEvent(Type type) : _spell(nullptr), _type(type) {}
+    GameEvent(Type type);
+    ~GameEvent();
 
     union
     {
       int _damage;
       int _healing;
-      LootItem _item;
+      LootItem* _item;
     };
 
     SpellBase* _spell;
@@ -33,6 +35,8 @@ namespace rogue
     Entity* _target;
 
     Type _type;
+  private:
+    DISALLOW_COPY_AND_ASSIGN(GameEvent);
   };
 
   class GameEventManager

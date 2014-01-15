@@ -583,7 +583,7 @@ void Renderer::OnDeath(const GameEvent& event)
 //-----------------------------------------------------------------------------
 void Renderer::OnItemGained(const GameEvent& event)
 {
-  AddToCombatLog(toString("%s gains %s!", event._target->Name().c_str(), event._item.ToString().c_str()));
+  AddToCombatLog(toString("%s gains %s!", event._target->Name().c_str(), event._item->ToString().c_str()));
 }
 
 //-----------------------------------------------------------------------------

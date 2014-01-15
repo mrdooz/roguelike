@@ -34,31 +34,31 @@ LootItem Level::GenerateLoot(int level)
   int rnd = rand() % 20;
   if (rnd < 10)
   {
-    LootItemEx obj(LootItem::Type::Gold);
+    LootItem obj(LootItem::Type::Gold);
     obj._numGold = (10 + (rand() % level) ) * 100;
     return obj;
   }
   else if (rnd < 12)
   {
-    LootItemEx obj(LootItem::Type::HealthPotion);
+    LootItem obj(LootItem::Type::HealthPotion);
     obj._numPots = 1;
     return obj;
   }
   else if (rnd < 15)
   {
-    LootItemEx obj(LootItem::Type::ManaPotion);
+    LootItem obj(LootItem::Type::ManaPotion);
     obj._numPots = 1;
     return obj;
   }
   else if (rnd < 17)
   {
-    LootItemEx obj(LootItem::Type::ArmorUpgrade);
+    LootItem obj(LootItem::Type::ArmorUpgrade);
     obj._numUpgrades = 1;
     return obj;
   }
   else
   {
-    LootItemEx obj(LootItem::Type::WeaponUpgrade);
+    LootItem obj(LootItem::Type::WeaponUpgrade);
     obj._numUpgrades = 1;
     return obj;
   }

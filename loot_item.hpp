@@ -13,6 +13,11 @@ namespace rogue
       ArmorUpgrade,
     };
 
+    LootItem(LootItem::Type type)
+    {
+      _type = type;
+    }
+
     string ToString() const;
 
     Type _type;
@@ -22,15 +27,5 @@ namespace rogue
       int _numPots;
       int _numUpgrades;
     };
-  };
-
-  // Meh, kinda cheesy just because I want to store LootItems in a union, so I can't
-  // have a default ctor
-  struct LootItemEx : public LootItem
-  {
-    LootItemEx(LootItem::Type type)
-    {
-      _type = type;
-    }
   };
 }

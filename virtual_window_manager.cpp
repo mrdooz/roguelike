@@ -84,6 +84,9 @@ bool VirtualWindowManager::OnLostFocus(const Event& event)
 //-----------------------------------------------------------------------------
 bool VirtualWindowManager::OnResize(const Event& event)
 {
+  size_t width = event.size.width;
+  size_t height = event.size.height;
+  _renderWindow->setView(sf::View(sf::FloatRect(0,0,(float)width, (float)height)));
   return false;
 }
 

@@ -1,7 +1,22 @@
 #include "game_event_manager.hpp"
 #include "error.hpp"
+#include "loot_item.hpp"
 
 using namespace rogue;
+
+//-----------------------------------------------------------------------------
+GameEvent::GameEvent(Type type)
+  : _spell(nullptr)
+  , _type(type)
+{
+}
+
+//-----------------------------------------------------------------------------
+GameEvent::~GameEvent()
+{
+  if (_type == Type::ItemGained)
+    delete exch_null(_item);
+}
 
 //-----------------------------------------------------------------------------
 GameEventManager::GameEventManager()

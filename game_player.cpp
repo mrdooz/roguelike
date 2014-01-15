@@ -127,14 +127,14 @@ void GamePlayer::OnLevelGained(const GameEvent& event)
 void GamePlayer::OnItemGained(const GameEvent& event)
 {
   Player* agent = static_cast<Player*>(event._agent);
-  auto item = event._item;
-  switch (item._type)
+  const LootItem* item = event._item;
+  switch (item->_type)
   {
-    case LootItem::Type::Gold: agent->_gold += item._numGold; break;
-    case LootItem::Type::ManaPotion: agent->_manaPotions += item._numPots; break;
-    case LootItem::Type::HealthPotion: agent->_healthPotions += item._numPots; break;
-    case LootItem::Type::ArmorUpgrade: agent->SetArmorBonus(agent->ArmorBonus() + item._numUpgrades); break;
-    case LootItem::Type::WeaponUpgrade: agent->SetWeaponBonus(agent->WeaponBonus() + item._numUpgrades); break;
+    case LootItem::Type::Gold: agent->_gold += item->_numGold; break;
+    case LootItem::Type::ManaPotion: agent->_manaPotions += item->_numPots; break;
+    case LootItem::Type::HealthPotion: agent->_healthPotions += item->_numPots; break;
+    case LootItem::Type::ArmorUpgrade: agent->SetArmorBonus(agent->ArmorBonus() + item->_numUpgrades); break;
+    case LootItem::Type::WeaponUpgrade: agent->SetWeaponBonus(agent->WeaponBonus() + item->_numUpgrades); break;
   }
 }
 
@@ -165,7 +165,7 @@ bool GamePlayer::ValidMovement(GameState& state, const Event& event)
         GameEvent event(GameEvent::Type::ItemGained);
         event._agent = player;
         event._target = player;
-        event._item = tile._items.back();
+        event._item = new LootItem(tile._items.back());
         tile._items.pop_back();
         GAME_EVENT->SendEvent(event);
       }
