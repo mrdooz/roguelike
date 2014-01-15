@@ -59,7 +59,17 @@ Texture* TextureCache::TextureByHandle(const TextureHandle& handle)
 {
   return _elems[handle._idx]._texture;
 }
-  
+
+//-----------------------------------------------------------------------------
+const TextureCache::TextureEntry* TextureCache::GetTextureEntry(
+    const TextureHandle& handle) const
+{
+  if (handle._idx >= ELEMS_IN_ARRAY(_elems))
+    return nullptr;
+
+  return &_elems[handle._idx];
+}
+
 //-----------------------------------------------------------------------------
 void TextureCache::CheckForReload()
 {

@@ -3,6 +3,7 @@
 #include "virtual_window_manager.hpp"
 #include "virtual_window.hpp"
 #include "sfml_helpers.hpp"
+#include "animation.hpp"
 
 namespace rogue
 {
@@ -19,8 +20,8 @@ namespace rogue
 
     bool OnKeyReleased(const Event& event);
 
-    HotloadSprite _animationSprite;
-    vector<HotloadSprite> _animationFrames;
+    Sprite _animationSprite;
+    vector<Sprite> _animationFrames;
 
     AnimationEditor* _editor;
     ptime _lastFrame;
@@ -34,32 +35,50 @@ namespace rogue
   public:
     CanvasWindow(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* editor);
     bool Init();
-    bool LoadImage(const char* filename);
-    bool OnMouseMove(const Event& event);
+    bool OnMouseMoved(const Event& event);
     bool OnMouseButtonPressed(const Event& event);
     bool OnKeyReleased(const Event& event);
     void Draw();
 
+    void UpdateFrameTexture();
     void UpdateDoubleBuffer();
     void UpdateFrameBuffer(int x, int y, sf::Mouse::Button btn);
 
-    AnimationEditor* _editor;
+    void TextureReloaded();
 
-    Image _editorImage;
+    void CopyToClipboard();
+    void PasteFromClipboard();
+    void Undo();
+    void Redo();
+
+    void SaveToUndoBuffer(int x, int y, u32 col);
+    void ResetUndoBuffer();
+
+    AnimationEditor* _editor;
 
     Texture _frameTexture;
     Sprite _frameSprite;
 
+    vector<u8> _clipboard;
+
     vector<u8> _imageDoubleBuffer;
     vector<u8> _frameDoubleBuffer;
-    Texture _editorTexture;
-    Sprite _editorSprite;
     
     Vector2u _gridSize;
-    Vector2u _imageSize;
     int _scale;
     Vector2i _frameSize;
     bool _showGrid;
+    bool _showPrevFrame;
+
+    // Points to next slot in the undo buffer
+    int _undoIndex;
+    struct UndoState
+    {
+      int x, y;
+      u32 col;
+    };
+
+    vector<UndoState> _undoBuffer;
   };
 
   //-----------------------------------------------------------------------------
@@ -119,14 +138,14 @@ namespace rogue
     bool OnKeyReleased(const Event& event);
     void Update();
 
-    Vector2f GetFrameSize() const;
-
   private:
+    Vector2f GetFrameSize() const;
 
     void DrawEditor();
     void DrawGrid();
 
-    bool LoadImage(const char* filename);
+    void AnimationsReloaded();
+    void SaveAnimation();
 
     Image _editorImage;
 
@@ -134,9 +153,13 @@ namespace rogue
     VirtualWindowManager _windowManager;
     Font* _font;
 
-    int _curAnimation;
-    int _curFrame;
-    int _curZoom;
+    // The animation editor keeps its own local copy of the texture
+    // that's currently being edited
+    Texture* _curTexture;
+    Animation* _curAnimation;
+    Frame _curFrame;
+    int _curAnimationIdx;
+    int _curFrameIdx;
     bool _playOnce;
 
     HsvColor _primaryColor;
@@ -144,5 +167,11 @@ namespace rogue
     vector<HsvColor> _swatch;
 
     bool _eyeDropper;
+
+    AnimationWindow* _animationWindow;
+    CanvasWindow* _canvasWindow;
+    ToolkitWindow* _toolkitWindow;
+    ColorPickerWindow* _colorPickerWindow;
+
   };
 }

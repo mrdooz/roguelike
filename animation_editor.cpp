@@ -4,6 +4,7 @@
 #include "animation_manager.hpp"
 #include "virtual_window.hpp"
 #include "sfml_helpers.hpp"
+#include "texture_cache.hpp"
 
 using namespace rogue;
 using namespace sf;
@@ -52,31 +53,26 @@ void AnimationWindow::Draw()
   _texture.clear();
 
   // display the current animation
-
   ptime now = microsec_clock::local_time();
   if (_lastFrame.is_not_a_date_time())
     _lastFrame = now;
 
   time_duration delta = now - _lastFrame;
 
+  Animation* animation = _editor->_curAnimation;
+  if (!animation)
+    return;
 
-  // Fetch all animations
-  vector<Animation*> animations;
-  ANIMATION->GetAnimations(&animations);
-  u32 curAnimation = Clamp(_editor->_curAnimation, 0, (int)animations.size() - 1);
-  _editor->_curAnimation = curAnimation;
-
-  Animation* animation = animations[curAnimation];
   size_t numFrames = animation->_frames.size();
 
   // Set the animation texture for the sprites
-  _animationSprite.setTexture(animation->_texture);
+  _animationSprite.setTexture(*_editor->_curTexture);
   _animationFrames.resize(numFrames);
 
   // Draw header
   sf::Text text("", _font, 10);
   text.setString(toString("Animation: %d\n[%d frames, %d ms]",
-                          curAnimation, numFrames, animation->_duration.total_milliseconds()));
+    _editor->_curAnimationIdx, numFrames, animation->_duration.total_milliseconds()));
   text.setPosition(sf::Vector2f(5, 5));
   text.setColor(sf::Color::White);
   _texture.draw(text);
@@ -90,18 +86,18 @@ void AnimationWindow::Draw()
   {
     auto& frame = animation->_frames[i];
     auto& sprite = _animationFrames[i];
-    sprite.setScale((float)_editor->_curZoom, (float)_editor->_curZoom);
+    sprite.setScale(_curZoom, _curZoom);
     sprite.setTextureRect(frame._textureRect);
     maxHeight = max(maxHeight, frame._textureRect.height);
     maxWidth = max(maxWidth, frame._textureRect.width);
-    sprite.setTexture(animation->_texture);
+    sprite.setTexture(*_editor->_curTexture);
     sprite.setPosition(pos);
-    pos.x += (i == numFrames - 1 ? 2 : 1) * frame._textureRect.width * _editor->_curZoom;
+    pos.x += (i == numFrames - 1 ? 2 : 1) * frame._textureRect.width * _curZoom;
     _texture.draw(sprite);
   }
 
   pos.x = 10;
-  pos.y = 35 + (2.0f + maxHeight) * _editor->_curZoom;
+  pos.y = 35 + (2.0f + maxHeight) * _curZoom;
 
   // Draw the current frame
   float ratio = delta.total_milliseconds() / (float)animation->_duration.total_milliseconds();
@@ -139,6 +135,8 @@ CanvasWindow::CanvasWindow(
   , _editor(renderer)
   , _gridSize(8, 8)
   , _showGrid(true)
+  , _showPrevFrame(false)
+  , _undoIndex(0)
 {
 }
 
@@ -148,10 +146,7 @@ bool CanvasWindow::Init()
   if (!VirtualWindow::Init())
     return false;
 
-  if (!LoadImage("oryx_lofi/lofi_obj.png"))
-    return false;
-
-  _windowManager->RegisterHandler(Event::MouseMoved, this, bind(&CanvasWindow::OnMouseMove, this, _1));
+  _windowManager->RegisterHandler(Event::MouseMoved, this, bind(&CanvasWindow::OnMouseMoved, this, _1));
   _windowManager->RegisterHandler(Event::MouseButtonPressed, this, bind(&CanvasWindow::OnMouseButtonPressed, this, _1));
   _windowManager->RegisterHandler(Event::KeyReleased, this, bind(&CanvasWindow::OnKeyReleased, this, _1));
 
@@ -159,31 +154,106 @@ bool CanvasWindow::Init()
 }
 
 //-----------------------------------------------------------------------------
-bool CanvasWindow::LoadImage(const char* filename)
+void CanvasWindow::TextureReloaded()
 {
-  _editorImage.loadFromFile(filename);
-  _imageSize = _editorImage.getSize();
-  _imageDoubleBuffer.resize(_imageSize.x*_imageSize.y*4);
-  const u8* ptr = _editorImage.getPixelsPtr();
-  memcpy(_imageDoubleBuffer.data(), ptr, _imageSize.x*_imageSize.y*4);
-
-  _editorTexture.loadFromImage(_editorImage);
-  _editorSprite.setTexture(_editorTexture);
+  Vector2u imageSize = _editor->_curTexture->getSize();
+  _imageDoubleBuffer.resize(imageSize.x*imageSize.y*4);
+  Image image = _editor->_curTexture->copyToImage();
+  const u8* ptr = image.getPixelsPtr();
+  memcpy(_imageDoubleBuffer.data(), ptr, imageSize.x*imageSize.y*4);
 
   UpdateDoubleBuffer();
-  return true;
+}
+
+//-----------------------------------------------------------------------------
+void CanvasWindow::CopyToClipboard()
+{
+  _clipboard = _frameDoubleBuffer;
+}
+
+//-----------------------------------------------------------------------------
+void CanvasWindow::PasteFromClipboard()
+{
+  if (_clipboard.size() == _frameDoubleBuffer.size())
+  {
+    _frameDoubleBuffer = _clipboard;
+    UpdateFrameTexture();
+  }
+}
+//-----------------------------------------------------------------------------
+void CanvasWindow::ResetUndoBuffer()
+{
+  _undoIndex = 0;
+  _undoBuffer.clear();
+}
+
+//-----------------------------------------------------------------------------
+void CanvasWindow::SaveToUndoBuffer(int x, int y, u32 col)
+{
+  UndoState* state = nullptr;
+  if (_undoIndex >= (int)_undoBuffer.size())
+  {
+    _undoBuffer.push_back(UndoState());
+    state = &_undoBuffer.back();
+  }
+  else
+  {
+    state = &_undoBuffer[_undoIndex];
+  }
+
+  state->x = x;
+  state->y = y;
+  state->col = col;
+
+  _undoIndex++;
+}
+
+//-----------------------------------------------------------------------------
+void CanvasWindow::Undo()
+{
+  if (_undoIndex == 0)
+    return;
+
+  const UndoState& state = _undoBuffer[_undoIndex-1];
+
+  if (state.x >= _frameSize.x || state.y >= _frameSize.y)
+  {
+    ResetUndoBuffer();
+    return;
+  }
+
+
+  *(u32*)&_frameDoubleBuffer[(state.y*_frameSize.x+state.x)*4]  = state.col;
+  UpdateFrameTexture();
+  _undoIndex--;
+}
+
+//-----------------------------------------------------------------------------
+void CanvasWindow::Redo()
+{
+  if (_undoIndex >= (int)_undoBuffer.size())
+    return;
+
+  const UndoState& state = _undoBuffer[_undoIndex];
+
+  if (state.x >= _frameSize.x || state.y >= _frameSize.y)
+  {
+    _undoBuffer.resize(_undoIndex-1);
+    return;
+  }
+
+  *(u32*)&_frameDoubleBuffer[(state.y*_frameSize.x+state.x)*4]  = state.col;
+  UpdateFrameTexture();
+  _undoIndex++;
 }
 
 //-----------------------------------------------------------------------------
 void CanvasWindow::UpdateDoubleBuffer()
 {
   // copy the current animation/frame to the double buffer
-  u32 curAnimation = _editor->_curAnimation;
-  u32 curFrame = _editor->_curFrame;
-
-  Frame frame;
-  if (!ANIMATION->GetFrame(curAnimation, curFrame, &frame))
-    return;
+  u32 curAnimation = _editor->_curAnimationIdx;
+  u32 curFrame = _editor->_curFrameIdx;
+  Frame frame = _editor->_curFrame;
 
   size_t w = frame._textureRect.width;
   size_t h = frame._textureRect.height;
@@ -191,7 +261,7 @@ void CanvasWindow::UpdateDoubleBuffer()
   _frameSize.x = w;
   _frameSize.y = h;
 
-  size_t iw = _editorImage.getSize().x;
+  size_t iw = _editor->_curTexture->getSize().x;
 
   _frameDoubleBuffer.resize(w * h * 4);
 
@@ -215,20 +285,8 @@ void CanvasWindow::UpdateDoubleBuffer()
 //-----------------------------------------------------------------------------
 bool CanvasWindow::OnKeyReleased(const Event& event)
 {
-  int prevFrame = _editor->_curFrame;
-  int numFrames = 5;
-
-  if (event.key.code == Keyboard::Left)
-    _editor->_curFrame = Clamp(_editor->_curFrame-1, 0, numFrames);
-
-  if (event.key.code == Keyboard::Right)
-    _editor->_curFrame = Clamp(_editor->_curFrame+1, 0, numFrames);
-
   if (event.key.code == Keyboard::Key::G)
     _showGrid = !_showGrid;
-
-  if (prevFrame != _editor->_curFrame)
-    UpdateDoubleBuffer();
 
   return false;
 }
@@ -243,10 +301,10 @@ bool CanvasWindow::OnMouseButtonPressed(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-bool CanvasWindow::OnMouseMove(const Event& event)
+bool CanvasWindow::OnMouseMoved(const Event& event)
 {
-  int x = event.mouseButton.x / _scale;
-  int y = event.mouseButton.y / _scale;
+  int x = event.mouseMove.x / _scale;
+  int y = event.mouseMove.y / _scale;
 
   Mouse::Button btn = Mouse::Button::ButtonCount;
   if (Mouse::isButtonPressed(Mouse::Button::Left))
@@ -283,13 +341,24 @@ void CanvasWindow::UpdateFrameBuffer(int x, int y, Mouse::Button btn)
   {
     Color color(btn == Mouse::Button::Left ? _editor->_primaryColor : _editor->_secondaryColor);
 
-    _frameDoubleBuffer[(y*w+x)*4+0] = color.r;  // r
-    _frameDoubleBuffer[(y*w+x)*4+1] = color.g;  // g
-    _frameDoubleBuffer[(y*w+x)*4+2] = color.b;  // b
-    _frameDoubleBuffer[(y*w+x)*4+3] = color.a;  // a
-
-    _frameTexture.update(_frameDoubleBuffer.data(), w, h, 0, 0);
+    u32* dst = (u32*)&_frameDoubleBuffer[(y*w+x)*4];
+    SaveToUndoBuffer(x, y, *dst);
+    *dst = ColorToU32(color);
+    
+    UpdateFrameTexture();
   }
+}
+
+//-----------------------------------------------------------------------------
+void CanvasWindow::UpdateFrameTexture()
+{
+  // Update the frame texture and the main texture with the double buffer data
+  int w = _frameSize.x;
+  int h = _frameSize.y;
+
+  _frameTexture.update(_frameDoubleBuffer.data(), w, h, 0, 0);
+  const IntRect& r = _editor->_curFrame._textureRect;
+  _editor->_curTexture->update(_frameDoubleBuffer.data(), w, h, r.left, r.top);
 }
 
 //-----------------------------------------------------------------------------
@@ -398,9 +467,9 @@ void ColorPickerWindow::DrawSliders()
   float h = _size.y - _swatchSize;
   VertexArray verts(Lines, 6);
   float y = 0;
-  verts[0].position = Vector2f(w*hue, y);
-  verts[1].position = Vector2f(w*hue, y + h/3);
-  text.setString(toString("H: %.2f", hue * 360));
+  verts[0].position = Vector2f(w*hue/360, y);
+  verts[1].position = Vector2f(w*hue/360, y + h/3);
+  text.setString(toString("H: %.2f", hue));
   text.setPosition(_size.x - _valueWidth + 5, y + 15);
   _texture.draw(text);
 
@@ -487,14 +556,14 @@ void ColorPickerWindow::UpdatePicker()
   // update saturation
   for (int i = 0; i < w; ++i)
   {
-    tmp[i] = ColorToU32(ColorFromHsv(hue*360, (float)i/(w-1), value));
+    tmp[i] = ColorToU32(ColorFromHsv(hue, (float)i/(w-1), value));
   }
   _pickerSTexture.update((const u8*)tmp.data(), w, 1, 0, 0);
 
   // update value (brightness)
   for (int i = 0; i < w; ++i)
   {
-    tmp[i] = ColorToU32(ColorFromHsv(hue*360, saturation, (float)i/(w-1)));
+    tmp[i] = ColorToU32(ColorFromHsv(hue, saturation, (float)i/(w-1)));
   }
   _pickerVTexture.update((const u8*)tmp.data(), w, 1, 0, 0);
 }
@@ -509,7 +578,7 @@ void ColorPickerWindow::UpdateHsv(int x, int y)
 
   if (Rect(0, 0*h, w*1.05f, h).contains(pos))
   {
-    _editor->_primaryColor.h = v;
+    _editor->_primaryColor.h = 360 * v;
   }
   else if (Rect(0, 1*h, w*1.05f, h).contains(pos))
   {
@@ -579,22 +648,27 @@ AnimationEditor::AnimationEditor(RenderWindow *window, WindowEventManager* event
   : _window(window)
   , _windowManager(window, eventManager)
   , _font(nullptr)
-  , _curAnimation(0)
-  , _curFrame(1)
-  , _curZoom(3)
+  , _curAnimation(nullptr)
+  , _curAnimationIdx(0)
+  , _curFrameIdx(0)
   , _playOnce(false)
   , _primaryColor(360, 1, 1)
   , _secondaryColor(0, 0, 0)
   , _swatch(10)
   , _eyeDropper(false)
+  , _animationWindow(new AnimationWindow("ANIMATION", Vector2f(20, 20), Vector2f(200,200), this))
+  , _canvasWindow(new CanvasWindow("CANVAS", Vector2f(250,150), Vector2f(400,400), this))
+  , _toolkitWindow(new ToolkitWindow("TOOLKIT", Vector2f(250,20), Vector2f(400,100)))
+  , _colorPickerWindow(new ColorPickerWindow("COLORPICKER", Vector2f(750,20), Vector2f(350,200), this))
 {
   eventManager->RegisterHandler(Event::KeyReleased, bind(&AnimationEditor::OnKeyReleased, this, _1));
 
-  _windowManager.AddWindow(new AnimationWindow("ANIMATION", Vector2f(20, 20), Vector2f(200,200), this));
-  _windowManager.AddWindow(new CanvasWindow("CANVAS", Vector2f(250,150), Vector2f(400,400), this));
+  _windowManager.AddWindow(_animationWindow);
+  _windowManager.AddWindow(_canvasWindow);
+  _windowManager.AddWindow(_toolkitWindow);
+  _windowManager.AddWindow(_colorPickerWindow);
 
-  _windowManager.AddWindow(new ToolkitWindow("TOOLKIT", Vector2f(250,20), Vector2f(400,100)));
-  _windowManager.AddWindow(new ColorPickerWindow("COLORPICKER", Vector2f(750,20), Vector2f(350,200), this));
+  ANIMATION->AddUpdateListener(bind(&AnimationEditor::AnimationsReloaded, this));
 }
 
 //-----------------------------------------------------------------------------
@@ -604,8 +678,7 @@ bool AnimationEditor::Init()
   if (!_font->loadFromFile("gfx/wscsnrg.ttf"))
     return false;
 
-  if (!LoadImage("oryx_lofi/lofi_obj.png"))
-    return false;
+  AnimationsReloaded();
 
   _windowManager.Init();
 
@@ -619,7 +692,7 @@ Vector2f AnimationEditor::GetFrameSize() const
 
   vector<Animation*> animations;
   ANIMATION->GetAnimations(&animations);
-  Animation* animation = animations[_curAnimation];
+  Animation* animation = animations[_curAnimationIdx];
 
   for (const Frame& frame : animation->_frames)
   {
@@ -630,23 +703,18 @@ Vector2f AnimationEditor::GetFrameSize() const
   return res;
 }
 
-
 //-----------------------------------------------------------------------------
-bool AnimationEditor::LoadImage(const char* filename)
+void AnimationEditor::SaveAnimation()
 {
-/*
-  _editorImage.loadFromFile(filename);
-  _imageSize = _editorImage.getSize();
-  _doubleBuffer.resize(_imageSize.x*_imageSize.y*4);
-  const u8* ptr = _editorImage.getPixelsPtr();
-  memcpy(_doubleBuffer.data(), ptr, _imageSize.x*_imageSize.y*4);
+  if (!_curAnimation || !_curTexture)
+    return;
 
-  _editorTexture.loadFromImage(_editorImage);
-  _editorSprite.setTexture(_editorTexture);
+  const TextureCache::TextureEntry* entry = TEXTURE_CACHE->GetTextureEntry(_curAnimation->_texture);
+  if (!entry)
+    return;
 
-  OnResize(Event());
-*/
-  return true;
+  Image image = _curTexture->copyToImage();
+  image.saveToFile(entry->_filename);
 }
 
 //-----------------------------------------------------------------------------
@@ -654,7 +722,8 @@ bool AnimationEditor::OnKeyReleased(const Event& event)
 {
   // Where applicable, the shortcuts are copied from photoshop
 
-  int _oldZoom = _curZoom;
+  int prevFrame = _curFrameIdx;
+  int prevAnimation = _curAnimationIdx;
 
   Keyboard::Key code = event.key.code;
 
@@ -668,28 +737,25 @@ bool AnimationEditor::OnKeyReleased(const Event& event)
   }
   else if (code >= Keyboard::Num0 && code <= Keyboard::Num9)
   {
-    // transfer swatch <-> primary
-    int idx = (int)code - Keyboard::Num0;
+    // transfer swatch <-> primary (note, indexing starts at 1)
+    int idx = code == Keyboard::Num0 ? _swatch.size() - 1 : (int)code - Keyboard::Num1;
     if (event.key.control)
+    {
       _swatch[idx] = _primaryColor;
+    }
     else
+    {
       _primaryColor = _swatch[idx];
+      _colorPickerWindow->UpdatePicker();
+    }
   }
   else if (code == Keyboard::Key::Up)
   {
-    _curAnimation++;
+    _curAnimationIdx++;
   }
   else if (code == Keyboard::Key::Down)
   {
-    _curAnimation = max(0, _curAnimation - 1);
-  }
-  else if (code == Keyboard::Key::Add)
-  {
-    _curZoom = min(10, _curZoom + 1);
-  }
-  else if (code == Keyboard::Key::Subtract)
-  {
-    _curZoom = max(1, _curZoom - 1);
+    _curAnimationIdx = max(0, _curAnimationIdx - 1);
   }
   else if (code == Keyboard::Key::Space)
   {
@@ -700,13 +766,41 @@ bool AnimationEditor::OnKeyReleased(const Event& event)
     //_lastFrame = boost::posix_time::not_a_date_time;
     _playOnce = true;
   }
-
-  if (_oldZoom != _curZoom)
+  else if (_curAnimation && event.key.code == Keyboard::Left)
   {
-    // todo: fix this. zoom is relative, and not absolute
-    //auto view = _window->getView();
-    //view.zoom(1 / (float)_curZoom);
-    //_window->setView(view);
+    _curFrameIdx = Clamp(_curFrameIdx-1, 0, (int)_curAnimation->_frames.size() - 1);
+  }
+  else if (_curAnimation && event.key.code == Keyboard::Right)
+  {
+    _curFrameIdx = Clamp(_curFrameIdx+1, 0, (int)_curAnimation->_frames.size() - 1);
+  }
+  else if (event.key.control)
+  {
+    if (code == Keyboard::S)
+    {
+      SaveAnimation();
+    }
+    else if (code == Keyboard::C)
+    {
+      _canvasWindow->CopyToClipboard();
+    }
+    else if (code == Keyboard::V)
+    {
+      _canvasWindow->PasteFromClipboard();
+    }
+    else if (code == Keyboard::Z)
+    {
+      _canvasWindow->Undo();
+    }
+    else if (code == Keyboard::Y)
+    {
+      _canvasWindow->Redo();
+    }
+  }
+
+  if (prevFrame != _curFrameIdx || prevAnimation != _curAnimationIdx)
+  {
+    AnimationsReloaded();
   }
 
   return false;
@@ -716,4 +810,28 @@ bool AnimationEditor::OnKeyReleased(const Event& event)
 void AnimationEditor::Update()
 {
   _windowManager.Update();
+}
+
+//-----------------------------------------------------------------------------
+void AnimationEditor::AnimationsReloaded()
+{
+  vector<Animation*> animations;
+  ANIMATION->GetAnimations(&animations);
+
+  if (animations.empty())
+  {
+    _curAnimation = nullptr;
+    _curAnimationIdx = 0;
+    _curFrameIdx = 0;
+    return;
+  }
+
+  _curAnimationIdx = Clamp(_curAnimationIdx, 0, (int)animations.size());
+  _curAnimation = animations[_curAnimationIdx];
+  _curFrameIdx = Clamp(_curFrameIdx, 0, (int)_curAnimation->_frames.size());
+  _curFrame = _curAnimation->_frames[_curFrameIdx];
+
+  _curTexture = TEXTURE_CACHE->TextureByHandle(_curAnimation->_texture);
+
+  _canvasWindow->TextureReloaded();
 }

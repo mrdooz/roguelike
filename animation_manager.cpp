@@ -7,6 +7,13 @@
 
 using namespace rogue;
 
+
+//-----------------------------------------------------------------------------
+AnimationManager::AnimationManager()
+  : _nextId(0)
+{
+}
+
 //-----------------------------------------------------------------------------
 AnimationManager::~AnimationManager()
 {
@@ -18,6 +25,7 @@ AnimationManager::~AnimationManager()
 //-----------------------------------------------------------------------------
 void AnimationManager::CheckForReload()
 {
+  bool animationsChanged = false;
   for (auto it = _lastModification.begin(); it != _lastModification.end(); ++it)
   {
     const char* filename = it->first.c_str();
@@ -28,8 +36,18 @@ void AnimationManager::CheckForReload()
       // File on disk is newer
       LoadAnimations(filename);
       it->second = s.st_mtime;
+      animationsChanged = true;
     }
   }
+
+  if (animationsChanged)
+  {
+    // call the listeners
+    for (const auto& listener : _listeners)
+    {
+      listener.second();
+    }
+  } 
 }
 
 //-----------------------------------------------------------------------------
@@ -122,4 +140,17 @@ bool AnimationManager::GetFrame(u32 animationIdx, u32 frameIdx, Frame* frame)
 
   *frame = animation->_frames[frameIdx];
   return true;
+}
+
+//-----------------------------------------------------------------------------
+u32 AnimationManager::AddUpdateListener(const fnAnimationsUpdated& listener)
+{
+  _listeners[_nextId] = listener;
+  return _nextId++;
+}
+
+//-----------------------------------------------------------------------------
+void AnimationManager::RemoveListener(u32 id)
+{
+  _listeners.erase(id);
 }

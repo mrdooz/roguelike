@@ -214,5 +214,5 @@ HsvColor::HsvColor(float h, float s, float v)
 //-----------------------------------------------------------------------------
 HsvColor::operator Color() const
 {
-  return ColorFromHsv(360*h, s, v);
+  return ColorFromHsv(h, s, v);
 }

@@ -6,14 +6,6 @@ namespace rogue
   class TextureCache
   {
   public:
-    TextureCache();
-    ~TextureCache();
-
-    void CheckForReload();
-    TextureHandle LoadTextureByHandle(const string& filename);
-    Texture* TextureByHandle(const TextureHandle& handle);
-
-  private:
     struct TextureEntry
     {
       TextureEntry() : _texture(nullptr) {}
@@ -21,6 +13,16 @@ namespace rogue
       time_t _lastModification;
       string _filename;
     };
+
+    TextureCache();
+    ~TextureCache();
+
+    void CheckForReload();
+    TextureHandle LoadTextureByHandle(const string& filename);
+    Texture* TextureByHandle(const TextureHandle& handle);
+    const TextureEntry* GetTextureEntry(const TextureHandle& handle) const;
+
+  private:
 
     ptime _lastUpdate;
     TextureEntry _elems[4096];
