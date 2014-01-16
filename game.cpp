@@ -372,12 +372,18 @@ void Game::FindAppRoot()
 //-----------------------------------------------------------------------------
 void Game::AddPlayerMessage(const time_duration& duration, const char* fmt, ...)
 {
-  auto now = microsec_clock::local_time();
-  auto expiry = now + duration;
-
   va_list args;
   va_start(args, fmt);
-  _playerMessages.emplace_back(expiry, ToString(fmt, args));
+  _playerMessages.emplace_back(microsec_clock::local_time() + duration, ToString(fmt, args));
+  va_end(args);
+}
+
+//-----------------------------------------------------------------------------
+void Game::AddPlayerMessage(const char* fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  _playerMessages.emplace_back(microsec_clock::local_time() + seconds(5), ToString(fmt, args));
   va_end(args);
 }
 

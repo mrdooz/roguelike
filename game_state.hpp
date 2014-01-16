@@ -68,6 +68,7 @@ namespace rogue
     PlayerAction _playerAction;
     SpellBase* _curSpell;
     bool _monsterPhase;
+    bool _playerInProgress;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(GameState);

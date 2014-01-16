@@ -47,7 +47,6 @@ namespace rogue
     PlayerMode _mode;
     PlayerClass _class;
     bool _hasMoved;
-
   };
 }
 

@@ -20,7 +20,12 @@ namespace rogue
     };
 
     GameEvent(Type type);
+    GameEvent(Entity* agent, Entity* target, LootItem* item);
     ~GameEvent();
+
+    Type _type;
+    Entity* _agent;
+    Entity* _target;
 
     union
     {
@@ -31,10 +36,6 @@ namespace rogue
 
     SpellBase* _spell;
 
-    Entity* _agent;
-    Entity* _target;
-
-    Type _type;
   private:
     DISALLOW_COPY_AND_ASSIGN(GameEvent);
   };

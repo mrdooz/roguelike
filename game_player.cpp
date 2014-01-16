@@ -13,14 +13,14 @@ using namespace rogue;
 namespace
 {
   //-----------------------------------------------------------------------------
-  bool ArrowKeyToHeading(sf::Keyboard::Key code, Pos *ofs, Heading* heading)
+  bool ArrowKeyToHeading(Keyboard::Key code, Pos *ofs, Heading* heading)
   {
     switch (code)
     {
-      case sf::Keyboard::Left:  *ofs = Pos(-1,0); *heading = Heading::West; return true;
-      case sf::Keyboard::Right: *ofs = Pos(+1,0); *heading = Heading::East; return true;
-      case sf::Keyboard::Up:    *ofs = Pos(0,-1); *heading = Heading::North; return true;
-      case sf::Keyboard::Down:  *ofs = Pos(0,+1); *heading = Heading::South; return true;
+      case Keyboard::Left:  *ofs = Pos(-1,0); *heading = Heading::West; return true;
+      case Keyboard::Right: *ofs = Pos(+1,0); *heading = Heading::East; return true;
+      case Keyboard::Up:    *ofs = Pos(0,-1); *heading = Heading::North; return true;
+      case Keyboard::Down:  *ofs = Pos(0,+1); *heading = Heading::South; return true;
     }
     return false;
   }
@@ -32,6 +32,7 @@ GamePlayer::GamePlayer(
     const fnTileAtPos& fnTileAtPos)
   : _windowEventManager(windowEventManager)
   , _fnTileAtPos(fnTileAtPos)
+  , _advancePlayer(false)
 {
   _actionMap[PlayerAction::ArcaneBlast] = new SpellArcaneBlast();
   _actionMap[PlayerAction::LightningBolt] = new SpellLightningBolt();
@@ -49,7 +50,7 @@ GamePlayer::~GamePlayer()
 //-----------------------------------------------------------------------------
 bool GamePlayer::Init()
 {
-  _windowEventManager->RegisterHandler(Event::KeyReleased, bind(&GamePlayer::OnKeyPressed, this, _1));
+  _windowEventManager->RegisterHandler(Event::KeyReleased, bind(&GamePlayer::OnKeyReleased, this, _1));
   _windowEventManager->RegisterHandler(Event::MouseButtonReleased, bind(&GamePlayer::OnMouseButtonReleased, this, _1));
 
   GAME_EVENT->RegisterHandler(GameEvent::Type::Attack, bind(&GamePlayer::OnAttack, this, _1));
@@ -58,12 +59,94 @@ bool GamePlayer::Init()
   GAME_EVENT->RegisterHandler(GameEvent::Type::LevelGained, bind(&GamePlayer::OnLevelGained, this, _1));
   GAME_EVENT->RegisterHandler(GameEvent::Type::ItemGained, bind(&GamePlayer::OnItemGained, this, _1));
 
+  InitActionMaps();
+
   return true;
+}
+
+//-----------------------------------------------------------------------------
+void GamePlayer::InitActionMaps()
+{
+  _actionMapWizard._keyboardCallbacks[Keyboard::Up]     = bind(&GamePlayer::OnMovement, this, _1);
+  _actionMapWizard._keyboardCallbacks[Keyboard::Down]   = bind(&GamePlayer::OnMovement, this, _1);
+  _actionMapWizard._keyboardCallbacks[Keyboard::Left]   = bind(&GamePlayer::OnMovement, this, _1);
+  _actionMapWizard._keyboardCallbacks[Keyboard::Right]  = bind(&GamePlayer::OnMovement, this, _1);
+
+  _actionMapWizard._selectionCallbacks[make_pair(Keyboard::L, (int)Selection::Monster)]
+    = bind(&GamePlayer::OnLightningBolt, this, _1);
+
+}
+
+//-----------------------------------------------------------------------------
+void GamePlayer::OnLightningBolt(Entity* entity)
+{
+
+}
+
+//-----------------------------------------------------------------------------
+void GamePlayer::OnMovement(Keyboard::Key key)
+{
+  const GameState& state = GAME.GetGameState();
+  Party* party = state._party;
+  Level* level = state._level;
+  Player* player = party->_players[state._activePlayer];
+
+  // Check if the input is a valid movement key, and the
+  // resulting position is valid
+  Pos ofs;
+  if (!ArrowKeyToHeading(key, &ofs, &player->_heading))
+    return;
+
+  Pos newPos(player->GetPos() + ofs);
+  if (!level->ValidDestination(newPos))
+  {
+    GAME.AddPlayerMessage("You can't move there");
+    return;
+  }
+
+  level->MovePlayer(player, newPos);
+
+  // If the new tile has any items, pick up the top one
+  Tile& tile = level->Get(newPos);
+  if (!tile._items.empty())
+  {
+    GameEvent event(player, player, new LootItem(tile._items.back()));
+    tile._items.pop_back();
+    GAME_EVENT->SendEvent(event);
+  }
+
+  NextPlayer();
 }
 
 //-----------------------------------------------------------------------------
 void GamePlayer::Update(GameState& gameState)
 {
+  // Check if it's time to set a new action map
+  if (gameState._monsterPhase || gameState._playerInProgress)
+    return;
+
+  const Player* player = gameState.GetActivePlayer();
+  gameState._playerInProgress = true;
+
+  switch (player->_class)
+  {
+  case PlayerClass::kWizard:
+    _curActionMap = &_actionMapWizard;
+    break;
+
+  case PlayerClass::kRanger:
+    _curActionMap = &_actionMapRanger;
+    break;
+
+  case PlayerClass::kWarrior:
+    _curActionMap = &_actionMapWarrior;
+    break;
+
+  case PlayerClass::kCleric:
+    _curActionMap = &_actionMapCleric;
+    break;
+  }
+
 }
 
 //-----------------------------------------------------------------------------
@@ -279,7 +362,7 @@ bool GamePlayer::OnMouseButtonReleased(const Event& event)
         state._actionPhase++;
         if (state._curSpell->Finished(state))
         {
-          NextPlayer(state);
+          NextPlayer();
         }
       }
     }
@@ -303,25 +386,61 @@ bool GamePlayer::OnMouseButtonReleased(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-void GamePlayer::NextPlayer(GameState& state)
+void GamePlayer::NextPlayer()
 {
-  int activePlayer = state._activePlayer;
-  activePlayer++;
-  if (activePlayer == state._party->GetNumPlayers())
+  GameState& state = GAME.GetGameState();
+
+  if (_advancePlayer)
   {
-    state._activePlayer = 0;
-    state._monsterPhase = true;
+    int activePlayer = state._activePlayer;
+    activePlayer++;
+    if (activePlayer == state._party->GetNumPlayers())
+    {
+      state._activePlayer = 0;
+      state._monsterPhase = true;
+    }
+    else
+    {
+      state._activePlayer = activePlayer;
+      state._actionPhase = 0;
+    }
   }
   else
   {
-    state._activePlayer = activePlayer;
     state._actionPhase = 0;
   }
 }
 
 //-----------------------------------------------------------------------------
-bool GamePlayer::OnKeyPressed(const Event& event)
+bool GamePlayer::OnKeyReleased(const Event& event)
 {
+  if (!_curActionMap)
+    return false;
+
+
+
+  // look for keyboard actions
+  Keyboard::Key key = event.key.code;
+  auto it = _curActionMap->_keyboardCallbacks.find(key);
+  if (it != _curActionMap->_keyboardCallbacks.end())
+  {
+    it->second(key);
+  }
+
+  // look for selection actions
+  for (auto cb : _curActionMap->_selectionCallbacks)
+  {
+    const pair<Keyboard::Key, ActionMap::SelectionMask>& cur = cb.first;
+    if (cur.first == key)
+    {
+      // 
+    }
+  }
+
+  return false;
+
+/*
+
   GameState& state = GAME.GetGameState();
   if (state._monsterPhase)
     return false;
@@ -384,6 +503,6 @@ bool GamePlayer::OnKeyPressed(const Event& event)
       NextPlayer(state);
     }
   }
-
+*/
   return true;
 }

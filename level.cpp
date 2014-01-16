@@ -166,6 +166,9 @@ void Level::MovePlayer(Player* p, const Pos& newPos)
   assert(!newTile._player);
   newTile._player = p;
 
+  p->_hasMoved = true;
+  p->SetPos(newPos);
+
   updateFog(newPos);
 }
 

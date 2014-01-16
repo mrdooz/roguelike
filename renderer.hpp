@@ -134,5 +134,10 @@ namespace rogue
     deque<AnimationInstance> _activeAnimations;
 
     Entity* _debugDump;
+
+    MainWindow* _mainWindow;
+    CombatLogWindow* _combatLogWindow;
+    PartyWindow* _partyWindow;
+
   };
 }

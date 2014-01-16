@@ -36,6 +36,7 @@ namespace rogue
     int Run();
 
     void AddPlayerMessage(const time_duration& duration, const char* fmt, ...);
+    void AddPlayerMessage(const char* fmt, ...);
 
     GameState& GetGameState();
 

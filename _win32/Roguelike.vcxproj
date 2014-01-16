@@ -47,7 +47,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(SFML_ROOT)/include;$(PROTOBUF_ROOT)/src;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SFML_ROOT)/lib;$(PROTOBUF_ROOT)/vsprojects/$(ConfigurationName);$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SFML_ROOT)/lib/$(Configuration);$(PROTOBUF_ROOT)/vsprojects/$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -80,7 +80,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>SFML_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>precompiled.hpp</PrecompiledHeaderFile>
-      <DisableSpecificWarnings>4996; 424</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996; 4244</DisableSpecificWarnings>
       <ForcedIncludeFiles>precompiled.hpp</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>

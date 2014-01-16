@@ -6,8 +6,18 @@ using namespace rogue;
 
 //-----------------------------------------------------------------------------
 GameEvent::GameEvent(Type type)
-  : _spell(nullptr)
-  , _type(type)
+  : _type(type)
+  , _spell(nullptr)
+{
+}
+
+//-----------------------------------------------------------------------------
+GameEvent::GameEvent(Entity* agent, Entity* target, LootItem* item)
+  : _type(Type::ItemGained)
+  , _agent(agent)
+  , _target(target)
+  , _item(item)
+  , _spell(nullptr)
 {
 }
 

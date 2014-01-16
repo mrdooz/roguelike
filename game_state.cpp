@@ -18,6 +18,7 @@ GameState::GameState()
   , _selection(0)
   , _curSpell(nullptr)
   , _monsterPhase(false)
+  , _playerInProgress(false)
 {
 }
 

@@ -11,6 +11,7 @@
 #include "animation_manager.hpp"
 
 using namespace rogue;
+using namespace sf;
 
 //-----------------------------------------------------------------------------
 enum class Tiles
@@ -60,8 +61,8 @@ void CombatLogWindow::Draw()
   _texture.draw(background);
 
   int spacing = 15;
-  sf::Text normal("", _renderer->_font, 10);
-  sf::Vector2f pos(0, 0);
+  Text normal("", _renderer->_font, 10);
+  Vector2f pos(0, 0);
 
   int rows = min((int)_renderer->_combatLog.size(), 150 / spacing);
   for (int i = 0; i < rows; ++i)
@@ -110,8 +111,8 @@ void PartyWindow::Draw()
   {
     heading.setString(player->Name());
     heading.setPosition(pos);
-    sf::FloatRect r = heading.getLocalBounds();
-    sf::Vector2f tmpPos = pos;
+    FloatRect r = heading.getLocalBounds();
+    Vector2f tmpPos = pos;
     pos.x += r.width + 10;
     _texture.draw(heading);
     normal.setString(toString("(%s, level %d)", playerClassToString(player->_class).c_str(), player->Level()));
@@ -132,8 +133,8 @@ void PartyWindow::Draw()
 
   for (auto *player : party->_players)
   {
-    heading.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
-    normal.setColor(player == activePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
+    heading.setColor(player == activePlayer ? Color(255, 255, 255) : Color(127,127,127));
+    normal.setColor(player == activePlayer ? Color(255, 255, 255) : Color(127,127,127));
 
     pos.x = col0;
     drawHeading(player);
@@ -173,29 +174,28 @@ void PartyWindow::Draw()
 }
 
 //-----------------------------------------------------------------------------
-Renderer::Renderer(sf::RenderWindow *window, WindowEventManager* eventManager) 
+Renderer::Renderer(RenderWindow *window, WindowEventManager* eventManager) 
   : _window(window)
   , _prevSelected(-1)
   , _offset(0,0)
   , _zoomLevel(3)
   , _windowManager(window, eventManager)
   , _debugDump(nullptr)
+  , _mainWindow(new MainWindow("MAIN", Vector2f(0,10), Vector2f(600, 600), this))
+  , _combatLogWindow(new CombatLogWindow("COMBAT LOG", Vector2f(0,600), Vector2f(600, 200), this))
+  , _partyWindow(new PartyWindow("PARTY", Vector2f(600,10), Vector2f(200, 600), this))
 {
-  auto mainWindow = new MainWindow("MAIN", Vector2f(0,10), Vector2f(600, 600), this);
-  auto combatLog = new CombatLogWindow("COMBAT LOG", Vector2f(0,600), Vector2f(600, 200), this);
-  auto partyWindow = new PartyWindow("PARTY", Vector2f(600,10), Vector2f(200, 600), this);
+  _windowManager.RegisterHandler(Event::Resized, _mainWindow, bind(&Renderer::OnResize, this, _1));
+  _windowManager.RegisterHandler(Event::MouseMoved, _mainWindow, bind(&Renderer::OnMouseMove, this, _1));
 
-  _windowManager.RegisterHandler(Event::Resized, mainWindow, bind(&Renderer::OnResize, this, _1));
-  _windowManager.RegisterHandler(Event::MouseMoved, mainWindow, bind(&Renderer::OnMouseMove, this, _1));
+  _windowManager.RegisterHandler(Event::MouseButtonReleased, _mainWindow, bind(&Renderer::OnMouseButtonReleased, this, _1));
+  _windowManager.RegisterHandler(Event::KeyReleased, _mainWindow, bind(&Renderer::OnKeyPressed, this, _1));
 
-  _windowManager.RegisterHandler(Event::MouseButtonReleased, mainWindow, bind(&Renderer::OnMouseButtonReleased, this, _1));
-  _windowManager.RegisterHandler(Event::KeyReleased, mainWindow, bind(&Renderer::OnKeyPressed, this, _1));
+  _rtMain = _mainWindow->GetTexture();
 
-  _rtMain = mainWindow->GetTexture();
-
-  _windowManager.AddWindow(mainWindow);
-  _windowManager.AddWindow(combatLog);
-  _windowManager.AddWindow(partyWindow);
+  _windowManager.AddWindow(_mainWindow);
+  _windowManager.AddWindow(_combatLogWindow);
+  _windowManager.AddWindow(_partyWindow);
 }
 
 //-----------------------------------------------------------------------------
@@ -275,10 +275,9 @@ void Renderer::DrawWorld(const GameState& state)
 
   // Blit render target to render window
   _rtMain->display();
-  //_window->draw(_sprMain);
 
   // display current state
-  sf::Text text("", _font, 10);
+  Text text("", _font, 10);
   text.setString(state._description);
   text.setPosition(20, 200);
   text.setColor(Color::White);
@@ -305,10 +304,10 @@ bool Renderer::OnResize(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::DrawQuad(const Pos& topLeft, u32 size, sf::Color color)
+void Renderer::DrawQuad(const Pos& topLeft, u32 size, Color color)
 {
   int s = size * _zoomLevel;
-  sf::Vertex verts[] = {
+  Vertex verts[] = {
     MakeVertex(0 + topLeft.x, 0 + topLeft.y, color),
     MakeVertex(s + topLeft.x, 0 + topLeft.y, color),
     MakeVertex(s + topLeft.x, s + topLeft.y, color),
@@ -316,7 +315,7 @@ void Renderer::DrawQuad(const Pos& topLeft, u32 size, sf::Color color)
     MakeVertex(0 + topLeft.x, 0 + topLeft.y, color),
   };
 
-  _rtMain->draw(verts, 5, sf::LinesStrip);
+  _rtMain->draw(verts, 5, LinesStrip);
 }
 
 //-----------------------------------------------------------------------------
@@ -336,7 +335,7 @@ void Renderer::DrawLevel(const GameState& state)
       Tile &tile = level->Get(x,y);
       auto& sprite = _tileSprites[y*level->Width()+x];
 
-//      sprite.setColor(sf::Color(tile._visited, tile._visited, tile._visited));
+//      sprite.setColor(Color(tile._visited, tile._visited, tile._visited));
       _rtMain->draw(sprite);
 
       if (tile._selected)
@@ -355,7 +354,7 @@ void Renderer::DrawLevel(const GameState& state)
   }
 
   if (selectedTile)
-    DrawQuad(selectedPos, 8, sf::Color::White);
+    DrawQuad(selectedPos, 8, Color::White);
 }
 
 //-----------------------------------------------------------------------------
@@ -376,7 +375,7 @@ void Renderer::DrawParty(const GameState& state)
     Pos pos(player->GetPos());
     bool isActivePlayer = player == activePlayer;
 
-    Color color(isActivePlayer ? sf::Color(255, 255, 255) : sf::Color(127,127,127));
+    Color color(isActivePlayer ? Color(255, 255, 255) : Color(127,127,127));
     auto sprite = player->_sprite;
     sprite.SetPosition(PlayerToWorldF(pos));
     sprite.SetColor(color);
@@ -386,7 +385,7 @@ void Renderer::DrawParty(const GameState& state)
     if (isActivePlayer)
     {
       Pos org(PlayerToWorld(pos));
-      DrawQuad(org, 8, sf::Color::Green);
+      DrawQuad(org, 8, Color::Green);
     }
 
     DrawHealthBar(player->CurHealth(), player->MaxHealth(), pos);
@@ -398,17 +397,17 @@ void Renderer::DrawHealthBar(int health, int maxHealth, const Pos &pos)
 {
   float zoomF = (float)_zoomLevel;
 
-  sf::RectangleShape rectangle;
+  RectangleShape rectangle;
   // deficit
-  rectangle.setSize(sf::Vector2f(zoomF*6, zoomF));
+  rectangle.setSize(Vector2f(zoomF*6, zoomF));
   rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
-  rectangle.setFillColor(sf::Color(200, 10, 10));
+  rectangle.setFillColor(Color(200, 10, 10));
   _rtMain->draw(rectangle);
 
   // cur health
-  rectangle.setSize(sf::Vector2f((float)health / maxHealth*zoomF*6, zoomF));
+  rectangle.setSize(Vector2f((float)health / maxHealth*zoomF*6, zoomF));
   rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
-  rectangle.setFillColor(sf::Color(10, 200, 10));
+  rectangle.setFillColor(Color(10, 200, 10));
   _rtMain->draw(rectangle);
 }
 
@@ -654,14 +653,14 @@ bool Renderer::Init(const GameState& state)
     m->_sprite.setTexture(_characterTexture);
     switch (m->GetType())
     {
-      case Monster::Type::Goblin: m->_sprite.setTextureRect(sf::IntRect(0, 5*8, 8, 8)); break;
-      case Monster::Type::Skeleton: m->_sprite.setTextureRect(sf::IntRect(0, 6*8, 8, 8)); break;
-      case Monster::Type::SkeletonWarrior: m->_sprite.setTextureRect(sf::IntRect(2*8, 6*8, 8, 8)); break;
-      case Monster::Type::SkeletonMage: m->_sprite.setTextureRect(sf::IntRect(3*8, 6*8, 8, 8)); break;
-      case Monster::Type::FireElemental: m->_sprite.setTextureRect(sf::IntRect(0, 7*8, 8, 8)); break;
-      case Monster::Type::WaterElemental: m->_sprite.setTextureRect(sf::IntRect(1*8, 7*8, 8, 8)); break;
-      case Monster::Type::Ogre: m->_sprite.setTextureRect(sf::IntRect(0, 8*8, 8, 8)); break;
-      case Monster::Type::Demon: m->_sprite.setTextureRect(sf::IntRect(0, 9*8, 8, 8)); break;
+      case Monster::Type::Goblin: m->_sprite.setTextureRect(IntRect(0, 5*8, 8, 8)); break;
+      case Monster::Type::Skeleton: m->_sprite.setTextureRect(IntRect(0, 6*8, 8, 8)); break;
+      case Monster::Type::SkeletonWarrior: m->_sprite.setTextureRect(IntRect(2*8, 6*8, 8, 8)); break;
+      case Monster::Type::SkeletonMage: m->_sprite.setTextureRect(IntRect(3*8, 6*8, 8, 8)); break;
+      case Monster::Type::FireElemental: m->_sprite.setTextureRect(IntRect(0, 7*8, 8, 8)); break;
+      case Monster::Type::WaterElemental: m->_sprite.setTextureRect(IntRect(1*8, 7*8, 8, 8)); break;
+      case Monster::Type::Ogre: m->_sprite.setTextureRect(IntRect(0, 8*8, 8, 8)); break;
+      case Monster::Type::Demon: m->_sprite.setTextureRect(IntRect(0, 9*8, 8, 8)); break;
     }
   }
 
@@ -686,16 +685,16 @@ bool Renderer::Init(const GameState& state)
       {
         if (level->Inside(x,y+1) && level->Get(x,y+1)._type != Tile::Type::Wall)
         {
-          sprite.setTextureRect(sf::IntRect((int)Tiles::wallH*8, 0, 8, 8));
+          sprite.setTextureRect(IntRect((int)Tiles::wallH*8, 0, 8, 8));
         }
         else
         {
-          sprite.setTextureRect(sf::IntRect((int)Tiles::wallV*8, 0, 8, 8));
+          sprite.setTextureRect(IntRect((int)Tiles::wallV*8, 0, 8, 8));
         }
       }
       else if (tile._type == Tile::Type::Floor)
       {
-        sprite.setTextureRect(sf::IntRect((int)Tiles::floorC*8, 0, 8, 8));
+        sprite.setTextureRect(IntRect((int)Tiles::floorC*8, 0, 8, 8));
       }
       else
       {
