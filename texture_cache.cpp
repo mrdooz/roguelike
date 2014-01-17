@@ -1,9 +1,33 @@
 #include "texture_cache.hpp"
 #include "utils.hpp"
-#include "game.hpp"
 #include "error.hpp"
 
 using namespace rogue;
+
+TextureCache* TextureCache::_instance;
+
+//-----------------------------------------------------------------------------
+bool TextureCache::Close()
+{
+  assert(_instance);
+  delete exch_null(_instance);
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+bool TextureCache::Create()
+{
+  assert(!_instance);
+  _instance = new TextureCache();
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+TextureCache* TextureCache::Instance()
+{
+  assert(_instance);
+  return _instance;
+}
 
 //-----------------------------------------------------------------------------
 TextureCache::TextureCache()

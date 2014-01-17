@@ -17,7 +17,6 @@ namespace rogue
 
   class TextureCache;
   class AnimationManager;
-  class AnimationEditor;
 
   struct LogMessage
   {
@@ -43,10 +42,8 @@ namespace rogue
     GameState& GetGameState();
 
     WindowEventManager* GetWindowEventManager();
-    WindowEventManager* GetDebugWindowEventManager();
     GameEventManager* GetGameEventManager();
 
-    TextureCache* GetTextureCache();
     AnimationManager* GetAnimationManager();
 
     u32 RegisterSelectionListener(const fnSelectionListener& listener);
@@ -64,7 +61,6 @@ namespace rogue
     bool OnResize(const Event& event);
 
     void ProcessMainWindow();
-    void ProcessDebugWindow();
 
     bool Init();
 
@@ -82,15 +78,11 @@ namespace rogue
     GameState _gameState;
 
     RenderWindow* _window;
-    RenderWindow* _debugWindow;
     Renderer *_renderer;
-    AnimationEditor* _animationEditor;
 
     WindowEventManager* _windowEventManager;
-    WindowEventManager* _debugWindowEventManager;
     GameEventManager* _gameEventManager;
 
-    TextureCache* _textureCache;
     AnimationManager* _animationManager;
 
     deque<LogMessage> _playerMessages;
@@ -105,7 +97,4 @@ namespace rogue
 
 #define GAME rogue::Game::Instance()
 #define GAME_EVENT rogue::Game::Instance()->GetGameEventManager()
-#define TEXTURE_CACHE rogue::Game::Instance()->GetTextureCache()
-#define ANIMATION rogue::Game::Instance()->GetAnimationManager()
-
 }

@@ -1,5 +1,7 @@
 Debug/
 Release/
+**/Debug_editor/*
+**/Relase_editor/*
 Distribution/
 _win32/_ReSharper.kumi/*
 data/

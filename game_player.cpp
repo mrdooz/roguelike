@@ -53,7 +53,7 @@ GamePlayer::~GamePlayer()
 bool GamePlayer::Init()
 {
   _windowEventManager->RegisterHandler(Event::KeyReleased, bind(&GamePlayer::OnKeyReleased, this, _1));
-  _windowEventManager->RegisterHandler(Event::MouseButtonReleased, bind(&GamePlayer::OnMouseButtonReleased, this, _1));
+//  _windowEventManager->RegisterHandler(Event::MouseButtonReleased, bind(&GamePlayer::OnMouseButtonReleased, this, _1));
 
   GAME_EVENT->RegisterHandler(GameEvent::Type::Attack, bind(&GamePlayer::OnAttack, this, _1));
   GAME_EVENT->RegisterHandler(GameEvent::Type::Heal, bind(&GamePlayer::OnHeal, this, _1));
@@ -88,9 +88,16 @@ void GamePlayer::OnLightningBolt(const SelectionEvent& event)
   const GameState& state = GAME->GetGameState();
   Player* player = state.GetActivePlayer();
   MonsterPtr monster = static_pointer_cast<Monster>(event._entity);
-  if (!state._level->IsVisible(player->GetPos(), monster->GetPos()))
+  int dist = state._level->IsVisible(player->GetPos(), monster->GetPos());
+  if (!dist)
   {
     GAME->AddPlayerMessage("Target is not visible");
+    return;
+  }
+
+  if (dist > 4)
+  {
+    GAME->AddPlayerMessage("Target out of range");
     return;
   }
 

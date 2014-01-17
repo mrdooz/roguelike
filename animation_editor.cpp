@@ -1,10 +1,11 @@
 #include "animation_editor.hpp"
-#include "game.hpp"
 #include "window_event_manager.hpp"
 #include "animation_manager.hpp"
 #include "virtual_window.hpp"
 #include "sfml_helpers.hpp"
 #include "texture_cache.hpp"
+#include "utils.hpp"
+#include "editor.hpp"
 
 using namespace rogue;
 using namespace sf;
@@ -644,7 +645,10 @@ bool ColorPickerWindow::OnResized(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-AnimationEditor::AnimationEditor(RenderWindow *window, WindowEventManager* eventManager)
+AnimationEditor::AnimationEditor(
+    RenderWindow *window,
+    WindowEventManager* eventManager,
+    AnimationManager* animationManager)
   : _window(window)
   , _windowManager(window, eventManager)
   , _font(nullptr)
@@ -660,6 +664,7 @@ AnimationEditor::AnimationEditor(RenderWindow *window, WindowEventManager* event
   , _canvasWindow(new CanvasWindow("CANVAS", Vector2f(250,150), Vector2f(400,400), this))
   , _toolkitWindow(new ToolkitWindow("TOOLKIT", Vector2f(250,20), Vector2f(400,100)))
   , _colorPickerWindow(new ColorPickerWindow("COLORPICKER", Vector2f(750,20), Vector2f(350,200), this))
+  , _animationManager(animationManager)
 {
   eventManager->RegisterHandler(Event::KeyReleased, bind(&AnimationEditor::OnKeyReleased, this, _1));
 
@@ -668,7 +673,7 @@ AnimationEditor::AnimationEditor(RenderWindow *window, WindowEventManager* event
   _windowManager.AddWindow(_toolkitWindow);
   _windowManager.AddWindow(_colorPickerWindow);
 
-  ANIMATION->AddUpdateListener(bind(&AnimationEditor::AnimationsReloaded, this));
+  _animationManager->AddUpdateListener(bind(&AnimationEditor::AnimationsReloaded, this));
 }
 
 //-----------------------------------------------------------------------------
@@ -691,7 +696,7 @@ Vector2f AnimationEditor::GetFrameSize() const
   Vector2f res(0,0);
 
   vector<Animation*> animations;
-  ANIMATION->GetAnimations(&animations);
+  _animationManager->GetAnimations(&animations);
   Animation* animation = animations[_curAnimationIdx];
 
   for (const Frame& frame : animation->_frames)
@@ -709,7 +714,7 @@ void AnimationEditor::SaveAnimation()
   if (!_curAnimation || !_curTexture)
     return;
 
-  const TextureCache::TextureEntry* entry = TEXTURE_CACHE->GetTextureEntry(_curAnimation->_texture);
+  const TextureCache::TextureEntry* entry = TextureCache::Instance()->GetTextureEntry(_curAnimation->_texture);
   if (!entry)
     return;
 
@@ -816,7 +821,7 @@ void AnimationEditor::Update()
 void AnimationEditor::AnimationsReloaded()
 {
   vector<Animation*> animations;
-  ANIMATION->GetAnimations(&animations);
+  _animationManager->GetAnimations(&animations);
 
   if (animations.empty())
   {
@@ -831,7 +836,7 @@ void AnimationEditor::AnimationsReloaded()
   _curFrameIdx = Clamp(_curFrameIdx, 0, (int)_curAnimation->_frames.size());
   _curFrame = _curAnimation->_frames[_curFrameIdx];
 
-  _curTexture = TEXTURE_CACHE->TextureByHandle(_curAnimation->_texture);
+  _curTexture = TextureCache::Instance()->TextureByHandle(_curAnimation->_texture);
 
   _canvasWindow->TextureReloaded();
 }

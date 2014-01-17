@@ -9,6 +9,8 @@ namespace rogue
 {
   class GameState;
   class AnimationEditor;
+  class AnimationManager;
+  class TextureCache;
 
   //-----------------------------------------------------------------------------
   class AnimationWindow : public VirtualWindow
@@ -132,7 +134,10 @@ namespace rogue
     friend class FramesWindow;
 
   public:
-    AnimationEditor(RenderWindow *window, WindowEventManager* eventManager);
+    AnimationEditor(
+        RenderWindow *window,
+        WindowEventManager* eventManager,
+        AnimationManager* animationManager);
 
     bool Init();
     bool OnKeyReleased(const Event& event);
@@ -172,6 +177,6 @@ namespace rogue
     CanvasWindow* _canvasWindow;
     ToolkitWindow* _toolkitWindow;
     ColorPickerWindow* _colorPickerWindow;
-
+    AnimationManager* _animationManager;
   };
 }

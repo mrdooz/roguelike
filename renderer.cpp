@@ -182,7 +182,7 @@ bool MainWindow::OnMouseButtonReleased(const Event& event)
 
   if (tile._monster)
   {
-    selEvent._entity = static_pointer_cast<Entity>(tile._monster);
+    selEvent._entity = tile._monster;
     _renderer->_debugDump = tile._monster;
   }
 
@@ -553,7 +553,10 @@ void PartyWindow::Draw()
 }
 
 //-----------------------------------------------------------------------------
-Renderer::Renderer(RenderWindow *window, WindowEventManager* eventManager) 
+Renderer::Renderer(
+    RenderWindow *window,
+    WindowEventManager* eventManager,
+    AnimationManager* animationManager)
   : _window(window)
   , _prevSelected(-1)
   , _windowManager(window, eventManager)
@@ -561,6 +564,7 @@ Renderer::Renderer(RenderWindow *window, WindowEventManager* eventManager)
   , _mainWindow(new MainWindow("MAIN", Vector2f(0,10), Vector2f(600, 600), this))
   , _combatLogWindow(new CombatLogWindow("COMBAT LOG", Vector2f(0,600), Vector2f(600, 200), this))
   , _partyWindow(new PartyWindow("PARTY", Vector2f(600,10), Vector2f(200, 600), this))
+  , _animationManager(animationManager)
 {
   _windowManager.AddWindow(_mainWindow);
   _windowManager.AddWindow(_combatLogWindow);
@@ -668,13 +672,13 @@ bool Renderer::Init(const GameState& state)
   if (!_font.loadFromFile("gfx/wscsnrg.ttf"))
     return false;
 
-  if (!(_environmentTexture = TEXTURE_CACHE->LoadTextureByHandle("oryx_lofi/lofi_environment.png")))
+  if (!(_environmentTexture = TextureCache::Instance()->LoadTextureByHandle("oryx_lofi/lofi_environment.png")))
     return false;
 
-  if (!(_characterTexture = TEXTURE_CACHE->LoadTextureByHandle("oryx_lofi/lofi_char.png")))
+  if (!(_characterTexture = TextureCache::Instance()->LoadTextureByHandle("oryx_lofi/lofi_char.png")))
     return false;
 
-  if (!(_objectTexture = TEXTURE_CACHE->LoadTextureByHandle("oryx_lofi/lofi_obj.png")))
+  if (!(_objectTexture = TextureCache::Instance()->LoadTextureByHandle("oryx_lofi/lofi_obj.png")))
     return false;
 
   _objectToTextureRect[LootItem::Type::Gold]          = Rect(0,0,8,8);
@@ -773,7 +777,7 @@ void Renderer::AddAnimation(
     const Pos& endPos,
     const time_duration& duration)
 {
-  Animation* animation = ANIMATION->FindAnimation(id);
+  Animation* animation = _animationManager->FindAnimation(id);
   if (!animation)
   {
     return;

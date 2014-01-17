@@ -397,7 +397,7 @@ void Level::EntitiesInPath(const Pos& a, const Pos& b, vector<Entity*>* entities
 }
 
 //-----------------------------------------------------------------------------
-bool Level::IsVisible(const Pos& a, const Pos& b)
+int Level::IsVisible(const Pos& a, const Pos& b)
 {
   vector<Tile*> tiles;
   TilesInPath(a, b, &tiles);
@@ -405,10 +405,9 @@ bool Level::IsVisible(const Pos& a, const Pos& b)
   for (Tile* t : tiles)
   {
     if (t->_type == Tile::Type::Wall)
-      return false;
+      return 0;
   }
-
-  return true;
+  return tiles.size();
 }
 
 //-----------------------------------------------------------------------------

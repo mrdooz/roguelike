@@ -42,7 +42,8 @@ void GameAI::Update(GameState& state)
       else
       {
         // Is the player visible?
-        monster->_playerVisible = level->IsVisible(monster->GetPos(), monster->_aggroPlayer->GetPos());
+        monster->_playerVisible = level->IsVisible(
+            monster->GetPos(), monster->_aggroPlayer->GetPos()) > 0;
         if (monster->_playerVisible)
         {
           monster->_lastPlayerPos = monster->_aggroPlayer->GetPos();
@@ -54,7 +55,8 @@ void GameAI::Update(GameState& state)
         {
           MoveMonster(level, monster.get(), level->StepTowards(monster->GetPos(), monster->_lastPlayerPos));
           monster->_aggroDecay--;
-          monster->_playerVisible = level->IsVisible(monster->GetPos(), monster->_aggroPlayer->GetPos());
+          monster->_playerVisible =
+              level->IsVisible(monster->GetPos(), monster->_aggroPlayer->GetPos()) > 0;
           if (monster->_playerVisible)
           {
             monster->_lastPlayerPos = monster->_aggroPlayer->GetPos();

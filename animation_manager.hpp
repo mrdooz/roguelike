@@ -3,6 +3,8 @@
 
 namespace rogue
 {
+  class TextureCache;
+
   class AnimationManager
   {
   public:

@@ -75,7 +75,7 @@ bool AnimationManager::LoadAnimations(const char* filename)
   for (int i = 0; i < animations.animation_size(); ++i)
   {
     auto& cur = animations.animation(i);
-    TextureHandle texture = TEXTURE_CACHE->LoadTextureByHandle(cur.texture());
+    TextureHandle texture = TextureCache::Instance()->LoadTextureByHandle(cur.texture());
     if (!texture)
     {
       LOG_WARN("Unable to find texture" << LogKeyValue("filename", cur.texture()));

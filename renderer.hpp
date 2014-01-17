@@ -15,6 +15,7 @@ namespace rogue
   class GameState;
   class WindowEventManager;
   class Renderer;
+  class AnimationManager;
 
   //-----------------------------------------------------------------------------
   class MainWindow : public VirtualWindow
@@ -82,7 +83,7 @@ namespace rogue
     friend class MainWindow;
 
   public:
-    Renderer(RenderWindow* window, WindowEventManager* eventManager);
+    Renderer(RenderWindow* window, WindowEventManager* eventManager, AnimationManager* animationManager);
     ~Renderer();
 
     bool Init(const GameState& state);
@@ -138,6 +139,6 @@ namespace rogue
     MainWindow* _mainWindow;
     CombatLogWindow* _combatLogWindow;
     PartyWindow* _partyWindow;
-
+    AnimationManager* _animationManager;
   };
 }

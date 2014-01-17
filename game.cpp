@@ -6,7 +6,6 @@
 #include "player_factory.hpp"
 #include "level_factory.hpp"
 #include "renderer.hpp"
-#include "animation_editor.hpp"
 #include "party.hpp"
 #include "window_event_manager.hpp"
 #include "game_event_manager.hpp"
@@ -22,8 +21,6 @@
 #include <CoreGraphics/CGDirectDisplay.h>
 #endif
 
-#define USE_DEBUG_WINDOW
-
 using namespace rogue;
 
 Game *Game::_instance;
@@ -34,13 +31,9 @@ Game::Game()
     , _gamePlayer(nullptr)
     , _gameAI(nullptr)
     , _window(nullptr)
-    , _debugWindow(nullptr)
     , _renderer(nullptr)
-    , _animationEditor(nullptr)
     , _windowEventManager(nullptr)
-    , _debugWindowEventManager(nullptr)
     , _gameEventManager(nullptr)
-    , _textureCache(nullptr)
     , _animationManager(nullptr)
 {
 }
@@ -48,19 +41,13 @@ Game::Game()
 //-----------------------------------------------------------------------------
 Game::~Game()
 {
-  delete exch_null(_textureCache);
   delete exch_null(_animationManager);
   delete exch_null(_playerFactory);
   delete exch_null(_gamePlayer);
   delete exch_null(_gameAI);
   delete exch_null(_renderer);
   delete exch_null(_window);
-#ifdef _USE_DEBUG_WINDOW
-  delete exch_null(_animationEditor);
-  delete exch_null(_debugWindow);
-#endif
   delete exch_null(_windowEventManager);
-  delete exch_null(_debugWindowEventManager);
   delete exch_null(_gameEventManager);
 }
 
@@ -85,12 +72,6 @@ Game* Game::Instance()
 {
   assert(_instance);
   return _instance;
-}
-
-//-----------------------------------------------------------------------------
-WindowEventManager* Game::GetDebugWindowEventManager()
-{
-  return _debugWindowEventManager;
 }
 
 //-----------------------------------------------------------------------------
@@ -167,27 +148,12 @@ bool Game::InitMainWindow()
   _windowEventManager->RegisterHandler(Event::Closed, [this](const Event&) { _window->close(); return true; });
   _windowEventManager->RegisterHandler(Event::Resized, bind(&Game::OnResize, this, _1));
 
-  _renderer = new Renderer(_window, _windowEventManager);
+  _renderer = new Renderer(_window, _windowEventManager, _animationManager);
   if (!_renderer->Init(_gameState))
     return false;
 
   if (!_playerMessageFont.loadFromFile("gfx/wscsnrg.ttf"))
     return false;
-
-  return true;
-}
-
-//-----------------------------------------------------------------------------
-bool Game::InitDebugWindow()
-{
-  _debugWindow = new sf::RenderWindow(sf::VideoMode(1200, 600), "debug");
-  _debugWindow->setFramerateLimit(60);
-  _debugWindowEventManager = new WindowEventManager(_debugWindow);
-
-  _animationEditor = new AnimationEditor(_debugWindow, _debugWindowEventManager);
-  if (!_animationEditor->Init())
-    return false;
-
 
   return true;
 }
@@ -202,9 +168,11 @@ bool Game::Init()
   if (!g_logSinkFile.Open("rogue.log"))
     return 1;
 
+  if (!TextureCache::Create())
+    return false;
+
   _playerFactory = new PlayerFactory();
   _gameEventManager = new GameEventManager();
-  _textureCache = new TextureCache();
   _animationManager = new AnimationManager();
   if (!_animationManager->LoadAnimations("config/animation_config.pb"))
   {
@@ -214,11 +182,6 @@ bool Game::Init()
   _gameState._level = LevelFactory::CreateLevel(1,30,30);
 
   CreateParty();
-
-#ifdef USE_DEBUG_WINDOW
-  if (!InitDebugWindow())
-    return false;
-#endif
 
   if (!InitMainWindow())
     return false;
@@ -248,19 +211,6 @@ void Game::ProcessMainWindow()
   ProcessPlayerMessages(now);
 
   _window->display();
-}
-
-//-----------------------------------------------------------------------------
-void Game::ProcessDebugWindow()
-{
-#ifdef USE_DEBUG_WINDOW
-  _debugWindow->setActive();
-
-  _debugWindowEventManager->Poll();
-  _debugWindow->clear();
-  _animationEditor->Update();
-  _debugWindow->display();
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -297,11 +247,8 @@ int Game::Run()
   // Start the game loop
   while (_window->isOpen())
   {
-    _textureCache->CheckForReload();
+    TextureCache::Instance()->CheckForReload();
     _animationManager->CheckForReload();
-
-    if (_debugWindow && _animationEditor)
-      ProcessDebugWindow();
 
     ProcessMainWindow();
   }
@@ -387,11 +334,6 @@ void Game::AddPlayerMessage(const char* fmt, ...)
   va_end(args);
 }
 
-//-----------------------------------------------------------------------------
-TextureCache* Game::GetTextureCache()
-{
-  return _textureCache;
-}
 
 //-----------------------------------------------------------------------------
 AnimationManager* Game::GetAnimationManager()

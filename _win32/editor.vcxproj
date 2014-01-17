@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\animation.cpp" />
+    <ClCompile Include="..\animation_editor.cpp" />
+    <ClCompile Include="..\animation_manager.cpp" />
+    <ClCompile Include="..\editor.cpp" />
+    <ClCompile Include="..\error.cpp" />
+    <ClCompile Include="..\hotload_sprite.cpp" />
+    <ClCompile Include="..\precompiled.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\protocol\animation_config.pb.cc" />
+    <ClCompile Include="..\protocol\spell_config.pb.cc" />
+    <ClCompile Include="..\protocol\sprite.pb.cc" />
+    <ClCompile Include="..\sfml_helpers.cpp" />
+    <ClCompile Include="..\standard_cursor.cpp" />
+    <ClCompile Include="..\texture_cache.cpp" />
+    <ClCompile Include="..\texture_handle.cpp" />
+    <ClCompile Include="..\utils.cpp" />
+    <ClCompile Include="..\virtual_window.cpp" />
+    <ClCompile Include="..\virtual_window_manager.cpp" />
+    <ClCompile Include="..\window_event_manager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\animation.hpp" />
+    <ClInclude Include="..\animation_editor.hpp" />
+    <ClInclude Include="..\animation_manager.hpp" />
+    <ClInclude Include="..\editor.hpp" />
+    <ClInclude Include="..\error.hpp" />
+    <ClInclude Include="..\hotload_sprite.hpp" />
+    <ClInclude Include="..\precompiled.hpp" />
+    <ClInclude Include="..\protocol\animation_config.pb.h" />
+    <ClInclude Include="..\protocol\spell_config.pb.h" />
+    <ClInclude Include="..\protocol\sprite.pb.h" />
+    <ClInclude Include="..\sfml_helpers.hpp" />
+    <ClInclude Include="..\standard_cursor.hpp" />
+    <ClInclude Include="..\texture_cache.hpp" />
+    <ClInclude Include="..\texture_handle.hpp" />
+    <ClInclude Include="..\utils.hpp" />
+    <ClInclude Include="..\virtual_window.hpp" />
+    <ClInclude Include="..\virtual_window_manager.hpp" />
+    <ClInclude Include="..\window_event_manager.hpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{60D052F7-518A-4EA8-A3A3-0BE1F526967A}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>editor</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SFML_ROOT)/include;$(PROTOBUF_ROOT)/src;D:\projects\boost-trunk;C:\Program Files %28x86%29\Windows Kits\8.0\Include\shared;C:\Program Files %28x86%29\Windows Kits\8.0\Include\um;C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include;C:\Program Files %28x86%29\FMOD SoundSystem\FMOD Programmers API Windows\api\inc;D:\projects\AntTweakBar\include;C:\Program Files\NVIDIA Corporation\NvToolsExt\include;D:\projects\protobuf-2.5.0\src;D:\projects\glm;$(SDL2)\include;D:\projects\glew-1.10.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SFML_ROOT)/lib/$(Configuration);$(PROTOBUF_ROOT)/vsprojects/$(Configuration);D:\projects\boost-trunk\stage\lib;D:\projects\AntTweakBar\lib;C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;C:\Program Files\NVIDIA Corporation\NvToolsExt\lib\Win32;D:\projects\protobuf-2.5.0\vsprojects\Debug;$(SDL2)\lib\x86;D:\projects\glew-1.10.0\lib\Release\Win32;$(LibraryPath)</LibraryPath>
+    <IntDir>$(Configuration)_editor\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SFML_ROOT)/include;$(PROTOBUF_ROOT)/src;D:\projects\boost-trunk;C:\Program Files %28x86%29\Windows Kits\8.0\Include\shared;C:\Program Files %28x86%29\Windows Kits\8.0\Include\um;C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include;C:\Program Files %28x86%29\FMOD SoundSystem\FMOD Programmers API Windows\api\inc;D:\projects\AntTweakBar\include;C:\Program Files\NVIDIA Corporation\NvToolsExt\include;D:\projects\protobuf-2.5.0\src;D:\projects\glm;$(SDL2)\include;D:\projects\glew-1.10.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SFML_ROOT)/lib/$(Configuration);$(PROTOBUF_ROOT)/vsprojects/$(Configuration);D:\projects\boost-trunk\stage\lib;D:\projects\AntTweakBar\lib;C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;C:\Program Files\NVIDIA Corporation\NvToolsExt\lib\Win32;D:\projects\protobuf-2.5.0\vsprojects\Debug;$(SDL2)\lib\x86;D:\projects\glew-1.10.0\lib\Release\Win32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>SFML_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>precompiled.hpp</PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4996; 4244</DisableSpecificWarnings>
+      <ForcedIncludeFiles>precompiled.hpp</ForcedIncludeFiles>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>sfml-graphics-s-d.lib;sfml-window-s-d.lib;sfml-system-s-d.lib;libprotobuf.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>SFML_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>precompiled.hpp</PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4996; 4244</DisableSpecificWarnings>
+      <ForcedIncludeFiles>"precompiled.hpp"</ForcedIncludeFiles>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>sfml-graphics-s.lib;sfml-window-s.lib;sfml-system-s.lib;libprotobuf.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

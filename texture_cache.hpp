@@ -14,8 +14,9 @@ namespace rogue
       string _filename;
     };
 
-    TextureCache();
-    ~TextureCache();
+    static TextureCache* Instance();
+    static bool Create();
+    static bool Close();
 
     void CheckForReload();
     TextureHandle LoadTextureByHandle(const string& filename);
@@ -23,10 +24,14 @@ namespace rogue
     const TextureEntry* GetTextureEntry(const TextureHandle& handle) const;
 
   private:
+    TextureCache();
+    ~TextureCache();
 
     ptime _lastUpdate;
     TextureEntry _elems[4096];
     u16 _nextIdx;
     unordered_map<string, TextureHandle> _filenameToHandle;
+
+    static TextureCache *_instance;
   };
 }

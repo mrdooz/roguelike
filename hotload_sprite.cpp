@@ -35,7 +35,7 @@ HotloadSprite::HotloadSprite(const TextureHandle& texture, const IntRect& rectan
 void HotloadSprite::setTexture(const TextureHandle& texture, bool resetRect)
 {
   m_texture = texture;
-  m_lastTexture = TEXTURE_CACHE->TextureByHandle(m_texture);
+  m_lastTexture = TextureCache::Instance()->TextureByHandle(m_texture);
 
   // Recompute the texture area if requested, or if there was no valid texture & rect before
   if (resetRect || (!m_lastTexture && (m_textureRect == sf::IntRect())))
@@ -108,7 +108,7 @@ FloatRect HotloadSprite::getGlobalBounds() const
 void HotloadSprite::draw(RenderTarget& target, RenderStates states) const
 {
   // Check if the texture has been modified since the last draw call
-  Texture* t = TEXTURE_CACHE->TextureByHandle(m_texture);
+  Texture* t = TextureCache::Instance()->TextureByHandle(m_texture);
   if (t != m_lastTexture)
   {
     const_cast<HotloadSprite*>(this)->setTexture(m_texture);
