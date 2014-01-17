@@ -28,7 +28,7 @@ void GameAI::Update(GameState& state)
 
   auto level = state._level;
 
-  for (const auto& monster : level->monsters())
+  for (MonsterPtr monster : level->monsters())
   {
     Player* player = monster->_aggroPlayer;
     // Check if the monster already has seen a player
@@ -37,7 +37,7 @@ void GameAI::Update(GameState& state)
       // Check if the player is adjacent
       if (MDist(player->GetPos(), monster->GetPos()) == 1)
       {
-        AttackPlayer(monster, player);
+        AttackPlayer(monster.get(), player);
       }
       else
       {
@@ -52,7 +52,7 @@ void GameAI::Update(GameState& state)
         // Move towards the last known player position
         if (monster->_aggroDecay)
         {
-          MoveMonster(level, monster, level->StepTowards(monster->GetPos(), monster->_lastPlayerPos));
+          MoveMonster(level, monster.get(), level->StepTowards(monster->GetPos(), monster->_lastPlayerPos));
           monster->_aggroDecay--;
           monster->_playerVisible = level->IsVisible(monster->GetPos(), monster->_aggroPlayer->GetPos());
           if (monster->_playerVisible)
@@ -80,7 +80,7 @@ void GameAI::Update(GameState& state)
           Pos p = org + Pos(i, r);
           if (level->Inside(p) && level->IsVisible(org, p) && level->Get(p)._player)
           {
-            player = level->Get(p)._player;
+            player = level->Get(p)._player.get();
             goto FOUND_PLAYER;
           }
         }
@@ -91,7 +91,7 @@ void GameAI::Update(GameState& state)
           Pos p = org + Pos(r, i);
           if (level->Inside(p) && level->IsVisible(org, p) && level->Get(p)._player)
           {
-            player = level->Get(p)._player;
+            player = level->Get(p)._player.get();
             goto FOUND_PLAYER;
           }
         }
@@ -102,7 +102,7 @@ void GameAI::Update(GameState& state)
           Pos p = org + Pos(i, -r);
           if (level->Inside(p) && level->IsVisible(org, p) && level->Get(p)._player)
           {
-            player = level->Get(p)._player;
+            player = level->Get(p)._player.get();
             goto FOUND_PLAYER;
           }
         }
@@ -113,7 +113,7 @@ void GameAI::Update(GameState& state)
           Pos p = org + Pos(-r, i);
           if (level->Inside(p) && level->IsVisible(org, p) && level->Get(p)._player)
           {
-            player = level->Get(p)._player;
+            player = level->Get(p)._player.get();
             goto FOUND_PLAYER;
           }
         }
@@ -125,7 +125,7 @@ FOUND_PLAYER:
         monster->_aggroDecay = 5;
         monster->_playerVisible = true;
         Pos newPos(level->StepTowards(monster->GetPos(), player->GetPos()));
-        MoveMonster(level, monster, newPos);
+        MoveMonster(level, monster.get(), newPos);
       }
       else
       {

@@ -81,10 +81,10 @@ bool Game::Create()
 }
 
 //-----------------------------------------------------------------------------
-Game &Game::Instance()
+Game* Game::Instance()
 {
   assert(_instance);
-  return *_instance;
+  return _instance;
 }
 
 //-----------------------------------------------------------------------------
@@ -397,4 +397,27 @@ TextureCache* Game::GetTextureCache()
 AnimationManager* Game::GetAnimationManager()
 {
   return _animationManager;
+}
+
+//-----------------------------------------------------------------------------
+u32 Game::RegisterSelectionListener(const fnSelectionListener& listener)
+{
+  _selectionListeners[_nextSelectionId] = listener;
+  return _nextSelectionId++;
+}
+
+
+//-----------------------------------------------------------------------------
+void Game::UnregisterSelectionListener(u32 id)
+{
+  _selectionListeners.erase(id);
+}
+
+//-----------------------------------------------------------------------------
+void Game::PostSelectionEvent(const SelectionEvent& event)
+{
+  for (const auto& s : _selectionListeners)
+  {
+    s.second(event);
+  }
 }

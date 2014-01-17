@@ -36,12 +36,391 @@ enum class Tiles
 //-----------------------------------------------------------------------------
 MainWindow::MainWindow(const string& title, const Vector2f& pos, const Vector2f& size, Renderer* renderer)
   : VirtualWindow(title, pos, size)
+  , _renderer(renderer)
+  , _zoomLevel(3)
+  , _offset(0,0)
 {
+}
+
+//-----------------------------------------------------------------------------
+bool MainWindow::Init()
+{
+  VirtualWindowManager* mgr = &_renderer->_windowManager;
+  mgr->RegisterHandler(Event::Resized, this, bind(&MainWindow::OnResize, this, _1));
+  mgr->RegisterHandler(Event::MouseMoved, this, bind(&MainWindow::OnMouseMove, this, _1));
+
+  mgr->RegisterHandler(Event::MouseButtonReleased, this, bind(&MainWindow::OnMouseButtonReleased, this, _1));
+  mgr->RegisterHandler(Event::KeyReleased, this, bind(&MainWindow::OnKeyPressed, this, _1));
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+void MainWindow::PlayerInView()
+{
+  const GameState& state = GAME->GetGameState();
+  Player* player = state.GetActivePlayer();
+  Pos pos(player->GetPos());
+  Pos wsPos(PlayerToWorld(pos));
+
+  // Make sure the current view contains the given player position
+  auto level = state._level;
+  auto& view = _texture.getView();
+  auto center = view.getCenter();
+  auto size = view.getSize();
+  Rect rect((int)center.x - (int)size.x/2, (int)center.y - (int)size.y/2, (int)size.x, (int)size.y);
+
+  // Check that all four corners of the player are inside the window
+  int s = _zoomLevel * 8;
+  bool inside = rect.contains(wsPos + s * Pos(0, 0))
+    && rect.contains(wsPos + s * Pos(1, 0))
+    && rect.contains(wsPos + s * Pos(0, 1))
+    && rect.contains(wsPos + s * Pos(1, 1));
+
+  if (!inside)
+  {
+    auto windowSize = _texture.getSize();
+    Vector2f center(VectorCast<float>(wsPos));
+
+    // If the player position is less than half the window away from the corners,
+    // bump it to avoid leaving empty space
+    int w = level->Width();
+    int h = level->Height();
+    int sx = windowSize.x / 2;
+    int sy = windowSize.y / 2;
+    if (center.x < windowSize.x/2)
+    {
+      center.x = (float)sx;
+    }
+    else if ((w - pos.x) * _zoomLevel * 8 < sx)
+    {
+      center.x = (float)(w * _zoomLevel * 8 - sx);
+    }
+
+    if (center.y < sy)
+    {
+      center.y = (float)sy;
+    }
+    else if ((h - pos.y) * _zoomLevel * 8 < sy)
+    {
+      center.y = (float)(h * _zoomLevel * 8 - sy);
+    }
+
+    _texture.setView(View(center, VectorCast<float>(windowSize)));
+  }
+}
+
+//-----------------------------------------------------------------------------
+Pos MainWindow::ToLocal(const Pos& pos) const
+{
+  return pos - _offset;
+}
+
+//-----------------------------------------------------------------------------
+Pos MainWindow::ToGlobal(const Pos& pos) const
+{
+  return pos + _offset;
+}
+
+//-----------------------------------------------------------------------------
+Pos MainWindow::PlayerToWorld(const Pos& pos) const
+{
+  size_t zoom = _zoomLevel * 8;
+  return Pos(pos.x * zoom, pos.y * zoom);
+}
+
+//-----------------------------------------------------------------------------
+Vector2f MainWindow::PlayerToWorldF(const Pos& pos) const
+{
+  size_t zoom = _zoomLevel * 8;
+  return Vector2f((float)(pos.x * zoom), (float)(pos.y * zoom));
+}
+
+//-----------------------------------------------------------------------------
+bool MainWindow::OnMouseMove(const Event& event)
+{
+  const GameState& state = GAME->GetGameState();
+  int x = event.mouseMove.x;
+  int y = event.mouseMove.y;
+  auto level = state._level;
+
+  if (_renderer->_prevSelected != -1)
+    level->Get(_renderer->_prevSelected)->_selected = false;
+
+  int idx = TileAtPos(state, x, y);
+  _renderer->_prevSelected = idx;
+  if (idx == -1)
+    return false;
+
+  level->Get(idx)->_selected = true;
+
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+bool MainWindow::OnMouseButtonReleased(const Event& event)
+{
+  int x = event.mouseButton.x;
+  int y = event.mouseButton.y;
+
+  const GameState& state = GAME->GetGameState();
+  Level* level = state._level;
+  size_t zoom = _zoomLevel * 8;
+
+  Vector2f wsPos = _texture.mapPixelToCoords(Pos(x,y));
+  int tx = (int)(wsPos.x / zoom);
+  int ty = (int)(wsPos.y / zoom);
+
+  if (tx >= level->Width() || ty >= level->Height())
+  {
+    return false;
+  }
+
+  Tile& tile = level->Get(tx, ty);
+
+  SelectionEvent selEvent(&tile);
+
+  if (tile._monster)
+  {
+    selEvent._entity = static_pointer_cast<Entity>(tile._monster);
+    _renderer->_debugDump = tile._monster;
+  }
+
+  if (tile._player)
+  {
+    selEvent._entity = tile._player;
+    _renderer->_debugDump = tile._player;
+  }
+
+  GAME->PostSelectionEvent(selEvent);
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+bool MainWindow::OnResize(const Event& event)
+{
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+bool MainWindow::OnKeyPressed(const Event& event)
+{
+  if (event.key.code == Keyboard::Escape)
+    _renderer->_debugDump = nullptr;
+
+  return false;
 }
 
 //-----------------------------------------------------------------------------
 void MainWindow::Draw()
 {
+  _texture.clear();
+
+  DrawLevel();
+  DrawMonsters();
+  DrawParty();
+  DrawAnimations();
+
+  if (_renderer->_debugDump)
+    _renderer->_debugDump->DebugDraw(_texture);
+
+  // Blit render target to render window
+  _texture.display();
+}
+
+//-----------------------------------------------------------------------------
+void MainWindow::DrawQuad(const Pos& topLeft, u32 size, Color color)
+{
+  int s = size * _zoomLevel;
+  Vertex verts[] = {
+    MakeVertex(0 + topLeft.x, 0 + topLeft.y, color),
+    MakeVertex(s + topLeft.x, 0 + topLeft.y, color),
+    MakeVertex(s + topLeft.x, s + topLeft.y, color),
+    MakeVertex(0 + topLeft.x, s + topLeft.y, color),
+    MakeVertex(0 + topLeft.x, 0 + topLeft.y, color),
+  };
+
+  _texture.draw(verts, 5, LinesStrip);
+}
+
+//-----------------------------------------------------------------------------
+void MainWindow::VisibleArea(const Level* level, int* rows, int* cols) const
+{
+  // Determine number of tiles in the visible area (rows x cols)
+  auto size = _texture.getSize();
+  size_t zoom = _zoomLevel * 8;
+
+  *cols = min(1 + (int)(size.x / zoom), level->Width());
+  *rows = min(1 + (int)(size.y / zoom), level->Height());
+}
+
+//-----------------------------------------------------------------------------
+void MainWindow::DrawLevel()
+{
+  const GameState& state = GAME->GetGameState();
+  int rows, cols;
+  VisibleArea(state._level, &rows, &cols);
+
+  Level* level = state._level;
+  Tile* selectedTile = nullptr;
+  Pos selectedPos;
+
+  for (int y = 0; y < level->Height(); ++y)
+  {
+    for (int x = 0; x < level->Width(); ++x)
+    {
+      Tile &tile = level->Get(x,y);
+      auto& sprite = _renderer->_tileSprites[y*level->Width()+x];
+
+      //      sprite.setColor(Color(tile._visited, tile._visited, tile._visited));
+      _texture.draw(sprite);
+
+      if (tile._selected)
+      {
+        selectedTile = &tile;
+        selectedPos = PlayerToWorld(Pos(x,y));
+      }
+
+      if (!tile._items.empty())
+      {
+        _renderer->_objectSprite.setTextureRect(_renderer->_objectToTextureRect[tile._items.back()._type]);
+        _renderer->_objectSprite.setPosition(PlayerToWorldF(Pos(x,y)));
+        _texture.draw(_renderer->_objectSprite);
+      }
+    }
+  }
+
+  if (selectedTile)
+    DrawQuad(selectedPos, 8, Color::White);
+}
+
+//-----------------------------------------------------------------------------
+void MainWindow::DrawParty()
+{
+  const GameState& state = GAME->GetGameState();
+  Player* activePlayer = state.GetActivePlayer();
+  assert(activePlayer);
+
+  Party* party = state._party;
+
+  int rows, cols;
+  VisibleArea(state._level, &rows, &cols);
+  Rect rect(_offset, Pos(cols, rows));
+
+  for (size_t i = 0; i < party->_players.size(); ++i)
+  {
+    PlayerPtr player = party->_players[i];
+    Pos pos(player->GetPos());
+    bool isActivePlayer = player == activePlayer;
+
+    Color color(isActivePlayer ? Color(255, 255, 255) : Color(127,127,127));
+    auto sprite = player->_sprite;
+    sprite.SetPosition(PlayerToWorldF(pos));
+    sprite.SetColor(color);
+    sprite.SetHeading(player->_heading);
+    _texture.draw(sprite);
+
+    if (isActivePlayer)
+    {
+      Pos org(PlayerToWorld(pos));
+      DrawQuad(org, 8, Color::Green);
+    }
+
+    DrawHealthBar(player->CurHealth(), player->MaxHealth(), pos);
+  }
+}
+
+//-----------------------------------------------------------------------------
+void MainWindow::DrawHealthBar(int health, int maxHealth, const Pos &pos)
+{
+  float zoomF = (float)_zoomLevel;
+
+  RectangleShape rectangle;
+  // deficit
+  rectangle.setSize(Vector2f(zoomF*6, zoomF));
+  rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
+  rectangle.setFillColor(Color(200, 10, 10));
+  _texture.draw(rectangle);
+
+  // cur health
+  rectangle.setSize(Vector2f((float)health / maxHealth*zoomF*6, zoomF));
+  rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
+  rectangle.setFillColor(Color(10, 200, 10));
+  _texture.draw(rectangle);
+}
+
+//-----------------------------------------------------------------------------
+void MainWindow::DrawMonsters()
+{
+  const GameState& state = GAME->GetGameState();
+  Level* level = state._level;
+
+  int rows, cols;
+  VisibleArea(state._level, &rows, &cols);
+  Rect rect(_offset, Pos(cols, rows));
+
+  for (auto monster : level->monsters())
+  {
+    if (!monster->CurHealth())
+      continue;
+
+    Pos pos(ToLocal(monster->GetPos()));
+    if (!rect.contains(pos))
+      continue;
+
+    monster->_sprite.setPosition(PlayerToWorldF(monster->GetPos()));
+    _texture.draw(monster->_sprite);
+
+    DrawHealthBar(monster->CurHealth(), monster->MaxHealth(), pos);
+  }
+}
+
+//-----------------------------------------------------------------------------
+int MainWindow::TileAtPos(const GameState& state, int x, int y) const
+{
+  auto level = state._level;
+  size_t zoom = _zoomLevel * 8;
+
+  Vector2f wsPos = _texture.mapPixelToCoords(Pos(x,y));
+  //  Vector2f wsPos = _rtMain->convertCoords(Pos(x,y));
+  int tx = (int)(wsPos.x / zoom);
+  int ty = (int)(wsPos.y / zoom);
+
+  if (tx >= level->Width() || ty >= level->Height())
+  {
+    return -1;
+  }
+
+  return ty * level->Width() + tx;
+}
+
+//-----------------------------------------------------------------------------
+void MainWindow::DrawAnimations()
+{
+  auto now = microsec_clock::local_time();
+
+  for (auto it = _renderer->_activeAnimations.begin(); it != _renderer->_activeAnimations.end(); )
+  {
+    auto& instance = *it;
+    const Animation* animation = instance._animation;
+
+    // Check if the animation has ended; otherwise draw it
+    time_duration remaining = instance._endTime - now;
+    if (remaining.total_milliseconds() <= 0)
+    {
+      it = _renderer->_activeAnimations.erase(it);
+    }
+    else
+    {
+      float ratio = 1 - (float)remaining.total_milliseconds() / instance._duration.total_milliseconds();
+      size_t frameIdx = animation->_frameIndex[(size_t)(animation->_weightSum * ratio)];
+      auto& sprite = instance._sprite;
+      sprite.setTextureRect(animation->_frames[frameIdx]._textureRect);
+      sprite.setPosition(VectorCast<float>(lerp(instance._startPos, instance._endPos, ratio)));
+      _texture.draw(sprite);
+      ++it;
+    }
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -88,7 +467,7 @@ void PartyWindow::Draw()
 {
   _texture.clear();
 
-  const GameState& state = GAME.GetGameState();
+  const GameState& state = GAME->GetGameState();
 
   Font& font = _renderer->_font;
 
@@ -131,13 +510,13 @@ void PartyWindow::Draw()
     _texture.draw(normal);
   };
 
-  for (auto *player : party->_players)
+  for (PlayerPtr& player : party->_players)
   {
     heading.setColor(player == activePlayer ? Color(255, 255, 255) : Color(127,127,127));
     normal.setColor(player == activePlayer ? Color(255, 255, 255) : Color(127,127,127));
 
     pos.x = col0;
-    drawHeading(player);
+    drawHeading(player.get());
     float y = pos.y;
     drawNormal(toString("HP: %d/%d", player->CurHealth(), player->MaxHealth()));
     if (player->MaxMana() > 0)
@@ -177,22 +556,12 @@ void PartyWindow::Draw()
 Renderer::Renderer(RenderWindow *window, WindowEventManager* eventManager) 
   : _window(window)
   , _prevSelected(-1)
-  , _offset(0,0)
-  , _zoomLevel(3)
   , _windowManager(window, eventManager)
   , _debugDump(nullptr)
   , _mainWindow(new MainWindow("MAIN", Vector2f(0,10), Vector2f(600, 600), this))
   , _combatLogWindow(new CombatLogWindow("COMBAT LOG", Vector2f(0,600), Vector2f(600, 200), this))
   , _partyWindow(new PartyWindow("PARTY", Vector2f(600,10), Vector2f(200, 600), this))
 {
-  _windowManager.RegisterHandler(Event::Resized, _mainWindow, bind(&Renderer::OnResize, this, _1));
-  _windowManager.RegisterHandler(Event::MouseMoved, _mainWindow, bind(&Renderer::OnMouseMove, this, _1));
-
-  _windowManager.RegisterHandler(Event::MouseButtonReleased, _mainWindow, bind(&Renderer::OnMouseButtonReleased, this, _1));
-  _windowManager.RegisterHandler(Event::KeyReleased, _mainWindow, bind(&Renderer::OnKeyPressed, this, _1));
-
-  _rtMain = _mainWindow->GetTexture();
-
   _windowManager.AddWindow(_mainWindow);
   _windowManager.AddWindow(_combatLogWindow);
   _windowManager.AddWindow(_partyWindow);
@@ -204,78 +573,8 @@ Renderer::~Renderer()
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::PlayerInView(const GameState& state)
-{
-  Player* player = state.GetActivePlayer();
-  Pos pos(player->GetPos());
-  Pos wsPos(PlayerToWorld(pos));
-
-  // Make sure the current view contains the given player position
-  auto level = state._level;
-  auto& view = _rtMain->getView();
-  auto center = view.getCenter();
-  auto size = view.getSize();
-  Rect rect((int)center.x - (int)size.x/2, (int)center.y - (int)size.y/2, (int)size.x, (int)size.y);
-
-  // Check that all four corners of the player are inside the window
-  int s = _zoomLevel * 8;
-  bool inside = rect.contains(wsPos + s * Pos(0, 0))
-    && rect.contains(wsPos + s * Pos(1, 0))
-    && rect.contains(wsPos + s * Pos(0, 1))
-    && rect.contains(wsPos + s * Pos(1, 1));
-
-  if (!inside)
-  {
-    auto windowSize = _rtMain->getSize();
-    Vector2f center(VectorCast<float>(wsPos));
-
-    // If the player position is less than half the window away from the corners,
-    // bump it to avoid leaving empty space
-    int w = level->Width();
-    int h = level->Height();
-    int sx = windowSize.x / 2;
-    int sy = windowSize.y / 2;
-    if (center.x < windowSize.x/2)
-    {
-      center.x = (float)sx;
-    }
-    else if ((w - pos.x) * _zoomLevel * 8 < sx)
-    {
-      center.x = (float)(w * _zoomLevel * 8 - sx);
-    }
-
-    if (center.y < sy)
-    {
-      center.y = (float)sy;
-    }
-    else if ((h - pos.y) * _zoomLevel * 8 < sy)
-    {
-      center.y = (float)(h * _zoomLevel * 8 - sy);
-    }
-
-    _rtMain->setView(View(center, VectorCast<float>(windowSize)));
-  }
-}
-
-//-----------------------------------------------------------------------------
 void Renderer::DrawWorld(const GameState& state)
 {
-  PlayerInView(state);
-
-  // Render to render target
-  _rtMain->clear();
-
-  DrawLevel(state);
-  DrawMonsters(state);
-  DrawParty(state);
-  DrawAnimations();
-
-  if (_debugDump)
-    _debugDump->DebugDraw(*_rtMain);
-
-  // Blit render target to render window
-  _rtMain->display();
-
   // display current state
   Text text("", _font, 10);
   text.setString(state._description);
@@ -287,253 +586,9 @@ void Renderer::DrawWorld(const GameState& state)
 }
 
 //-----------------------------------------------------------------------------
-void Renderer::VisibleArea(const Level* level, int* rows, int* cols) const
-{
-  // Determine number of tiles in the visible area (rows x cols)
-  auto size = _rtMain->getSize();
-  size_t zoom = _zoomLevel * 8;
-
-  *cols = min(1 + (int)(size.x / zoom), level->Width());
-  *rows = min(1 + (int)(size.y / zoom), level->Height());
-}
-
-//-----------------------------------------------------------------------------
-bool Renderer::OnResize(const Event& event)
-{
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-void Renderer::DrawQuad(const Pos& topLeft, u32 size, Color color)
-{
-  int s = size * _zoomLevel;
-  Vertex verts[] = {
-    MakeVertex(0 + topLeft.x, 0 + topLeft.y, color),
-    MakeVertex(s + topLeft.x, 0 + topLeft.y, color),
-    MakeVertex(s + topLeft.x, s + topLeft.y, color),
-    MakeVertex(0 + topLeft.x, s + topLeft.y, color),
-    MakeVertex(0 + topLeft.x, 0 + topLeft.y, color),
-  };
-
-  _rtMain->draw(verts, 5, LinesStrip);
-}
-
-//-----------------------------------------------------------------------------
-void Renderer::DrawLevel(const GameState& state)
-{
-  int rows, cols;
-  VisibleArea(state._level, &rows, &cols);
-
-  Level* level = state._level;
-  Tile* selectedTile = nullptr;
-  Pos selectedPos;
-
-  for (int y = 0; y < level->Height(); ++y)
-  {
-    for (int x = 0; x < level->Width(); ++x)
-    {
-      Tile &tile = level->Get(x,y);
-      auto& sprite = _tileSprites[y*level->Width()+x];
-
-//      sprite.setColor(Color(tile._visited, tile._visited, tile._visited));
-      _rtMain->draw(sprite);
-
-      if (tile._selected)
-      {
-        selectedTile = &tile;
-        selectedPos = PlayerToWorld(Pos(x,y));
-      }
-
-      if (!tile._items.empty())
-      {
-        _objectSprite.setTextureRect(_objectToTextureRect[tile._items.back()._type]);
-        _objectSprite.setPosition(PlayerToWorldF(Pos(x,y)));
-        _rtMain->draw(_objectSprite);
-      }
-    }
-  }
-
-  if (selectedTile)
-    DrawQuad(selectedPos, 8, Color::White);
-}
-
-//-----------------------------------------------------------------------------
-void Renderer::DrawParty(const GameState& state)
-{
-  Player* activePlayer = state.GetActivePlayer();
-  assert(activePlayer);
-
-  Party* party = state._party;
-
-  int rows, cols;
-  VisibleArea(state._level, &rows, &cols);
-  Rect rect(_offset, Pos(cols, rows));
-
-  for (size_t i = 0; i < party->_players.size(); ++i)
-  {
-    Player *player = party->_players[i];
-    Pos pos(player->GetPos());
-    bool isActivePlayer = player == activePlayer;
-
-    Color color(isActivePlayer ? Color(255, 255, 255) : Color(127,127,127));
-    auto sprite = player->_sprite;
-    sprite.SetPosition(PlayerToWorldF(pos));
-    sprite.SetColor(color);
-    sprite.SetHeading(player->_heading);
-    _rtMain->draw(sprite);
-
-    if (isActivePlayer)
-    {
-      Pos org(PlayerToWorld(pos));
-      DrawQuad(org, 8, Color::Green);
-    }
-
-    DrawHealthBar(player->CurHealth(), player->MaxHealth(), pos);
-  }
-}
-
-//-----------------------------------------------------------------------------
-void Renderer::DrawHealthBar(int health, int maxHealth, const Pos &pos)
-{
-  float zoomF = (float)_zoomLevel;
-
-  RectangleShape rectangle;
-  // deficit
-  rectangle.setSize(Vector2f(zoomF*6, zoomF));
-  rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
-  rectangle.setFillColor(Color(200, 10, 10));
-  _rtMain->draw(rectangle);
-
-  // cur health
-  rectangle.setSize(Vector2f((float)health / maxHealth*zoomF*6, zoomF));
-  rectangle.setPosition((pos.x*8+1)*zoomF, (pos.y*8+7)*zoomF);
-  rectangle.setFillColor(Color(10, 200, 10));
-  _rtMain->draw(rectangle);
-}
-
-//-----------------------------------------------------------------------------
-Pos Renderer::ToLocal(const Pos& pos) const
-{
-  return pos - _offset;
-}
-
-//-----------------------------------------------------------------------------
-Pos Renderer::ToGlobal(const Pos& pos) const
-{
-  return pos + _offset;
-}
-
-//-----------------------------------------------------------------------------
-Pos Renderer::PlayerToWorld(const Pos& pos) const
-{
-  size_t zoom = _zoomLevel * 8;
-  return Pos(pos.x * zoom, pos.y * zoom);
-}
-
-//-----------------------------------------------------------------------------
-Vector2f Renderer::PlayerToWorldF(const Pos& pos) const
-{
-  size_t zoom = _zoomLevel * 8;
-  return Vector2f((float)(pos.x * zoom), (float)(pos.y * zoom));
-}
-
-//-----------------------------------------------------------------------------
-void Renderer::DrawMonsters(const GameState& state)
-{
-  Level* level = state._level;
-
-  int rows, cols;
-  VisibleArea(state._level, &rows, &cols);
-  Rect rect(_offset, Pos(cols, rows));
-
-  for (auto monster : level->monsters())
-  {
-    if (!monster->CurHealth())
-      continue;
-
-    Pos pos(ToLocal(monster->GetPos()));
-    if (!rect.contains(pos))
-      continue;
-
-    monster->_sprite.setPosition(PlayerToWorldF(monster->GetPos()));
-    _rtMain->draw(monster->_sprite);
-
-    DrawHealthBar(monster->CurHealth(), monster->MaxHealth(), pos);
-  }
-}
-
-//-----------------------------------------------------------------------------
 int Renderer::TileAtPos(const GameState& state, int x, int y) const
 {
-  auto level = state._level;
-  size_t zoom = _zoomLevel * 8;
-
-  Vector2f wsPos = _rtMain->mapPixelToCoords(Pos(x,y));
-//  Vector2f wsPos = _rtMain->convertCoords(Pos(x,y));
-  int tx = (int)(wsPos.x / zoom);
-  int ty = (int)(wsPos.y / zoom);
-
-  if (tx >= level->Width() || ty >= level->Height())
-  {
-    return -1;
-  }
-
-  return ty * level->Width() + tx;
-}
-
-//-----------------------------------------------------------------------------
-bool Renderer::OnMouseMove(const Event& event)
-{
-  const GameState& state = GAME.GetGameState();
-  int x = event.mouseMove.x;
-  int y = event.mouseMove.y;
-  auto level = state._level;
-
-  if (_prevSelected != -1)
-    level->_tiles[_prevSelected]._selected = false;
-
-  int idx = TileAtPos(state, x, y);
-  _prevSelected = idx;
-  if (idx == -1)
-    return false;
-
-  level->_tiles[idx]._selected = true;
-
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-bool Renderer::OnMouseButtonReleased(const Event& event)
-{
-  auto& state = GAME.GetGameState();
-  int idx = TileAtPos(state, event.mouseButton.x, event.mouseButton.y);
-  if (idx == -1)
-    return false;
-
-  auto& tile = state._level->_tiles[idx];
-
-  if (tile._monster)
-    _debugDump = tile._monster;
-
-  if (tile._player)
-    _debugDump = tile._player;
-
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-bool Renderer::OnKeyPressed(const Event& event)
-{
-  if (event.key.code == Keyboard::Escape)
-    _debugDump = nullptr;
-
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-Pos Renderer::HalfOffset() const
-{
-  return Pos(_zoomLevel*4, _zoomLevel*4);
+  return _mainWindow->TileAtPos(state, x, y);
 }
 
 //-----------------------------------------------------------------------------
@@ -542,7 +597,7 @@ void Renderer::OnAttack(const GameEvent& event)
   // Add to combat log
   AddToCombatLog(toString("%s attacks %s for %d",
     event._agent->Name().c_str(), event._target->Name().c_str(), event._damage));
-
+/*
   // Check if the attack has its own animation, or if we should just use the
   // generic one
   bool foundAnimation = false;
@@ -561,6 +616,7 @@ void Renderer::OnAttack(const GameEvent& event)
     Pos pos(PlayerToWorld(event._target->GetPos()));
     AddAnimation(Animation::Id::Blood, pos, pos, seconds(1));
   }
+*/
 }
 
 //-----------------------------------------------------------------------------
@@ -668,7 +724,8 @@ bool Renderer::Init(const GameState& state)
   int height = level->Height();
   int width = level->Width();
   _tileSprites.resize(width*height);
-  size_t zoom = _zoomLevel * 8;
+  //size_t zoom = _zoomLevel * 8;
+  size_t zoom = 3 * 8;
   for (int y = 0; y < height; ++y)
   {
     for (int x = 0; x < width; ++x)
@@ -703,41 +760,10 @@ bool Renderer::Init(const GameState& state)
     }
   }
 
-  OnResize(Event());
-
   if (!_windowManager.Init())
     return false;
 
   return true;
-}
-
-//-----------------------------------------------------------------------------
-void Renderer::DrawAnimations()
-{
-  auto now = microsec_clock::local_time();
-
-  for (auto it = _activeAnimations.begin(); it != _activeAnimations.end(); )
-  {
-    auto& instance = *it;
-    const Animation* animation = instance._animation;
-
-    // Check if the animation has ended; otherwise draw it
-    time_duration remaining = instance._endTime - now;
-    if (remaining.total_milliseconds() <= 0)
-    {
-      it = _activeAnimations.erase(it);
-    }
-    else
-    {
-      float ratio = 1 - (float)remaining.total_milliseconds() / instance._duration.total_milliseconds();
-      size_t frameIdx = animation->_frameIndex[(size_t)(animation->_weightSum * ratio)];
-      auto& sprite = instance._sprite;
-      sprite.setTextureRect(animation->_frames[frameIdx]._textureRect);
-      sprite.setPosition(VectorCast<float>(lerp(instance._startPos, instance._endPos, ratio)));
-      _rtMain->draw(sprite);
-      ++it;
-    }
-  }
 }
 
 //-----------------------------------------------------------------------------

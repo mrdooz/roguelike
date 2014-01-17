@@ -119,6 +119,7 @@
     <ClInclude Include="..\protocol\sprite.pb.h" />
     <ClInclude Include="..\renderer.hpp" />
     <ClInclude Include="..\roguelike.hpp" />
+    <ClInclude Include="..\selection.hpp" />
     <ClInclude Include="..\sfml_helpers.hpp" />
     <ClInclude Include="..\spell.hpp" />
     <ClInclude Include="..\standard_cursor.hpp" />
@@ -162,6 +163,7 @@
     <ClCompile Include="..\protocol\sprite.pb.cc" />
     <ClCompile Include="..\renderer.cpp" />
     <ClCompile Include="..\roguelike.cpp" />
+    <ClCompile Include="..\selection.cpp" />
     <ClCompile Include="..\sfml_helpers.cpp" />
     <ClCompile Include="..\spell.cpp" />
     <ClCompile Include="..\standard_cursor.cpp" />

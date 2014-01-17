@@ -35,5 +35,5 @@ Player* GameState::GetActivePlayer() const
   if (!_party || _activePlayer >= _party->GetNumPlayers())
     return nullptr;
 
-  return _party->_players[_activePlayer];
+  return _party->_players[_activePlayer].get();
 }

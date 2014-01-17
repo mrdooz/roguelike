@@ -1,5 +1,6 @@
 #pragma once
 #include "utils.hpp"
+#include "entity.hpp"
 
 namespace rogue
 {
@@ -24,8 +25,8 @@ namespace rogue
     ~GameEvent();
 
     Type _type;
-    Entity* _agent;
-    Entity* _target;
+    EntityPtr _agent;
+    EntityPtr _target;
 
     union
     {

@@ -1,5 +1,6 @@
 #pragma once
 #include "utils.hpp"
+#include "selection.hpp"
 
 namespace rogue
 {
@@ -38,15 +39,6 @@ namespace rogue
     ImmobilizingShot,
     MultiShot,
     Leap,
-  };
-
-  enum class Selection
-  {
-    None      = 0,
-    Empty     = 1 << 0,
-    Monster   = 1 << 1,
-    Player    = 1 << 2,
-    Any       = (int)Empty | (int)Monster | (int)Player,
   };
 
   class GameState

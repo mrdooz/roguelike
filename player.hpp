@@ -25,6 +25,9 @@ namespace rogue
 
   class Player : public Entity
   {
+    friend void intrusive_ptr_add_ref(Player*);
+    friend void intrusive_ptr_release(Player*);
+
   public:
     Player();
 
@@ -48,5 +51,23 @@ namespace rogue
     PlayerClass _class;
     bool _hasMoved;
   };
+
+  typedef intrusive_ptr<Player> PlayerPtr;
+
+  //-----------------------------------------------------------------------------
+  inline void intrusive_ptr_add_ref(Player* e)
+  {
+    ++e->_refCount;
+  }
+
+  //-----------------------------------------------------------------------------
+  inline void intrusive_ptr_release(Player* e)
+  {
+    if (--e->_refCount == 0)
+    {
+      delete e;
+    }
+  }
+
 }
 

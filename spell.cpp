@@ -49,7 +49,7 @@ bool SpellCharge::IsValid(GameState& state, const Event& event)
 
   // for a charge to be valid, there must be a free path to a mob in the given
   // direction
-  Monster* monster = nullptr;
+  MonsterPtr monster;
   Pos ofs;
   if (ArrowKeyToOffset(event.key.code, &ofs))
   {
@@ -74,7 +74,7 @@ bool SpellCharge::IsValid(GameState& state, const Event& event)
   }
   else
   {
-    GAME.AddPlayerMessage(seconds(3), "Invalid charge");
+    GAME->AddPlayerMessage(seconds(3), "Invalid charge");
   }
 
   return !!monster;

@@ -9,6 +9,9 @@ namespace rogue
 
   class Monster : public Entity
   {
+    friend void intrusive_ptr_add_ref(Monster*);
+    friend void intrusive_ptr_release(Monster*);
+
   public:
     enum class Type
     {
@@ -62,4 +65,22 @@ namespace rogue
     Action _action;
     vector<u8> _visited;
   };
+
+  typedef intrusive_ptr<Monster> MonsterPtr;
+
+  //-----------------------------------------------------------------------------
+  inline void intrusive_ptr_add_ref(Monster* e)
+  {
+    ++e->_refCount;
+  }
+
+  //-----------------------------------------------------------------------------
+  inline void intrusive_ptr_release(Monster* e)
+  {
+    if (--e->_refCount == 0)
+    {
+      delete e;
+    }
+  }
+
 }

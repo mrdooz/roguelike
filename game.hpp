@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game_state.hpp"
+#include "selection.hpp"
 
 namespace rogue
 {
@@ -28,8 +29,9 @@ namespace rogue
   class Game
   {
   public:
+    typedef function<void(const SelectionEvent&)> fnSelectionListener;
 
-    static Game &Instance();
+    static Game *Instance();
     static bool Create();
     static bool Close();
 
@@ -46,6 +48,10 @@ namespace rogue
 
     TextureCache* GetTextureCache();
     AnimationManager* GetAnimationManager();
+
+    u32 RegisterSelectionListener(const fnSelectionListener& listener);
+    void UnregisterSelectionListener(u32 id);
+    void PostSelectionEvent(const SelectionEvent& event);
 
   private:
     Game();
@@ -91,12 +97,15 @@ namespace rogue
 
     string _appRoot;
 
+    map<u32, fnSelectionListener> _selectionListeners;
+    u32 _nextSelectionId;
+
     static Game *_instance;
   };
 
 #define GAME rogue::Game::Instance()
-#define GAME_EVENT rogue::Game::Instance().GetGameEventManager()
-#define TEXTURE_CACHE rogue::Game::Instance().GetTextureCache()
-#define ANIMATION rogue::Game::Instance().GetAnimationManager()
+#define GAME_EVENT rogue::Game::Instance()->GetGameEventManager()
+#define TEXTURE_CACHE rogue::Game::Instance()->GetTextureCache()
+#define ANIMATION rogue::Game::Instance()->GetAnimationManager()
 
 }

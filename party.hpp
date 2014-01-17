@@ -8,6 +8,6 @@ namespace rogue
   {
   public:
     size_t GetNumPlayers() const;
-    vector<Player *> _players;
+    vector<intrusive_ptr<Player>> _players;
   };
 }

@@ -6,17 +6,18 @@
 namespace rogue
 {
   struct SpellBase;
+  struct SelectionEvent;
 
   class ActionMap
   {
   public:
     typedef function<void(Keyboard::Key)> fnKeyboardCallback;
-    typedef function<void(Entity*)> fnSelectionCallback;
-
+    typedef function<void(const SelectionEvent&)> fnSelectionCallback;
     typedef int SelectionMask;
-    typedef map<pair<Keyboard::Key, SelectionMask>, fnSelectionCallback> SelectionCallback;
-    SelectionCallback::iterator _selectionCandidate;
-    SelectionCallback _selectionCallbacks;
+    typedef pair<SelectionMask, fnSelectionCallback> SelectionPair;
+    typedef map<Keyboard::Key, pair<SelectionMask, fnSelectionCallback> > KeyToSelectionPair;
+
+    KeyToSelectionPair _selectionCallbacks;
     map<Keyboard::Key, fnKeyboardCallback> _keyboardCallbacks;
   };
 
@@ -35,9 +36,10 @@ namespace rogue
     bool OnMouseButtonReleased(const Event& event);
 
   private:
+    void OnSelectionEvent(const SelectionEvent& event);
     void InitActionMaps();
     void OnMovement(Keyboard::Key key);
-    void OnLightningBolt(Entity* entity);
+    void OnLightningBolt(const SelectionEvent& event);
 
     void OnAttack(const GameEvent& event);
     void OnHeal(const GameEvent& event);
@@ -53,18 +55,20 @@ namespace rogue
 
     typedef function<bool(GameState&, const Event&)> fnProcessAction;
 
+    WindowEventManager* _windowEventManager;
+    fnTileAtPos _fnTileAtPos;
+    map<PlayerAction, SpellBase*> _spellMap;
+
+    bool _advancePlayer;
+
     ActionMap _actionMapWizard;
     ActionMap _actionMapRanger;
     ActionMap _actionMapWarrior;
     ActionMap _actionMapCleric;
 
     ActionMap* _curActionMap;
+    ActionMap::SelectionPair* _selectionCandidate;
 
-    WindowEventManager* _windowEventManager;
-    fnTileAtPos _fnTileAtPos;
-    map<PlayerAction, SpellBase*> _actionMap;
-
-    bool _advancePlayer;
   };
 }
 

@@ -18,7 +18,6 @@ Level::Level(int difficulty, int width, int height)
 //-----------------------------------------------------------------------------
 Level::~Level()
 {
-  SeqDelete(&_monsters);
 }
 
 //-----------------------------------------------------------------------------
@@ -67,7 +66,7 @@ LootItem Level::GenerateLoot(int level)
 //-----------------------------------------------------------------------------
 void Level::OnDeath(const GameEvent& event)
 {
-  Entity* target = event._target;
+  EntityPtr target = event._target;
   if (target->IsHuman())
   {
 
@@ -77,12 +76,12 @@ void Level::OnDeath(const GameEvent& event)
     // Spawn loot!
     LootItem item(GenerateLoot(target->Level()));
     Get(target->GetPos())._items.push_back(item);
-    MonsterKilled(static_cast<Monster*>(event._target));
+    MonsterKilled(static_pointer_cast<Monster>(event._target));
   }
 }
 
 //-----------------------------------------------------------------------------
-void Level::MonsterKilled(Monster* m)
+void Level::MonsterKilled(MonsterPtr& m)
 {
   auto it = find(_monsters.begin(), _monsters.end(), m);
   if (it == _monsters.end())
@@ -91,7 +90,7 @@ void Level::MonsterKilled(Monster* m)
   // Clean up structues referencing the monster
   Get(m->GetPos())._monster = nullptr;
   _monsters.erase(it);
-  delete m;
+  m.reset();
 }
 
 //-----------------------------------------------------------------------------
@@ -100,16 +99,27 @@ bool Level::Inside(int x, int y) const
   return x >= 0 && x < _width && y >= 0 && y < _height;
 }
 
+//-----------------------------------------------------------------------------
+Tile* Level::Get(int idx)
+{
+  if (idx >= (int)_tiles.size())
+    return nullptr;
+  return &_tiles[idx];
+}
+
+//-----------------------------------------------------------------------------
 Tile &Level::Get(int x, int y)
 {
   return _tiles[y*_width+x];
 }
 
+//-----------------------------------------------------------------------------
 Tile &Level::Get(const Pos &pos)
 {
   return _tiles[pos.y*_width+pos.x];
 }
 
+//-----------------------------------------------------------------------------
 const Tile &Level::Get(const Pos &pos) const
 {
   return _tiles[pos.y*_width+pos.x];
@@ -287,12 +297,12 @@ bool Level::calcPath(const Pos &start, const Pos &end, vector<Pos> *path)
 
 Player *Level::playerAt(const Pos &pos)
 {
-  return Inside(pos) ? Get(pos)._player : nullptr;
+  return Inside(pos) ? Get(pos)._player.get() : nullptr;
 }
 
 Monster *Level::monsterAt(const Pos &pos)
 {
-  return Inside(pos) ? Get(pos)._monster : nullptr;
+  return Inside(pos) ? Get(pos)._monster.get() : nullptr;
 }
 
 Pos Level::IndexToPos(size_t idx) const
@@ -313,41 +323,55 @@ void Level::TilesInPath(const Pos& a, const Pos& b, vector<Tile*>* tiles)
 {
   tiles->clear();
 
-  int dx = b.x - a.x;
-  int dy = b.y - a.y;
+  // Bresenham between the points
+  int x0 = a.x;
+  int y0 = a.y;
+  int x1 = b.x;
+  int y1 = b.y;
 
-  if (dx == 0 && dy == 0)
-    return;
+  int dx = abs(x1-x0);
+  int sx = x0 < x1 ? 1 : -1;
+  int dy = abs(y1-y0);
+  int sy = y0 < y1 ? 1 : -1;
 
-  // We want to step along the greatest axis
   if (dx > dy)
   {
-    int m = (dy << 16) / dx;
-    Pos p(a.x, a.y);
-    int ty = a.y << 16;
-    for (int i = 0; i <= dx; ++i)
+    int ofs = 0;
+    int threshold = dx;
+    while (true)
     {
-      auto& tile = Get(p);
+      auto& tile = Get(Pos(x0,y0));
       tiles->push_back(&tile);
-      p.x++;
-      ty += m;
-      p.y = ty >> 16;
+      if (x0 == x1)
+        break;
 
+      ofs += 2 * dy;
+      if (ofs >= threshold)
+      {
+        y0 += sy;
+        threshold += 2 * dx;
+      }
+      x0 += sx;
     }
   }
   else
   {
-    int m = (dx << 16) / dy;
-    Pos p(a.x, a.y);
-    int tx = a.x << 16;
-    for (int i = 0; i <= dy; ++i)
+    int ofs = 0;
+    int threshold = dy;
+    while (true)
     {
-      auto& tile = Get(p);
+      auto& tile = Get(Pos(x0,y0));
       tiles->push_back(&tile);
+      if (y0 == y1)
+        break;
 
-      p.y++;
-      tx += m;
-      p.x = tx >> 16;
+      ofs += 2 * dx;
+      if (ofs >= threshold)
+      {
+        x0 += sx;
+        threshold += 2 * dy;
+      }
+      y0 += sy;
     }
   }
 }
@@ -365,10 +389,10 @@ void Level::EntitiesInPath(const Pos& a, const Pos& b, vector<Entity*>* entities
       return;
 
     if (t->_monster)
-      entities->push_back(t->_monster);
+      entities->push_back(t->_monster.get());
 
     if (t->_player)
-      entities->push_back(t->_player);
+      entities->push_back(t->_player.get());
   }
 }
 

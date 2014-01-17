@@ -1,4 +1,6 @@
 #include "tile.hpp"
+#include "player.hpp"
+#include "monster.hpp"
 
 using namespace rogue;
 

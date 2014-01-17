@@ -8,6 +8,11 @@ Entity::Entity()
     , _armorBonus(0)
     , _weaponBonus(0)
     , _level(1)
+    , _refCount(0)
+{
+}
+//-----------------------------------------------------------------------------
+Entity::~Entity()
 {
 }
 

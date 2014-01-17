@@ -9,7 +9,7 @@ int main()
   if (!Game::Create())
     return 1;
 
-  int res = GAME.Run();
-  GAME.Close();
+  int res = GAME->Run();
+  GAME->Close();
   return res;
 }

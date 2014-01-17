@@ -33,18 +33,20 @@ GamePlayer::GamePlayer(
   : _windowEventManager(windowEventManager)
   , _fnTileAtPos(fnTileAtPos)
   , _advancePlayer(false)
+  , _selectionCandidate(nullptr)
+  , _curActionMap(nullptr)
 {
-  _actionMap[PlayerAction::ArcaneBlast] = new SpellArcaneBlast();
-  _actionMap[PlayerAction::LightningBolt] = new SpellLightningBolt();
+  _spellMap[PlayerAction::ArcaneBlast] = new SpellArcaneBlast();
+  _spellMap[PlayerAction::LightningBolt] = new SpellLightningBolt();
 
-  _actionMap[PlayerAction::MightyBlow] = new SpellMightyBlow();
-  _actionMap[PlayerAction::Charge] = new SpellCharge();
+  _spellMap[PlayerAction::MightyBlow] = new SpellMightyBlow();
+  _spellMap[PlayerAction::Charge] = new SpellCharge();
 }
 
 //-----------------------------------------------------------------------------
 GamePlayer::~GamePlayer()
 {
-  AssocDelete(&_actionMap);
+  AssocDelete(&_spellMap);
 }
 
 //-----------------------------------------------------------------------------
@@ -59,6 +61,8 @@ bool GamePlayer::Init()
   GAME_EVENT->RegisterHandler(GameEvent::Type::LevelGained, bind(&GamePlayer::OnLevelGained, this, _1));
   GAME_EVENT->RegisterHandler(GameEvent::Type::ItemGained, bind(&GamePlayer::OnItemGained, this, _1));
 
+  GAME->RegisterSelectionListener(bind(&GamePlayer::OnSelectionEvent, this, _1));
+
   InitActionMaps();
 
   return true;
@@ -72,24 +76,49 @@ void GamePlayer::InitActionMaps()
   _actionMapWizard._keyboardCallbacks[Keyboard::Left]   = bind(&GamePlayer::OnMovement, this, _1);
   _actionMapWizard._keyboardCallbacks[Keyboard::Right]  = bind(&GamePlayer::OnMovement, this, _1);
 
-  _actionMapWizard._selectionCallbacks[make_pair(Keyboard::L, (int)Selection::Monster)]
-    = bind(&GamePlayer::OnLightningBolt, this, _1);
+  _actionMapWizard._selectionCallbacks[Keyboard::L] =
+    make_pair((int)Selection::Monster, bind(&GamePlayer::OnLightningBolt, this, _1));
 
 }
 
 //-----------------------------------------------------------------------------
-void GamePlayer::OnLightningBolt(Entity* entity)
+void GamePlayer::OnLightningBolt(const SelectionEvent& event)
 {
+  // Check for LOS to mob
+  const GameState& state = GAME->GetGameState();
+  Player* player = state.GetActivePlayer();
+  MonsterPtr monster = static_pointer_cast<Monster>(event._entity);
+  if (!state._level->IsVisible(player->GetPos(), monster->GetPos()))
+  {
+    GAME->AddPlayerMessage("Target is not visible");
+    return;
+  }
 
+  // Zap all mobs in the LOS (skip self!)
+  vector<Entity*> mobs;
+  state._level->EntitiesInPath(player->GetPos(), monster->GetPos(), &mobs);
+
+  for (size_t i = 1; i < mobs.size(); ++i)
+  {
+    GameEvent event(GameEvent::Type::Attack);
+    event._agent = player;
+    event._target = mobs[i];
+    event._spell = _spellMap[PlayerAction::LightningBolt];
+
+    event._damage = (5 * player->Level() + player->WeaponBonus());
+
+    GAME_EVENT->SendEvent(event);
+  }
+  NextPlayer();
 }
 
 //-----------------------------------------------------------------------------
 void GamePlayer::OnMovement(Keyboard::Key key)
 {
-  const GameState& state = GAME.GetGameState();
+  const GameState& state = GAME->GetGameState();
   Party* party = state._party;
   Level* level = state._level;
-  Player* player = party->_players[state._activePlayer];
+  Player* player = party->_players[state._activePlayer].get();
 
   // Check if the input is a valid movement key, and the
   // resulting position is valid
@@ -100,7 +129,7 @@ void GamePlayer::OnMovement(Keyboard::Key key)
   Pos newPos(player->GetPos() + ofs);
   if (!level->ValidDestination(newPos))
   {
-    GAME.AddPlayerMessage("You can't move there");
+    GAME->AddPlayerMessage("You can't move there");
     return;
   }
 
@@ -175,10 +204,10 @@ void GamePlayer::OnHeal(const GameEvent& event)
 void GamePlayer::OnDeath(const GameEvent& event)
 {
   // If a monster is killed, calc xp, and give it to all the players
-  Entity* target = event._target;
+  EntityPtr target = event._target;
   if (!target->IsHuman())
   {
-    auto& state = GAME.GetGameState();
+    auto& state = GAME->GetGameState();
     int xp = target->Level();
     for (auto p : state._party->_players)
     {
@@ -200,7 +229,7 @@ void GamePlayer::OnDeath(const GameEvent& event)
 //-----------------------------------------------------------------------------
 void GamePlayer::OnLevelGained(const GameEvent& event)
 {
-  Player* player = (Player*)event._agent;
+  Player* player = static_cast<Player*>(event._agent.get());
   player->SetLevel(player->Level()+1);
   player->_xp = player->_xpForNextLevel;
   player->_xpForNextLevel *= 2;
@@ -209,7 +238,7 @@ void GamePlayer::OnLevelGained(const GameEvent& event)
 //-----------------------------------------------------------------------------
 void GamePlayer::OnItemGained(const GameEvent& event)
 {
-  Player* agent = static_cast<Player*>(event._agent);
+  Player* agent = static_cast<Player*>(event._agent.get());
   const LootItem* item = event._item;
   switch (item->_type)
   {
@@ -237,7 +266,7 @@ bool GamePlayer::ValidMovement(GameState& state, const Event& event)
     Pos newPos(player->GetPos() + ofs);
     if (level->ValidDestination(newPos))
     {
-      level->MovePlayer(player, newPos);
+      level->MovePlayer(player.get(), newPos);
       player->_hasMoved = true;
       player->SetPos(newPos);
 
@@ -312,7 +341,7 @@ bool GamePlayer::ValidMultiPhaseAction(GameState& state, const Event& event)
     auto& cur = keys[i];
     if (player->_class == cur._class && (key == cur._key || key == cur._altKey))
     {
-      state._curSpell = _actionMap[cur._action];
+      state._curSpell = _spellMap[cur._action];
       state._playerAction = cur._action;
       state._description = cur._desc;
       if (cur._selection != Selection::None)
@@ -336,7 +365,7 @@ bool GamePlayer::ValidMultiPhaseAction(GameState& state, const Event& event)
 //-----------------------------------------------------------------------------
 bool GamePlayer::OnMouseButtonReleased(const Event& event)
 {
-  GameState& state = GAME.GetGameState();
+  GameState& state = GAME->GetGameState();
   if (state._selection == 0)
     return false;
 
@@ -352,10 +381,10 @@ bool GamePlayer::OnMouseButtonReleased(const Event& event)
 
   if (tile._monster && (flags & (int)Selection::Monster))
   {
-    Monster* monster = tile._monster;
+    MonsterPtr monster = tile._monster;
     if (Dist(monster->GetPos(), state._selectionOrg) <= state._selectionRange)
     {
-      if (state._curSpell->OnMonsterSelected(state, monster))
+      if (state._curSpell->OnMonsterSelected(state, monster.get()))
       {
         // Check if the current spell is finished, in which case update
         // the active player
@@ -369,13 +398,13 @@ bool GamePlayer::OnMouseButtonReleased(const Event& event)
   }
   else if (tile._player && (flags & (int)Selection::Player))
   {
-    Player* player = tile._player;
+    PlayerPtr player = tile._player;
     if (Dist(player->GetPos(), state._selectionOrg) <= state._selectionRange)
     {
-      state._curSpell->OnPlayerSelected(state, player);
+      state._curSpell->OnPlayerSelected(state, player.get());
     }
 
-    state._curSpell->OnPlayerSelected(state, tile._player);
+    state._curSpell->OnPlayerSelected(state, tile._player.get());
   }
   else
   {
@@ -388,7 +417,7 @@ bool GamePlayer::OnMouseButtonReleased(const Event& event)
 //-----------------------------------------------------------------------------
 void GamePlayer::NextPlayer()
 {
-  GameState& state = GAME.GetGameState();
+  GameState& state = GAME->GetGameState();
 
   if (_advancePlayer)
   {
@@ -412,28 +441,49 @@ void GamePlayer::NextPlayer()
 }
 
 //-----------------------------------------------------------------------------
+void GamePlayer::OnSelectionEvent(const SelectionEvent& event)
+{
+  if (_selectionCandidate)
+  {
+    // check the selection mask
+    u32 mask = _selectionCandidate->first;
+
+    bool invokeCallback = ((mask & (u32)Selection::Empty) && !event._entity)
+      || ((mask & (u32)Selection::Player) && event._entity && event._entity->IsHuman())
+      || ((mask & (u32)Selection::Monster) && event._entity && !event._entity->IsHuman());
+
+    if (invokeCallback)
+    {
+      _selectionCandidate->second(event);
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
 bool GamePlayer::OnKeyReleased(const Event& event)
 {
   if (!_curActionMap)
     return false;
 
-
+  Keyboard::Key key = event.key.code;
+  if (key == Keyboard::Escape)
+  {
+    _selectionCandidate = nullptr;
+  }
 
   // look for keyboard actions
-  Keyboard::Key key = event.key.code;
   auto it = _curActionMap->_keyboardCallbacks.find(key);
   if (it != _curActionMap->_keyboardCallbacks.end())
   {
     it->second(key);
   }
-
-  // look for selection actions
-  for (auto cb : _curActionMap->_selectionCallbacks)
+  else
   {
-    const pair<Keyboard::Key, ActionMap::SelectionMask>& cur = cb.first;
-    if (cur.first == key)
+    // look for selection actions
+    auto it = _curActionMap->_selectionCallbacks.find(key);
+    if (it != _curActionMap->_selectionCallbacks.end())
     {
-      // 
+      _selectionCandidate = &it->second;
     }
   }
 
@@ -441,7 +491,7 @@ bool GamePlayer::OnKeyReleased(const Event& event)
 
 /*
 
-  GameState& state = GAME.GetGameState();
+  GameState& state = GAME->GetGameState();
   if (state._monsterPhase)
     return false;
 

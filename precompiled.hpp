@@ -42,6 +42,7 @@
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/date_time.hpp>
+#include <boost/intrusive_ptr.hpp>
 
 #include <google/protobuf/text_format.h>
 

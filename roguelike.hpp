@@ -31,6 +31,8 @@ namespace rogue
   using boost::posix_time::microsec_clock;
   using boost::posix_time::milliseconds;
   using boost::posix_time::seconds;
+  using boost::intrusive_ptr;
+  using boost::static_pointer_cast;
 
   using google::protobuf::TextFormat;
 

@@ -4,6 +4,9 @@ namespace rogue
 {
   class Entity
   {
+    friend void intrusive_ptr_add_ref(Entity*);
+    friend void intrusive_ptr_release(Entity*);
+
     friend class PlayerFactory;
     friend class LevelFactory;
     
@@ -25,6 +28,7 @@ namespace rogue
     int MaxMana() const { return _maxMana; }
 
     Pos& GetPos() { return _pos; }
+    const Pos& GetPos() const { return _pos; }
     void SetPos(const Pos& pos) { _pos = pos ;}
     const string& Name() const { return _name; }
 
@@ -33,7 +37,7 @@ namespace rogue
 
   protected:
     Entity();
-    virtual ~Entity() {}
+    virtual ~Entity();
     
     Pos _pos;
     string _name;
@@ -49,5 +53,24 @@ namespace rogue
     int _maxMana;
 
     int _level;
+    u32 _refCount;
   };
+
+  typedef intrusive_ptr<Entity> EntityPtr;
+
+  //-----------------------------------------------------------------------------
+  inline void intrusive_ptr_add_ref(Entity* e)
+  {
+    ++e->_refCount;
+  }
+
+  //-----------------------------------------------------------------------------
+  inline void intrusive_ptr_release(Entity* e)
+  {
+    if (--e->_refCount == 0)
+    {
+      delete e;
+    }
+  }
+
 }

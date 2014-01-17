@@ -22,8 +22,8 @@ namespace rogue
 
     deque<LootItem> _items;
     Tile::Type _type;
-    Player *_player;
-    Monster *_monster;
+    intrusive_ptr<Player> _player;
+    intrusive_ptr<Monster> _monster;
     int _visited;
     bool _selected;
   };
