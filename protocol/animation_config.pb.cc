@@ -58,12 +58,13 @@ void protobuf_AssignDesc_animation_5fconfig_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Frame));
   Animation_descriptor_ = file->message_type(1);
-  static const int Animation_offsets_[5] = {
+  static const int Animation_offsets_[6] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, texture_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, duration_ms_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, frame_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, looping_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Animation, name_),
   };
   Animation_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -134,15 +135,15 @@ void protobuf_AddDesc_animation_5fconfig_2eproto() {
     "\n\026animation_config.proto\022\026rogue.animatio"
     "n_config\032\014sprite.proto\"K\n\005Frame\022\021\n\006weigh"
     "t\030\001 \001(\005:\0011\022/\n\014texture_rect\030\002 \001(\0132\031.rogue"
-    ".sprite.TextureRect\"\256\001\n\tAnimation\022/\n\002id\030"
+    ".sprite.TextureRect\"\274\001\n\tAnimation\022/\n\002id\030"
     "\001 \001(\0162#.rogue.animation_config.Animation"
     "Id\022\017\n\007texture\030\002 \001(\t\022\031\n\013duration_ms\030\003 \001(\005"
     ":\0041000\022,\n\005frame\030\004 \003(\0132\035.rogue.animation_"
-    "config.Frame\022\026\n\007looping\030\005 \001(\010:\005false\"B\n\n"
-    "Animations\0224\n\tanimation\030\001 \003(\0132!.rogue.an"
-    "imation_config.Animation*F\n\013AnimationId\022"
-    "\010\n\004None\020\000\022\t\n\005Blood\020\001\022\017\n\013ArcaneBlast\020\002\022\021\n"
-    "\rLightningBolt\020\003", 456);
+    "config.Frame\022\026\n\007looping\030\005 \001(\010:\005false\022\014\n\004"
+    "name\030\006 \001(\t\"B\n\nAnimations\0224\n\tanimation\030\001 "
+    "\003(\0132!.rogue.animation_config.Animation*F"
+    "\n\013AnimationId\022\010\n\004None\020\000\022\t\n\005Blood\020\001\022\017\n\013Ar"
+    "caneBlast\020\002\022\021\n\rLightningBolt\020\003", 470);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "animation_config.proto", &protobuf_RegisterTypes);
   Frame::default_instance_ = new Frame();
@@ -438,6 +439,7 @@ const int Animation::kTextureFieldNumber;
 const int Animation::kDurationMsFieldNumber;
 const int Animation::kFrameFieldNumber;
 const int Animation::kLoopingFieldNumber;
+const int Animation::kNameFieldNumber;
 #endif  // !_MSC_VER
 
 Animation::Animation()
@@ -460,6 +462,7 @@ void Animation::SharedCtor() {
   texture_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   duration_ms_ = 1000;
   looping_ = false;
+  name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -470,6 +473,9 @@ Animation::~Animation() {
 void Animation::SharedDtor() {
   if (texture_ != &::google::protobuf::internal::kEmptyString) {
     delete texture_;
+  }
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    delete name_;
   }
   if (this != default_instance_) {
   }
@@ -506,6 +512,11 @@ void Animation::Clear() {
     }
     duration_ms_ = 1000;
     looping_ = false;
+    if (has_name()) {
+      if (name_ != &::google::protobuf::internal::kEmptyString) {
+        name_->clear();
+      }
+    }
   }
   frame_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -598,6 +609,23 @@ bool Animation::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(50)) goto parse_name;
+        break;
+      }
+
+      // optional string name = 6;
+      case 6: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_name:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_name()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->name().data(), this->name().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -651,6 +679,15 @@ void Animation::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->looping(), output);
   }
 
+  // optional string name = 6;
+  if (has_name()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->name().data(), this->name().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      6, this->name(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -692,6 +729,16 @@ void Animation::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->looping(), target);
   }
 
+  // optional string name = 6;
+  if (has_name()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->name().data(), this->name().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        6, this->name(), target);
+  }
+
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -726,6 +773,13 @@ int Animation::ByteSize() const {
     // optional bool looping = 5 [default = false];
     if (has_looping()) {
       total_size += 1 + 1;
+    }
+
+    // optional string name = 6;
+    if (has_name()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->name());
     }
 
   }
@@ -776,6 +830,9 @@ void Animation::MergeFrom(const Animation& from) {
     if (from.has_looping()) {
       set_looping(from.looping());
     }
+    if (from.has_name()) {
+      set_name(from.name());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -804,6 +861,7 @@ void Animation::Swap(Animation* other) {
     std::swap(duration_ms_, other->duration_ms_);
     frame_.Swap(&other->frame_);
     std::swap(looping_, other->looping_);
+    std::swap(name_, other->name_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

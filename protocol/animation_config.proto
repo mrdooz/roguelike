@@ -24,6 +24,7 @@ message Animation
 	optional int32 duration_ms = 3 [default=1000];
 	repeated Frame frame = 4;
 	optional bool looping = 5 [default=false];
+	optional string name = 6;
 };
 
 message Animations

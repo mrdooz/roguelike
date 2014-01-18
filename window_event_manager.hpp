@@ -21,5 +21,9 @@ namespace rogue
     u32 _nextId;
 
     RenderWindow* _window;
+
+    // Stores the previous keystate for each of the 100 SFML keys, along
+    // with the shift/ctrl/alt combinations
+    vector<u8> _keystate;
   };
 }

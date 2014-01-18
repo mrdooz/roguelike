@@ -256,6 +256,18 @@ class Animation : public ::google::protobuf::Message {
   inline bool looping() const;
   inline void set_looping(bool value);
 
+  // optional string name = 6;
+  inline bool has_name() const;
+  inline void clear_name();
+  static const int kNameFieldNumber = 6;
+  inline const ::std::string& name() const;
+  inline void set_name(const ::std::string& value);
+  inline void set_name(const char* value);
+  inline void set_name(const char* value, size_t size);
+  inline ::std::string* mutable_name();
+  inline ::std::string* release_name();
+  inline void set_allocated_name(::std::string* name);
+
   // @@protoc_insertion_point(class_scope:rogue.animation_config.Animation)
  private:
   inline void set_has_id();
@@ -266,6 +278,8 @@ class Animation : public ::google::protobuf::Message {
   inline void clear_has_duration_ms();
   inline void set_has_looping();
   inline void clear_has_looping();
+  inline void set_has_name();
+  inline void clear_has_name();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -273,10 +287,11 @@ class Animation : public ::google::protobuf::Message {
   int id_;
   ::google::protobuf::int32 duration_ms_;
   ::google::protobuf::RepeatedPtrField< ::rogue::animation_config::Frame > frame_;
+  ::std::string* name_;
   bool looping_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_animation_5fconfig_2eproto();
   friend void protobuf_AssignDesc_animation_5fconfig_2eproto();
@@ -601,6 +616,76 @@ inline bool Animation::looping() const {
 inline void Animation::set_looping(bool value) {
   set_has_looping();
   looping_ = value;
+}
+
+// optional string name = 6;
+inline bool Animation::has_name() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void Animation::set_has_name() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void Animation::clear_has_name() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void Animation::clear_name() {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    name_->clear();
+  }
+  clear_has_name();
+}
+inline const ::std::string& Animation::name() const {
+  return *name_;
+}
+inline void Animation::set_name(const ::std::string& value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+}
+inline void Animation::set_name(const char* value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+}
+inline void Animation::set_name(const char* value, size_t size) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  name_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Animation::mutable_name() {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    name_ = new ::std::string;
+  }
+  return name_;
+}
+inline ::std::string* Animation::release_name() {
+  clear_has_name();
+  if (name_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = name_;
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Animation::set_allocated_name(::std::string* name) {
+  if (name_ != &::google::protobuf::internal::kEmptyString) {
+    delete name_;
+  }
+  if (name) {
+    set_has_name();
+    name_ = name;
+  } else {
+    clear_has_name();
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
 }
 
 // -------------------------------------------------------------------

@@ -30,6 +30,7 @@ namespace rogue
     vector<u32> _frameIndex;
     u32 _weightSum;
     bool _looping;
+    string _name;
   };
 
   struct AnimationInstance

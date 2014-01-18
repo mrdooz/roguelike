@@ -86,7 +86,7 @@ bool Editor::InitMainWindow()
 #endif
 
   _window = new RenderWindow(sf::VideoMode(8 * width / 10, 8 * height / 10), "...");
-  _window->setFramerateLimit(60);
+//  _window->setFramerateLimit(60);
 
   // Note, to avoid bugs having to do with registering handlers pointing to NULL objects,
   // it's easier if classes register themselves in their ctors

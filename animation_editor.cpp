@@ -6,6 +6,7 @@
 #include "texture_cache.hpp"
 #include "utils.hpp"
 #include "editor.hpp"
+#include "error.hpp"
 
 using namespace rogue;
 using namespace sf;
@@ -72,8 +73,17 @@ void AnimationWindow::Draw()
 
   // Draw header
   sf::Text text("", _font, 10);
-  text.setString(toString("Animation: %d\n[%d frames, %d ms]",
-    _editor->_curAnimationIdx, numFrames, animation->_duration.total_milliseconds()));
+
+  if (animation->_name.empty())
+  {
+    text.setString(toString("Animation: %d\n[%d frames, %d ms]",
+      _editor->_curAnimationIdx, numFrames, animation->_duration.total_milliseconds()));
+  }
+  else
+  {
+    text.setString(toString("Animation: %s\n[%d frames, %d ms]",
+      animation->_name.c_str(), numFrames, animation->_duration.total_milliseconds()));
+  }
   text.setPosition(sf::Vector2f(5, 5));
   text.setColor(sf::Color::White);
   _texture.draw(text);
@@ -340,13 +350,14 @@ void CanvasWindow::UpdateFrameBuffer(int x, int y, Mouse::Button btn)
   }
   else
   {
-    Color color(btn == Mouse::Button::Left ? _editor->_primaryColor : _editor->_secondaryColor);
-
+    u32 color(ColorToU32(btn == Mouse::Button::Left ? _editor->_primaryColor : _editor->_secondaryColor));
     u32* dst = (u32*)&_frameDoubleBuffer[(y*w+x)*4];
-    SaveToUndoBuffer(x, y, *dst);
-    *dst = ColorToU32(color);
-    
-    UpdateFrameTexture();
+    if (color != *dst)
+    {
+      SaveToUndoBuffer(x, y, *dst);
+      *dst = color;
+      UpdateFrameTexture();
+    }
   }
 }
 
@@ -731,6 +742,8 @@ bool AnimationEditor::OnKeyReleased(const Event& event)
   int prevAnimation = _curAnimationIdx;
 
   Keyboard::Key code = event.key.code;
+
+  LOG_INFO("OnKeyReleased" << LogKeyValue("key", code));
 
   if (code == Keyboard::I)
   {

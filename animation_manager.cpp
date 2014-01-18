@@ -84,6 +84,9 @@ bool AnimationManager::LoadAnimations(const char* filename)
     Animation* anim = new Animation((Animation::Id)cur.id(), texture, milliseconds(cur.duration_ms()));
     anim->_looping = cur.looping();
 
+    if (cur.has_name())
+      anim->_name = cur.name();
+
     // Load the animation frames
     for (int j = 0; j < cur.frame_size(); ++j)
     {
