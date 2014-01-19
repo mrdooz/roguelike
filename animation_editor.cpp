@@ -671,6 +671,7 @@ AnimationEditor::AnimationEditor(
   , _secondaryColor(0, 0, 0)
   , _swatch(10)
   , _eyeDropper(false)
+  , _selectionMode(false)
   , _animationWindow(new AnimationWindow("ANIMATION", Vector2f(20, 20), Vector2f(200,200), this))
   , _canvasWindow(new CanvasWindow("CANVAS", Vector2f(250,150), Vector2f(400,400), this))
   , _toolkitWindow(new ToolkitWindow("TOOLKIT", Vector2f(250,20), Vector2f(400,100)))
@@ -743,56 +744,7 @@ bool AnimationEditor::OnKeyReleased(const Event& event)
 
   Keyboard::Key code = event.key.code;
 
-  LOG_INFO("OnKeyReleased" << LogKeyValue("key", code));
-
-  if (code == Keyboard::I)
-  {
-    _eyeDropper = true;
-  }
-  else if (code == Keyboard::X)
-  {
-    swap(_primaryColor, _secondaryColor);
-  }
-  else if (code >= Keyboard::Num0 && code <= Keyboard::Num9)
-  {
-    // transfer swatch <-> primary (note, indexing starts at 1)
-    int idx = code == Keyboard::Num0 ? _swatch.size() - 1 : (int)code - Keyboard::Num1;
-    if (event.key.control)
-    {
-      _swatch[idx] = _primaryColor;
-    }
-    else
-    {
-      _primaryColor = _swatch[idx];
-      _colorPickerWindow->UpdatePicker();
-    }
-  }
-  else if (code == Keyboard::Key::Up)
-  {
-    _curAnimationIdx++;
-  }
-  else if (code == Keyboard::Key::Down)
-  {
-    _curAnimationIdx = max(0, _curAnimationIdx - 1);
-  }
-  else if (code == Keyboard::Key::Space)
-  {
-    _playOnce = false;
-  }
-  else if (code == Keyboard::Key::Return)
-  {
-    //_lastFrame = boost::posix_time::not_a_date_time;
-    _playOnce = true;
-  }
-  else if (_curAnimation && event.key.code == Keyboard::Left)
-  {
-    _curFrameIdx = Clamp(_curFrameIdx-1, 0, (int)_curAnimation->_frames.size() - 1);
-  }
-  else if (_curAnimation && event.key.code == Keyboard::Right)
-  {
-    _curFrameIdx = Clamp(_curFrameIdx+1, 0, (int)_curAnimation->_frames.size() - 1);
-  }
-  else if (event.key.control)
+  if (event.key.control)
   {
     if (code == Keyboard::S)
     {
@@ -813,6 +765,56 @@ bool AnimationEditor::OnKeyReleased(const Event& event)
     else if (code == Keyboard::Y)
     {
       _canvasWindow->Redo();
+    }
+  }
+  else
+  {
+    if (code == Keyboard::I)
+    {
+      _eyeDropper = true;
+    }
+    else if (code == Keyboard::X)
+    {
+      swap(_primaryColor, _secondaryColor);
+    }
+    else if (code >= Keyboard::Num0 && code <= Keyboard::Num9)
+    {
+      // transfer swatch <-> primary (note, indexing starts at 1)
+      int idx = code == Keyboard::Num0 ? _swatch.size() - 1 : (int)code - Keyboard::Num1;
+      if (event.key.control)
+      {
+        _swatch[idx] = _primaryColor;
+      }
+      else
+      {
+        _primaryColor = _swatch[idx];
+        _colorPickerWindow->UpdatePicker();
+      }
+    }
+    else if (code == Keyboard::Key::Up)
+    {
+      _curAnimationIdx++;
+    }
+    else if (code == Keyboard::Key::Down)
+    {
+      _curAnimationIdx = max(0, _curAnimationIdx - 1);
+    }
+    else if (code == Keyboard::Key::Space)
+    {
+      _playOnce = false;
+    }
+    else if (code == Keyboard::Key::Return)
+    {
+      //_lastFrame = boost::posix_time::not_a_date_time;
+      _playOnce = true;
+    }
+    else if (_curAnimation && event.key.code == Keyboard::Left)
+    {
+      _curFrameIdx = Clamp(_curFrameIdx-1, 0, (int)_curAnimation->_frames.size() - 1);
+    }
+    else if (_curAnimation && event.key.code == Keyboard::Right)
+    {
+      _curFrameIdx = Clamp(_curFrameIdx+1, 0, (int)_curAnimation->_frames.size() - 1);
     }
   }
 
@@ -844,9 +846,9 @@ void AnimationEditor::AnimationsReloaded()
     return;
   }
 
-  _curAnimationIdx = Clamp(_curAnimationIdx, 0, (int)animations.size());
+  _curAnimationIdx = Clamp(_curAnimationIdx, 0, (int)animations.size() - 1);
   _curAnimation = animations[_curAnimationIdx];
-  _curFrameIdx = Clamp(_curFrameIdx, 0, (int)_curAnimation->_frames.size());
+  _curFrameIdx = Clamp(_curFrameIdx, 0, (int)_curAnimation->_frames.size() - 1);
   _curFrame = _curAnimation->_frames[_curFrameIdx];
 
   _curTexture = TextureCache::Instance()->TextureByHandle(_curAnimation->_texture);

@@ -172,6 +172,7 @@ namespace rogue
     vector<HsvColor> _swatch;
 
     bool _eyeDropper;
+    bool _selectionMode;
 
     AnimationWindow* _animationWindow;
     CanvasWindow* _canvasWindow;
