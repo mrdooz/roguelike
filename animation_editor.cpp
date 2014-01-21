@@ -1,3 +1,4 @@
+void LightningBolt();
 #include "animation_editor.hpp"
 #include "window_event_manager.hpp"
 #include "animation_manager.hpp"
@@ -415,6 +416,11 @@ void CanvasWindow::Draw()
   }
 
   _texture.display();
+}
+
+//-----------------------------------------------------------------------------
+void CanvasWindow::LightningBolt()
+{
 }
 
 //-----------------------------------------------------------------------------

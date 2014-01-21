@@ -32,6 +32,6 @@ animation
 	name : "Lightning Bolt";
 	texture : "oryx_lofi/lofi_obj.png";
 	duration_ms : 1000;
-	frame : { weight: 1 ; texture_rect : { x : 24; y : 88; w : 8; h : 8 }; };
-	frame : { weight: 1 ; texture_rect : { x : 32; y : 88; w : 8; h : 8 }; };
+	frame : { weight: 1 ; texture_rect : { x : 0; y : 128; w : 8; h : 16 }; };
+	frame : { weight: 1 ; texture_rect : { x : 8; y : 128; w : 8; h : 16 }; };
 }

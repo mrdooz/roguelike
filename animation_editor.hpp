@@ -56,6 +56,8 @@ namespace rogue
     void SaveToUndoBuffer(int x, int y, u32 col);
     void ResetUndoBuffer();
 
+    void LightningBolt();
+
     AnimationEditor* _editor;
 
     Texture _frameTexture;
