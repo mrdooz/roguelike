@@ -399,14 +399,14 @@ void CanvasWindow::Draw()
     VertexArray verts(sf::Lines, 2 * vLines + 2 * hLines);
 
     size_t idx = 0;
-    for (size_t i = 0; i < vLines; ++i)
+    for (size_t i = 0; i < hLines; ++i)
     {
       verts[idx+0].position = Vector2f(i*gx, 0);
       verts[idx+1].position = Vector2f(i*gx, iy);
       idx +=2;
     }
 
-    for (size_t i = 0; i < hLines; ++i)
+    for (size_t i = 0; i < vLines; ++i)
     {
       verts[idx+0].position = Vector2f(0, i*gy);
       verts[idx+1].position = Vector2f(ix, i*gy);
@@ -670,7 +670,7 @@ AnimationEditor::AnimationEditor(
   , _windowManager(window, eventManager)
   , _font(nullptr)
   , _curAnimation(nullptr)
-  , _curAnimationIdx(0)
+  , _curAnimationIdx(2)
   , _curFrameIdx(0)
   , _playOnce(false)
   , _primaryColor(360, 1, 1)
