@@ -13,6 +13,18 @@ namespace rogue
   class TextureCache;
 
   //-----------------------------------------------------------------------------
+  class HistoryWindow : public VirtualWindow
+  {
+  public:
+    HistoryWindow(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* editor);
+    virtual void Draw();
+    void AddHistory(const string& str);
+
+    vector<string> _history;
+    AnimationEditor* _editor;
+  };
+
+  //-----------------------------------------------------------------------------
   class AnimationWindow : public VirtualWindow
   {
     public:
@@ -40,6 +52,7 @@ namespace rogue
     bool OnMouseMoved(const Event& event);
     bool OnMouseButtonPressed(const Event& event);
     bool OnKeyReleased(const Event& event);
+    bool OnResized(const Event& event);
     void Draw();
 
     void UpdateFrameTexture();
@@ -69,7 +82,8 @@ namespace rogue
     vector<u8> _frameDoubleBuffer;
     
     Vector2u _gridSize;
-    int _scale;
+    int _scaleX;
+    int _scaleY;
     Vector2i _frameSize;
     bool _showGrid;
     bool _showPrevFrame;
@@ -134,7 +148,7 @@ namespace rogue
     friend class ToolkitWindow;
     friend class ColorPickerWindow;
     friend class FramesWindow;
-
+    friend class HistoryWindow;
   public:
     AnimationEditor(
         RenderWindow *window,
@@ -181,5 +195,6 @@ namespace rogue
     ToolkitWindow* _toolkitWindow;
     ColorPickerWindow* _colorPickerWindow;
     AnimationManager* _animationManager;
+    HistoryWindow* _historyWindow;
   };
 }

@@ -13,6 +13,48 @@ using namespace rogue;
 using namespace sf;
 
 //-----------------------------------------------------------------------------
+HistoryWindow::HistoryWindow(
+    const string& title,
+    const Vector2f& pos,
+    const Vector2f& size,
+    AnimationEditor* editor)
+  : VirtualWindow(title, pos, size)
+  , _editor(editor)
+{
+}
+
+//-----------------------------------------------------------------------------
+void HistoryWindow::Draw()
+{
+  _texture.clear();
+
+  RectangleShape background(Vector2f(_size.x, _size.y));
+  background.setFillColor(Color(40,40,40));
+  _texture.draw(background);
+
+  int spacing = 15;
+  Text normal("", *_editor->_font, 10);
+  Vector2f pos(0, 0);
+
+  int rows = min((int)_history.size(), (int)(_size.y - 20) / spacing);
+  for (int i = 0; i < rows; ++i)
+  {
+    const string& cur = _history[_history.size() - rows + i];
+    normal.setString(cur);
+    normal.setPosition(pos);
+    _texture.draw(normal);
+    pos.y += spacing;
+  }
+  _texture.display();
+}
+
+//-----------------------------------------------------------------------------
+void HistoryWindow::AddHistory(const string& str)
+{
+  _history.push_back(toString("[%d] %s", _history.size(), str.c_str()));
+}
+
+//-----------------------------------------------------------------------------
 AnimationWindow::AnimationWindow(
      const string& title,
      const Vector2f& pos,
@@ -161,6 +203,7 @@ bool CanvasWindow::Init()
   _windowManager->RegisterHandler(Event::MouseMoved, this, bind(&CanvasWindow::OnMouseMoved, this, _1));
   _windowManager->RegisterHandler(Event::MouseButtonPressed, this, bind(&CanvasWindow::OnMouseButtonPressed, this, _1));
   _windowManager->RegisterHandler(Event::KeyReleased, this, bind(&CanvasWindow::OnKeyReleased, this, _1));
+  _windowManager->RegisterHandler(Event::Resized, this, bind(&CanvasWindow::OnResized, this, _1));
 
   return true;
 }
@@ -260,6 +303,21 @@ void CanvasWindow::Redo()
 }
 
 //-----------------------------------------------------------------------------
+bool CanvasWindow::OnResized(const Event& event)
+{
+  if (!_frameSize.x || !_frameSize.y)
+    return false;
+
+  _scaleX = _size.x / _frameSize.x;
+  _scaleY = _size.y / _frameSize.y;
+
+  _frameSprite.setScale(_scaleX, _scaleY);
+  _frameSprite.setTexture(_frameTexture, true);
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
 void CanvasWindow::UpdateDoubleBuffer()
 {
   // copy the current animation/frame to the double buffer
@@ -288,9 +346,10 @@ void CanvasWindow::UpdateDoubleBuffer()
   _frameTexture.create(w, h);
   _frameTexture.update(dst, w, h, 0, 0);
 
-  _scale = min(_size.x / w, _size.y / h);
+  _scaleX = _size.x / w;
+  _scaleY = _size.y / h;
 
-  _frameSprite.setScale(_scale, _scale);
+  _frameSprite.setScale(_scaleX, _scaleY);
   _frameSprite.setTexture(_frameTexture, true);
 }
 
@@ -306,8 +365,8 @@ bool CanvasWindow::OnKeyReleased(const Event& event)
 //-----------------------------------------------------------------------------
 bool CanvasWindow::OnMouseButtonPressed(const Event& event)
 {
-  int x = event.mouseButton.x / _scale;
-  int y = event.mouseButton.y / _scale;
+  int x = event.mouseButton.x / _scaleX;
+  int y = event.mouseButton.y / _scaleY;
   UpdateFrameBuffer(x, y, event.mouseButton.button);
   return true;
 }
@@ -315,8 +374,8 @@ bool CanvasWindow::OnMouseButtonPressed(const Event& event)
 //-----------------------------------------------------------------------------
 bool CanvasWindow::OnMouseMoved(const Event& event)
 {
-  int x = event.mouseMove.x / _scale;
-  int y = event.mouseMove.y / _scale;
+  int x = event.mouseMove.x / _scaleX;
+  int y = event.mouseMove.y / _scaleY;
 
   Mouse::Button btn = Mouse::Button::ButtonCount;
   if (Mouse::isButtonPressed(Mouse::Button::Left))
@@ -682,6 +741,7 @@ AnimationEditor::AnimationEditor(
   , _canvasWindow(new CanvasWindow("CANVAS", Vector2f(250,150), Vector2f(400,400), this))
   , _toolkitWindow(new ToolkitWindow("TOOLKIT", Vector2f(250,20), Vector2f(400,100)))
   , _colorPickerWindow(new ColorPickerWindow("COLORPICKER", Vector2f(750,20), Vector2f(350,200), this))
+  , _historyWindow(new HistoryWindow("HISTORY", Vector2f(20, 250), Vector2f(200, 500), this))
   , _animationManager(animationManager)
 {
   eventManager->RegisterHandler(Event::KeyReleased, bind(&AnimationEditor::OnKeyReleased, this, _1));
@@ -690,6 +750,7 @@ AnimationEditor::AnimationEditor(
   _windowManager.AddWindow(_canvasWindow);
   _windowManager.AddWindow(_toolkitWindow);
   _windowManager.AddWindow(_colorPickerWindow);
+  _windowManager.AddWindow(_historyWindow);
 
   _animationManager->AddUpdateListener(bind(&AnimationEditor::AnimationsReloaded, this));
 }
@@ -754,22 +815,27 @@ bool AnimationEditor::OnKeyReleased(const Event& event)
   {
     if (code == Keyboard::S)
     {
+      _historyWindow->AddHistory("Animation saved");
       SaveAnimation();
     }
     else if (code == Keyboard::C)
     {
+      _historyWindow->AddHistory("Copy to clipboard");
       _canvasWindow->CopyToClipboard();
     }
     else if (code == Keyboard::V)
     {
+      _historyWindow->AddHistory("Paste from clipboard");
       _canvasWindow->PasteFromClipboard();
     }
     else if (code == Keyboard::Z)
     {
+      _historyWindow->AddHistory("Undo");
       _canvasWindow->Undo();
     }
     else if (code == Keyboard::Y)
     {
+      _historyWindow->AddHistory("Redo");
       _canvasWindow->Redo();
     }
   }

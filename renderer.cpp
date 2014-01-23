@@ -443,7 +443,7 @@ void CombatLogWindow::Draw()
   Text normal("", _renderer->_font, 10);
   Vector2f pos(0, 0);
 
-  int rows = min((int)_renderer->_combatLog.size(), 150 / spacing);
+  int rows = min((int)_renderer->_combatLog.size(), (int)(_size.y - 20) / spacing);
   for (int i = 0; i < rows; ++i)
   {
     const string& cur = _renderer->_combatLog[_renderer->_combatLog.size() - rows + i];
