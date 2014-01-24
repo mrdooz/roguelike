@@ -93,30 +93,6 @@ GameState& Game::GetGameState()
 }
 
 //-----------------------------------------------------------------------------
-void Game::CreateParty()
-{
-  _gameState._party = new Party();
-
-  for (int i = 0; i < 4; ++i)
-  {
-    auto *p = _playerFactory->CreatePlayer((PlayerClass)i, toString("Player %d", i));
-    while (true)
-    {
-      int x = rand() % _gameState._level->Width();
-      int y = rand() % _gameState._level->Height();
-      auto& tile = _gameState._level->Get(x, y);
-      if (tile.IsEmpty(false) && tile._type == Tile::Type::Floor)
-      {
-        p->SetPos(Pos(x, y));
-        break;
-      }
-    }
-    _gameState._level->initPlayer(p, p->GetPos());
-    _gameState._party->_players.push_back(p);
-  }
-}
-
-//-----------------------------------------------------------------------------
 bool Game::OnResize(const Event& event)
 {
   size_t width = event.size.width;
@@ -127,8 +103,29 @@ bool Game::OnResize(const Event& event)
 }
 
 //-----------------------------------------------------------------------------
-bool Game::InitMainWindow()
+bool Game::Init()
 {
+  srand(1337);
+
+  FindAppRoot();
+
+  if (!g_logSinkFile.Open("rogue.log"))
+    return 1;
+
+  if (!TextureCache::Create())
+    return false;
+
+  _playerFactory = new PlayerFactory();
+  _gameEventManager = new GameEventManager();
+  _animationManager = new AnimationManager();
+  if (!_animationManager->LoadAnimations("config/animation_config.pb"))
+  {
+    return false;
+  }
+
+  _gameState._level = LevelFactory::CreateLevel(1,30,30);
+  _gameState.CreateParty(_playerFactory);
+
   size_t width, height;
 #ifdef _WIN32
   width = GetSystemMetrics(SM_CXFULLSCREEN);
@@ -155,38 +152,7 @@ bool Game::InitMainWindow()
   if (!_playerMessageFont.loadFromFile("gfx/wscsnrg.ttf"))
     return false;
 
-  return true;
-}
-
-//-----------------------------------------------------------------------------
-bool Game::Init()
-{
-  srand(1337);
-
-  FindAppRoot();
-
-  if (!g_logSinkFile.Open("rogue.log"))
-    return 1;
-
-  if (!TextureCache::Create())
-    return false;
-
-  _playerFactory = new PlayerFactory();
-  _gameEventManager = new GameEventManager();
-  _animationManager = new AnimationManager();
-  if (!_animationManager->LoadAnimations("config/animation_config.pb"))
-  {
-    return false;
-  }
-
-  _gameState._level = LevelFactory::CreateLevel(1,30,30);
-
-  CreateParty();
-
-  if (!InitMainWindow())
-    return false;
-
-  _gamePlayer = new GamePlayer(_windowEventManager, bind(&Renderer::TileAtPos, _renderer, _1, _2, _3));
+  _gamePlayer = new GamePlayer(_windowEventManager, _renderer);
   _gameAI = new GameAI();
 
   _gamePlayer->Init();
@@ -196,10 +162,8 @@ bool Game::Init()
 
 
 //-----------------------------------------------------------------------------
-void Game::ProcessMainWindow()
+void Game::ProcessWindow()
 {
-  _window->setActive();
-
   _windowEventManager->Poll();
   _gamePlayer->Update(_gameState);
   _gameAI->Update(_gameState);
@@ -250,7 +214,7 @@ int Game::Run()
     TextureCache::Instance()->CheckForReload();
     _animationManager->CheckForReload();
 
-    ProcessMainWindow();
+    ProcessWindow();
   }
 
   return EXIT_SUCCESS;

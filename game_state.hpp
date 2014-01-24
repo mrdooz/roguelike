@@ -11,6 +11,7 @@ namespace rogue
 
   class Player;
   class Monster;
+  class PlayerFactory;
 
   enum class PlayerAction : u8
   {
@@ -46,6 +47,8 @@ namespace rogue
   public:
     GameState();
     ~GameState();
+
+    void CreateParty(PlayerFactory* playerFactory);
 
     string _description;
     Player* GetActivePlayer() const;

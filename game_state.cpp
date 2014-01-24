@@ -5,6 +5,7 @@
 #include "party.hpp"
 #include "monster.hpp"
 #include "game.hpp"
+#include "player_factory.hpp"
 
 using namespace rogue;
 
@@ -37,3 +38,28 @@ Player* GameState::GetActivePlayer() const
 
   return _party->_players[_activePlayer].get();
 }
+
+//-----------------------------------------------------------------------------
+void GameState::CreateParty(PlayerFactory* playerFactory)
+{
+  _party = new Party();
+
+  for (int i = 0; i < 4; ++i)
+  {
+    auto *p = playerFactory->CreatePlayer((PlayerClass)i, toString("Player %d", i));
+    while (true)
+    {
+      int x = rand() % _level->Width();
+      int y = rand() % _level->Height();
+      auto& tile = _level->Get(x, y);
+      if (tile.IsEmpty(false) && tile._type == Tile::Type::Floor)
+      {
+        p->SetPos(Pos(x, y));
+        break;
+      }
+    }
+    _level->initPlayer(p, p->GetPos());
+    _party->_players.push_back(p);
+  }
+}
+

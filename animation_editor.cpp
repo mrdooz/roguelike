@@ -56,16 +56,17 @@ UIState::UIState()
 ImGuiWindow::ImGuiWindow(
     const string& title,
     const Vector2f& pos,
-    const Vector2f& size,
-    AnimationEditor* editor)
+    const Vector2f& size)
   : VirtualWindow(title, pos, size)
-  , _editor(editor)
 {
 }
 
 //-----------------------------------------------------------------------------
 bool ImGuiWindow::Init()
 {
+  if (!_font.loadFromFile("gfx/wscsnrg.ttf"))
+    return false;
+
   _windowManager->RegisterHandler(Event::MouseMoved, this, bind(&ImGuiWindow::OnMouseMove, this, _1));
   _windowManager->RegisterHandler(Event::MouseButtonPressed, this, bind(&ImGuiWindow::OnMouseButtonPressed, this, _1));
   _windowManager->RegisterHandler(Event::MouseButtonReleased, this, bind(&ImGuiWindow::OnMouseButtonReleased, this, _1));
@@ -149,7 +150,7 @@ void ImGuiWindow::DrawRect(int x, int y, int w, int h, const Color& color)
 //-----------------------------------------------------------------------------
 void ImGuiWindow::DrawString(int x, int y, int h, const char* str)
 {
-  Text text("", *_editor->_font, h);
+  Text text("", _font, h);
   text.setString(str);
   text.setPosition(x, y);
   _texture.draw(text);
@@ -1156,7 +1157,7 @@ AnimationEditor::AnimationEditor(
   , _toolkitWindow(new ToolkitWindow("TOOLKIT", Vector2f(250,20), Vector2f(400,100)))
   , _colorPickerWindow(new ColorPickerWindow("COLORPICKER", Vector2f(750,20), Vector2f(350,200), this))
   , _historyWindow(new HistoryWindow("HISTORY", Vector2f(20, 250), Vector2f(200, 500), this))
-  , _imguiWindow(new ImGuiWindow("IMGUI", Vector2f(500, 500), Vector2f(500, 500), this))
+  , _imguiWindow(new ImGuiWindow("IMGUI", Vector2f(500, 500), Vector2f(500, 500)))
   , _animationManager(animationManager)
 {
   eventManager->RegisterHandler(Event::KeyReleased, bind(&AnimationEditor::OnKeyReleased, this, _1));

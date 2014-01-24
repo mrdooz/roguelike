@@ -54,17 +54,13 @@ namespace rogue
     Game();
     ~Game();
 
-    bool InitMainWindow();
-    bool InitDebugWindow();
-
     bool OnMouseMove(const Event& event);
     bool OnResize(const Event& event);
 
-    void ProcessMainWindow();
+    void ProcessWindow();
 
     bool Init();
 
-    void CreateParty();
     void FindAppRoot();
 
     void ProcessPlayerMessages(const ptime& now);

@@ -28,16 +28,16 @@ namespace rogue
     int lastItem;
     int keyChar;
   };
-
+/*
   class LightningProperties : public ImGuiWindow
   {
     LightningProperties(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* editor);
   };
-
+*/
   class ImGuiWindow : public VirtualWindow
   {
   public:
-    ImGuiWindow(const string& title, const Vector2f& pos, const Vector2f& size, AnimationEditor* editor);
+    ImGuiWindow(const string& title, const Vector2f& pos, const Vector2f& size);
     bool Button(int id, int x, int y, int w, int h);
     bool TextField(int id, int x, int y, int maxLen, int h, char* buffer);
     void DrawString(int x, int y, int h, const char* str);
@@ -60,7 +60,7 @@ namespace rogue
     bool OnTextEntered(const Event& event);
 
     UIState _uistate;
-    AnimationEditor* _editor;
+    Font _font;
   };
 
   //-----------------------------------------------------------------------------

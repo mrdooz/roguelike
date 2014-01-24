@@ -42,6 +42,7 @@ namespace rogue
 
     bool calcPath(const Pos &start, const Pos &end, vector<Pos> *path);
 
+    void TilesInPath(const Pos& a, const Pos& b, vector<Tile*>* tiles);
     int IsVisible(const Pos& a, const Pos& b);
     void EntitiesInPath(const Pos& a, const Pos& b, vector<Entity*>* entities);
 
@@ -57,7 +58,6 @@ namespace rogue
 
   private:
 
-    void TilesInPath(const Pos& a, const Pos& b, vector<Tile*>* tiles);
 
     void OnDeath(const GameEvent& event);
     void MonsterKilled(intrusive_ptr<Monster>& m);

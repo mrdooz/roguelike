@@ -5,8 +5,9 @@
 
 namespace rogue
 {
-  struct SpellBase;
   struct SelectionEvent;
+
+  class Renderer;
 
   class ActionMap
   {
@@ -24,9 +25,7 @@ namespace rogue
   class GamePlayer
   {
   public:
-    typedef function<int (const GameState&, int, int)> fnTileAtPos;
-
-    GamePlayer(WindowEventManager* windowEventManager, const fnTileAtPos& fnTileAtPos);
+    GamePlayer(WindowEventManager* windowEventManager, Renderer* renderer);
     ~GamePlayer();
 
     bool Init();
@@ -47,17 +46,12 @@ namespace rogue
     void OnLevelGained(const GameEvent& event);
     void OnItemGained(const GameEvent& event);
 
-    bool ValidMovement(GameState& state, const Event& event);
-    bool ValidMultiPhaseAction(GameState& state, const Event& event);
-    bool ValidSinglePhaseAction(GameState& state, const Event& event);
-
     void NextPlayer();
 
     typedef function<bool(GameState&, const Event&)> fnProcessAction;
 
     WindowEventManager* _windowEventManager;
-    fnTileAtPos _fnTileAtPos;
-    map<PlayerAction, SpellBase*> _spellMap;
+    Renderer* _renderer;
 
     bool _advancePlayer;
 
@@ -68,7 +62,6 @@ namespace rogue
 
     ActionMap* _curActionMap;
     ActionMap::SelectionPair* _selectionCandidate;
-
   };
 }
 

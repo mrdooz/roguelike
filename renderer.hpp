@@ -25,6 +25,9 @@ namespace rogue
     virtual void Draw();
     virtual bool Init();
     int TileAtPos(const GameState& state, int x, int y) const;
+    Pos PlayerToWorld(const Pos& pos) const;
+    Vector2f PlayerToWorldF(const Pos& pos) const;
+
   private:
     bool OnResize(const Event& event);
     bool OnKeyPressed(const Event& event);
@@ -42,9 +45,6 @@ namespace rogue
     // Convert a pos in world (global) space to window space
     Pos ToLocal(const Pos& pos) const;
     Pos ToGlobal(const Pos& pos) const;
-
-    Pos PlayerToWorld(const Pos& pos) const;
-    Vector2f PlayerToWorldF(const Pos& pos) const;
 
     void PlayerInView();
 
@@ -94,6 +94,12 @@ namespace rogue
     // Given the x/y window coordinates, return the tile at that position
     int TileAtPos(const GameState& state, int x, int y) const;
 
+    void AddAnimation(
+      Animation::Id id,
+      const Pos& startPos,
+      const Pos& endPos,
+      const time_duration& duration);
+
   private:
 
     void OnAttack(const GameEvent& event);
@@ -107,12 +113,6 @@ namespace rogue
     void VisibleArea(const Level* level, int* rows, int* cols) const;
 
     void AddToCombatLog(const string& msg);
-
-    void AddAnimation(
-        Animation::Id id,
-        const Pos& startPos,
-        const Pos& endPos,
-        const time_duration& duration);
 
     RenderWindow *_window;
     int _prevSelected;

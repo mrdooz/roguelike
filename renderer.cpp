@@ -601,26 +601,6 @@ void Renderer::OnAttack(const GameEvent& event)
   // Add to combat log
   AddToCombatLog(toString("%s attacks %s for %d",
     event._agent->Name().c_str(), event._target->Name().c_str(), event._damage));
-/*
-  // Check if the attack has its own animation, or if we should just use the
-  // generic one
-  bool foundAnimation = false;
-  if (event._spell)
-  {
-    Animation::Id id = event._spell->AnimationId();
-    if (id != Animation::Id::None)
-    {
-      AddAnimation(id, PlayerToWorld(event._agent->GetPos()), PlayerToWorld(event._target->GetPos()), seconds(1));
-      foundAnimation = true;
-    }
-  }
-
-  if (!foundAnimation)
-  {
-    Pos pos(PlayerToWorld(event._target->GetPos()));
-    AddAnimation(Animation::Id::Blood, pos, pos, seconds(1));
-  }
-*/
 }
 
 //-----------------------------------------------------------------------------
