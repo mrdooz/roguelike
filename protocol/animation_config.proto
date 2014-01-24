@@ -6,7 +6,9 @@ enum AnimationId
 	None 			= 0;
 	Blood 			= 1;
 	ArcaneBlast 	= 2;
-	LightningBolt 	= 3;
+	LightningBolt2 	= 3;
+	LightningBolt3	= 4;
+	LightningBolt4 	= 5;
 };
 
 message Frame

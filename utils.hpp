@@ -107,6 +107,23 @@ namespace rogue
     return max(c, max(a, b));
   }
 
+  template <typename T, typename U>
+  T Lerp(T a, T b, U v)
+  {
+    return (1-v) * a + v * b;
+  }
+
+  template <typename T>
+  T Randf(T a, T b)
+  {
+    float t = (float)rand() / RAND_MAX;
+    return Lerp(a, b, t);
+  }
+
+  float GaussianRand(float mean, float variance);
+
+  void Line(int x0, int y0, int x1, int y1, vector<Pos>* line);
+
   // Macro for creating "local" names
 #define GEN_NAME2(prefix, line) prefix##line
 #define GEN_NAME(prefix, line) GEN_NAME2(prefix, line)

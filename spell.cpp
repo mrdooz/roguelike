@@ -139,5 +139,5 @@ bool SpellLightningBolt::OnMonsterSelected(GameState& state, Monster* monster)
 //-----------------------------------------------------------------------------
 Animation::Id SpellLightningBolt::AnimationId()
 {
-  return Animation::Id::LightningBolt;
+  return Animation::Id::LightningBolt2;
 }

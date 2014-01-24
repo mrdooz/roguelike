@@ -31,11 +31,12 @@ VirtualWindowManager::VirtualWindowManager(
   _eventManager->RegisterHandler(Event::MouseMoved, bind(&VirtualWindowManager::OnMouseMove, this, _1));
   _eventManager->RegisterHandler(Event::Resized, bind(&VirtualWindowManager::OnResize, this, _1));
 
+  _eventManager->RegisterHandler(Event::TextEntered, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
+  _eventManager->RegisterHandler(Event::KeyPressed, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
   _eventManager->RegisterHandler(Event::KeyReleased, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
   _eventManager->RegisterHandler(Event::MouseButtonPressed, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
   _eventManager->RegisterHandler(Event::MouseButtonReleased, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
   _eventManager->RegisterHandler(Event::MouseMoved, bind(&VirtualWindowManager::HandlerForFocusWindow, this, _1));
-
 }
 
 //-----------------------------------------------------------------------------

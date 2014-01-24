@@ -44,11 +44,13 @@ enum AnimationId {
   None = 0,
   Blood = 1,
   ArcaneBlast = 2,
-  LightningBolt = 3
+  LightningBolt2 = 3,
+  LightningBolt3 = 4,
+  LightningBolt4 = 5
 };
 bool AnimationId_IsValid(int value);
 const AnimationId AnimationId_MIN = None;
-const AnimationId AnimationId_MAX = LightningBolt;
+const AnimationId AnimationId_MAX = LightningBolt4;
 const int AnimationId_ARRAYSIZE = AnimationId_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* AnimationId_descriptor();

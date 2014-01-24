@@ -141,9 +141,10 @@ void protobuf_AddDesc_animation_5fconfig_2eproto() {
     ":\0041000\022,\n\005frame\030\004 \003(\0132\035.rogue.animation_"
     "config.Frame\022\026\n\007looping\030\005 \001(\010:\005false\022\014\n\004"
     "name\030\006 \001(\t\"B\n\nAnimations\0224\n\tanimation\030\001 "
-    "\003(\0132!.rogue.animation_config.Animation*F"
+    "\003(\0132!.rogue.animation_config.Animation*o"
     "\n\013AnimationId\022\010\n\004None\020\000\022\t\n\005Blood\020\001\022\017\n\013Ar"
-    "caneBlast\020\002\022\021\n\rLightningBolt\020\003", 470);
+    "caneBlast\020\002\022\022\n\016LightningBolt2\020\003\022\022\n\016Light"
+    "ningBolt3\020\004\022\022\n\016LightningBolt4\020\005", 511);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "animation_config.proto", &protobuf_RegisterTypes);
   Frame::default_instance_ = new Frame();
@@ -171,6 +172,8 @@ bool AnimationId_IsValid(int value) {
     case 1:
     case 2:
     case 3:
+    case 4:
+    case 5:
       return true;
     default:
       return false;

@@ -18,7 +18,9 @@ namespace rogue
       None,
       Blood,
       ArcaneBlast,
-      LightningBolt,
+      LightningBolt2,
+      LightningBolt3,
+      LightningBolt4,
     };
 
     Animation(Id id, const TextureHandle& texture, time_duration duration);

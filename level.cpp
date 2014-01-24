@@ -322,57 +322,13 @@ size_t Level::PosToIndex(const Pos& pos) const
 void Level::TilesInPath(const Pos& a, const Pos& b, vector<Tile*>* tiles)
 {
   tiles->clear();
+  vector<Pos> line;
+  Line(a.x, a.y, b.x, b.y, &line);
 
-  // Bresenham between the points
-  int x0 = a.x;
-  int y0 = a.y;
-  int x1 = b.x;
-  int y1 = b.y;
-
-  int dx = abs(x1-x0);
-  int sx = x0 < x1 ? 1 : -1;
-  int dy = abs(y1-y0);
-  int sy = y0 < y1 ? 1 : -1;
-
-  if (dx > dy)
+  for (const Pos& p: line)
   {
-    int ofs = 0;
-    int threshold = dx;
-    while (true)
-    {
-      auto& tile = Get(Pos(x0,y0));
-      tiles->push_back(&tile);
-      if (x0 == x1)
-        break;
-
-      ofs += 2 * dy;
-      if (ofs >= threshold)
-      {
-        y0 += sy;
-        threshold += 2 * dx;
-      }
-      x0 += sx;
-    }
-  }
-  else
-  {
-    int ofs = 0;
-    int threshold = dy;
-    while (true)
-    {
-      auto& tile = Get(Pos(x0,y0));
-      tiles->push_back(&tile);
-      if (y0 == y1)
-        break;
-
-      ofs += 2 * dx;
-      if (ofs >= threshold)
-      {
-        x0 += sx;
-        threshold += 2 * dy;
-      }
-      y0 += sy;
-    }
+    auto& tile = Get(p);
+    tiles->push_back(&tile);
   }
 }
 
