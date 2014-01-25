@@ -7,7 +7,6 @@
 #include "game_state.hpp"
 #include "game.hpp"
 #include "window_event_manager.hpp"
-#include "spell.hpp"
 #include "animation_manager.hpp"
 
 using namespace rogue;

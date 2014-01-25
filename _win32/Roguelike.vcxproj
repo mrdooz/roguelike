@@ -120,7 +120,6 @@
     <ClInclude Include="..\roguelike.hpp" />
     <ClInclude Include="..\selection.hpp" />
     <ClInclude Include="..\sfml_helpers.hpp" />
-    <ClInclude Include="..\spell.hpp" />
     <ClInclude Include="..\standard_cursor.hpp" />
     <ClInclude Include="..\texture_cache.hpp" />
     <ClInclude Include="..\texture_handle.hpp" />
@@ -163,7 +162,6 @@
     <ClCompile Include="..\roguelike.cpp" />
     <ClCompile Include="..\selection.cpp" />
     <ClCompile Include="..\sfml_helpers.cpp" />
-    <ClCompile Include="..\spell.cpp" />
     <ClCompile Include="..\standard_cursor.cpp" />
     <ClCompile Include="..\texture_cache.cpp" />
     <ClCompile Include="..\texture_handle.cpp" />

@@ -5,7 +5,6 @@
 #include "monster.hpp"
 #include "utils.hpp"
 #include "game.hpp"
-#include "spell.hpp"
 #include "window_event_manager.hpp"
 #include "renderer.hpp"
 
